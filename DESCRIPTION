@@ -1,11 +1,24 @@
 Package: peekbankr
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Accessing the Peekbank Database
 Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Description: Tools for connecting to peekbank, an open repository for
+    developmental eye-tracking data.
+License: GPL-3
+BugReports: http://github.com/langcog/peekbankr/issues
 Encoding: UTF-8
 LazyData: true
+Imports:
+    DBI (>= 0.8),
+    dbplyr (>= 1.2.1),
+    dplyr (>= 0.7.4),
+    jsonlite (>= 1.5),
+    magrittr (>= 1.5),
+    purrr (>= 0.2.4),
+    RMySQL (>= 0.10.14)
+Suggests:
+    knitr,
+    rmarkdown
+RoxygenNote: 6.1.1
