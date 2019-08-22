@@ -2,24 +2,17 @@
 % Please edit documentation in R/peekbankr.R
 \name{connect_to_peekbank}
 \alias{connect_to_peekbank}
-\title{Connect to peekbank}
+\title{Connect to the peekbank database}
 \usage{
-connect_to_peekbank(db_version = "current", db_args = NULL)
-}
-\arguments{
-\item{db_version}{String of the name of database version to use}
-
-\item{db_args}{List with host, user, and password defined}
+connect_to_peekbank()
 }
 \value{
-con A DBIConnection object for the peekbank database
+A connection to the peekbank database.
 }
 \description{
-Connect to peekbank
+Connect to the peekbank database
 }
 \examples{
-\donttest{
-con <- connect_to_peekbank(db_version = "current", db_args = NULL)
+con <- connect_to_peekbank()
 DBI::dbDisconnect(con)
-}
 }

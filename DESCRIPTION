@@ -2,8 +2,10 @@ Package: peekbankr
 Type: Package
 Title: Accessing the Peekbank Database
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
+Authors@R: c(
+    person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
+    person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut")
+    )
 Description: Tools for connecting to peekbank, an open repository for
     developmental eye-tracking data.
 License: GPL-3
@@ -14,11 +16,8 @@ Imports:
     DBI (>= 0.8),
     dbplyr (>= 1.2.1),
     dplyr (>= 0.7.4),
-    jsonlite (>= 1.5),
     magrittr (>= 1.5),
     purrr (>= 0.2.4),
-    RMySQL (>= 0.10.14)
-Suggests:
-    knitr,
-    rmarkdown
+    RMySQL (>= 0.10.14),
+    rlang (>= 0.4.0)
 RoxygenNote: 6.1.1

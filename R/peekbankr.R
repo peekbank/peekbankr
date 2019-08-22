@@ -1,85 +1,195 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
+#' @importFrom rlang .data
 NULL
 
-# utils::globalVariables(c("collection_id", "collection_name", "corpus_id",
-#                          "corpus_name", "gloss", "id", "max_age", "min_age",
-#                          "name", "speaker_role", "target_child_id",
-#                          "target_child_name", "target_child_age",
-#                          "utterance_id", "transcript_id", "utterance_order",
-#                          "replacement"))
-
-avg_month <- 365.2425 / 12
-
-translate_version <- function(db_version, db_args, db_info) {
-
-  # using the childes-db hosted server
-  if (db_args$host == db_info$host) {
-
-    # current version
-    if (db_version == "current") {
-      db_to_use <- db_info[["current"]]
-      message("Using current database version: '", db_to_use, "'.")
-      return("childesdb")
-
-      # supported version
-    } else if (db_version %in% db_info[["supported"]]) {
-      db_to_use <- db_version
-      message("Using supported database version: '", db_to_use, "'.")
-      return("childesdb")
-
-      # historical version
-    } else if (db_version %in% db_info[["historical"]]) {
-      stop("Version '", db_version, "' is no longer hosted by ",
-           "childes-db.stanford.edu; either specify a more recent version or ",
-           "install MySQL Server locally and update db_args.")
-
-      # version not recognized
-    } else {
-      stop("Version '", db_version, "' not found. Specify one of: 'current', ",
-           paste(sprintf("'%s'", db_info$supported), collapse = ", "), ".")
-    }
-
-    # using a different server than the childes-db hosted one
-  } else {
-    message("Not using hosted database version; no checks will be applied to ",
-            "version specification.")
-    return(db_args$db_name)
-  }
-}
-
-resolve_connection <- function(connection, db_version = NULL, db_args = NULL) {
-  if (is.null(connection)) connect_to_peekbank(db_version, db_args)
-  else connection
-}
-
-#' Connect to peekbank
+#' Connect to the peekbank database
 #'
-#' @param db_version String of the name of database version to use
-#' @param db_args List with host, user, and password defined
-#' @return con A DBIConnection object for the peekbank database
+#' @return A connection to the peekbank database.
 #' @export
 #'
 #' @examples
-#' \donttest{
-#' con <- connect_to_peekbank(db_version = "current", db_args = NULL)
+#' con <- connect_to_peekbank()
 #' DBI::dbDisconnect(con)
-#' }
-connect_to_peekbank <- function(db_version = "current", db_args = NULL) {
-  # TODO: what does this config file contain and where to put it?
-  # db_info <- jsonlite::fromJSON(
-  #   "https://peekbank.stanford.edu/peekbank.json"
-  # )
+connect_to_peekbank <- function() {
 
-  if (is.null(db_args)) db_args <- db_info
+  DBI::dbConnect(RMySQL::MySQL(),
+                 host = "ec2-18-237-23-48.us-west-2.compute.amazonaws.com",
+                 dbname = "peekbank",
+                 user = "root", password = "NpwvcxhF249PdESheFqS")
 
-  con <- DBI::dbConnect(
-    RMySQL::MySQL(),
-    host = db_args$host,
-    dbname = translate_version(db_version, db_args, db_info),
-    user = db_args$user,
-    password = db_args$password
-  )
-  DBI::dbGetQuery(con, "SET NAMES utf8")
-  return(con)
+}
+
+resolve_connection <- function(connection) {
+  if (is.null(connection)) connect_to_peekbank() else connection
+}
+
+#' List of peekbank tables
+#'
+#' @param connection A connection to the peekbank database
+#'
+#' @return A vector of the names of tables in peekbank
+#' @export
+#'
+#' @examples
+#' con <- connect_to_peekbank()
+#' list_peekbank_tables(con)
+list_peekbank_tables <- function(connection) {
+  DBI::dbListTables(connection)
+}
+
+#' Get datasets
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of Datasets data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_datasets()
+get_datasets <- function(connection = NULL) {
+  con <- resolve_connection(connection)
+
+  datasets <- dplyr::tbl(con, "datasets") %>%
+    dplyr::select(-.data$id)
+
+  if (is.null(connection)) {
+    datasets %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(datasets)
+
+}
+
+#' Get subjects
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of Subjects data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_subjects()
+get_subjects <- function(connection = NULL) {
+  con <- resolve_connection(connection)
+
+  subjects <- dplyr::tbl(con, "subjects") %>%
+    dplyr::select(-.data$id)
+
+  if (is.null(connection)) {
+    subjects %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(subjects)
+
+}
+
+#' Get trials
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of Trials data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_trials()
+get_trials <- function(connection = NULL) {
+  con <- resolve_connection(connection)
+
+  trials <- dplyr::tbl(con, "trials") %>%
+    dplyr::select(-.data$id)
+
+  if (is.null(connection)) {
+    trials %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(trials)
+
+}
+
+#' Get AOI regions
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of AOI Regions data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_aoi_regions()
+get_aoi_regions <- function(connection = NULL) {
+  con <- resolve_connection(connection)
+
+  aoi_regions <- dplyr::tbl(con, "aoi_regions") %>%
+    dplyr::select(-.data$id)
+
+  if (is.null(connection)) {
+    aoi_regions %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(aoi_regions)
+
+}
+
+#' Get AOI data
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of AOI data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_aoi_data
+get_aoi_data <- function(connection = NULL) {
+  con <- resolve_connection(connection)
+
+  aoi_data <- dplyr::tbl(con, "aoi_data") %>%
+    dplyr::select(-.data$id)
+
+  if (is.null(connection)) {
+    aoi_data %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(aoi_data)
+
+}
+
+#' Get XY data
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of XY data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_xy_data()
+get_xy_data <- function(connection = NULL) {
+  con <- resolve_connection(connection)
+
+  xy_data <- dplyr::tbl(con, "xy_data") %>%
+    dplyr::select(-.data$id)
+
+  if (is.null(connection)) {
+    xy_data %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(xy_data)
+
 }
