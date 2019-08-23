@@ -52,8 +52,7 @@ list_peekbank_tables <- function(connection) {
 get_datasets <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  datasets <- dplyr::tbl(con, "datasets") %>%
-    dplyr::select(-.data$id)
+  datasets <- dplyr::tbl(con, "datasets")
 
   if (is.null(connection)) {
     datasets %<>% dplyr::collect()
@@ -78,8 +77,7 @@ get_datasets <- function(connection = NULL) {
 get_subjects <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  subjects <- dplyr::tbl(con, "subjects") %>%
-    dplyr::select(-.data$id)
+  subjects <- dplyr::tbl(con, "subjects")
 
   if (is.null(connection)) {
     subjects %<>% dplyr::collect()
@@ -104,8 +102,7 @@ get_subjects <- function(connection = NULL) {
 get_trials <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  trials <- dplyr::tbl(con, "trials") %>%
-    dplyr::select(-.data$id)
+  trials <- dplyr::tbl(con, "trials")
 
   if (is.null(connection)) {
     trials %<>% dplyr::collect()
@@ -130,8 +127,7 @@ get_trials <- function(connection = NULL) {
 get_aoi_regions <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  aoi_regions <- dplyr::tbl(con, "aoi_regions") %>%
-    dplyr::select(-.data$id)
+  aoi_regions <- dplyr::tbl(con, "aoi_regions")
 
   if (is.null(connection)) {
     aoi_regions %<>% dplyr::collect()
@@ -156,8 +152,7 @@ get_aoi_regions <- function(connection = NULL) {
 get_aoi_data <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  aoi_data <- dplyr::tbl(con, "aoi_data") %>%
-    dplyr::select(-.data$id)
+  aoi_data <- dplyr::tbl(con, "aoi_data")
 
   if (is.null(connection)) {
     aoi_data %<>% dplyr::collect()
@@ -182,8 +177,7 @@ get_aoi_data <- function(connection = NULL) {
 get_xy_data <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  xy_data <- dplyr::tbl(con, "xy_data") %>%
-    dplyr::select(-.data$id)
+  xy_data <- dplyr::tbl(con, "xy_data")
 
   if (is.null(connection)) {
     xy_data %<>% dplyr::collect()
