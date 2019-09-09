@@ -10,9 +10,8 @@ get_datasets(connection = NULL)
 \item{connection}{A connection to the peekbank database}
 }
 \value{
-A `tbl` of Datasets data, filtered down by supplied arguments. If
-  `connection` is supplied, the result remains a remote query, otherwise it
-  is retrieved into a local tibble.
+A `tbl` of Datasets data. If `connection` is supplied, the result
+  remains a remote query, otherwise it is retrieved into a local tibble.
 }
 \description{
 Get datasets

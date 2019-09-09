@@ -4,9 +4,14 @@
 \alias{get_xy_data}
 \title{Get XY data}
 \usage{
-get_xy_data(connection = NULL)
+get_xy_data(dataset_id = NULL, lab_dataset_id = NULL,
+  connection = NULL)
 }
 \arguments{
+\item{dataset_id}{An integer vector of one or more dataset ids}
+
+\item{lab_dataset_id}{A character vector of one or more lab dataset ids}
+
 \item{connection}{A connection to the peekbank database}
 }
 \value{
@@ -18,5 +23,5 @@ A `tbl` of XY data, filtered down by supplied arguments. If
 Get XY data
 }
 \examples{
-get_xy_data()
+get_xy_data(lab_dataset_id = "pomper_saffran_2016")
 }

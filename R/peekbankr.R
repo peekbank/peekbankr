@@ -42,9 +42,8 @@ list_peekbank_tables <- function(connection) {
 #'
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Datasets data, filtered down by supplied arguments. If
-#'   `connection` is supplied, the result remains a remote query, otherwise it
-#'   is retrieved into a local tibble.
+#' @return A `tbl` of Datasets data. If `connection` is supplied, the result
+#'   remains a remote query, otherwise it is retrieved into a local tibble.
 #' @export
 #'
 #' @examples
@@ -52,8 +51,7 @@ list_peekbank_tables <- function(connection) {
 get_datasets <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  datasets <- dplyr::tbl(con, "datasets") %>%
-    dplyr::select(-.data$id)
+  datasets <- dplyr::tbl(con, "datasets")
 
   if (is.null(connection)) {
     datasets %<>% dplyr::collect()
@@ -78,8 +76,7 @@ get_datasets <- function(connection = NULL) {
 get_subjects <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  subjects <- dplyr::tbl(con, "subjects") %>%
-    dplyr::select(-.data$id)
+  subjects <- dplyr::tbl(con, "subjects")
 
   if (is.null(connection)) {
     subjects %<>% dplyr::collect()
@@ -92,6 +89,8 @@ get_subjects <- function(connection = NULL) {
 
 #' Get trials
 #'
+#' @param dataset_id An integer vector of one or more dataset ids
+#' @param lab_dataset_id A character vector of one or more lab dataset ids
 #' @inheritParams list_peekbank_tables
 #'
 #' @return A `tbl` of Trials data, filtered down by supplied arguments. If
@@ -101,11 +100,23 @@ get_subjects <- function(connection = NULL) {
 #'
 #' @examples
 #' get_trials()
-get_trials <- function(connection = NULL) {
+#' get_trials(lab_dataset_id = "pomper_saffran_2016")
+get_trials <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NULL) {
   con <- resolve_connection(connection)
+  input_dataset_id <- dataset_id
+  input_lab_dataset_id <- lab_dataset_id
 
-  trials <- dplyr::tbl(con, "trials") %>%
-    dplyr::select(-.data$id)
+  trials <- dplyr::tbl(con, "trials")
+
+  datasets <- dplyr::tbl(con, "datasets")
+  if (!is.null(dataset_id)) datasets %<>%
+    dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  if (!is.null(lab_dataset_id)) datasets %<>%
+    dplyr::filter(lab_dataset_id %in% input_lab_dataset_id)
+  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  if (num_datasets == 0) stop("No matching datasets found")
+
+  trials %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
     trials %<>% dplyr::collect()
@@ -130,8 +141,7 @@ get_trials <- function(connection = NULL) {
 get_aoi_regions <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  aoi_regions <- dplyr::tbl(con, "aoi_regions") %>%
-    dplyr::select(-.data$id)
+  aoi_regions <- dplyr::tbl(con, "aoi_regions")
 
   if (is.null(connection)) {
     aoi_regions %<>% dplyr::collect()
@@ -145,6 +155,7 @@ get_aoi_regions <- function(connection = NULL) {
 #' Get AOI data
 #'
 #' @inheritParams list_peekbank_tables
+#' @inheritParams get_trials
 #'
 #' @return A `tbl` of AOI data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
@@ -152,12 +163,13 @@ get_aoi_regions <- function(connection = NULL) {
 #' @export
 #'
 #' @examples
-#' get_aoi_data
-get_aoi_data <- function(connection = NULL) {
+#' get_aoi_data(lab_dataset_id = "pomper_saffran_2016")
+get_aoi_data <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NULL) {
   con <- resolve_connection(connection)
 
-  aoi_data <- dplyr::tbl(con, "aoi_data") %>%
-    dplyr::select(-.data$id)
+  aoi_data <- dplyr::tbl(con, "aoi_data")
+  trials <- get_trials(dataset_id, lab_dataset_id, con)
+  aoi_data %<>% dplyr::inner_join(trials, by = "trial_id")
 
   if (is.null(connection)) {
     aoi_data %<>% dplyr::collect()
@@ -171,6 +183,7 @@ get_aoi_data <- function(connection = NULL) {
 #' Get XY data
 #'
 #' @inheritParams list_peekbank_tables
+#' @inheritParams get_trials
 #'
 #' @return A `tbl` of XY data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
@@ -178,12 +191,13 @@ get_aoi_data <- function(connection = NULL) {
 #' @export
 #'
 #' @examples
-#' get_xy_data()
-get_xy_data <- function(connection = NULL) {
+#' get_xy_data(lab_dataset_id = "pomper_saffran_2016")
+get_xy_data <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NULL) {
   con <- resolve_connection(connection)
 
-  xy_data <- dplyr::tbl(con, "xy_data") %>%
-    dplyr::select(-.data$id)
+  xy_data <- dplyr::tbl(con, "xy_data")
+  trials <- get_trials(dataset_id, lab_dataset_id, con)
+  xy_data %<>% dplyr::inner_join(trials, by = "trial_id")
 
   if (is.null(connection)) {
     xy_data %<>% dplyr::collect()

@@ -4,9 +4,14 @@
 \alias{get_trials}
 \title{Get trials}
 \usage{
-get_trials(connection = NULL)
+get_trials(dataset_id = NULL, lab_dataset_id = NULL,
+  connection = NULL)
 }
 \arguments{
+\item{dataset_id}{An integer vector of one or more dataset ids}
+
+\item{lab_dataset_id}{A character vector of one or more lab dataset ids}
+
 \item{connection}{A connection to the peekbank database}
 }
 \value{
@@ -19,4 +24,5 @@ Get trials
 }
 \examples{
 get_trials()
+get_trials(lab_dataset_id = "pomper_saffran_2016")
 }

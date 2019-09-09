@@ -4,9 +4,14 @@
 \alias{get_aoi_data}
 \title{Get AOI data}
 \usage{
-get_aoi_data(connection = NULL)
+get_aoi_data(dataset_id = NULL, lab_dataset_id = NULL,
+  connection = NULL)
 }
 \arguments{
+\item{dataset_id}{An integer vector of one or more dataset ids}
+
+\item{lab_dataset_id}{A character vector of one or more lab dataset ids}
+
 \item{connection}{A connection to the peekbank database}
 }
 \value{
@@ -18,5 +23,5 @@ A `tbl` of AOI data, filtered down by supplied arguments. If
 Get AOI data
 }
 \examples{
-get_aoi_data
+get_aoi_data(lab_dataset_id = "pomper_saffran_2016")
 }
