@@ -9,6 +9,7 @@ Authors@R: c(
 Description: Tools for connecting to peekbank, an open repository for
     developmental eye-tracking data.
 License: GPL-3
+URL: http://github.com/langcog/peekbankr
 BugReports: http://github.com/langcog/peekbankr/issues
 Encoding: UTF-8
 LazyData: true
@@ -18,6 +19,10 @@ Imports:
     dplyr (>= 0.7.4),
     magrittr (>= 1.5),
     purrr (>= 0.2.4),
-    RMySQL (>= 0.10.14),
-    rlang (>= 0.4.0)
+    rlang (>= 0.4.0),
+    RMySQL (>= 0.10.14)
+Suggests: 
+    knitr,
+    rmarkdown
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr
