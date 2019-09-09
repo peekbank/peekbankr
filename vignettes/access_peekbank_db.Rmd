@@ -1,0 +1,130 @@
+---
+title: "Accessing `peekbank-db`"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Accessing peekbank-db}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+  
+## Overview
+  
+The `peekbankr` package allows you to access data in the peekbank-db from R. This removes the need to write complex SQL queries in order to get the information you want from the database. This vignette shows some examples of how to use the data loading functions and what the resulting data look like.
+  
+There are several different `get_` functions that you can use to extract different types of data from the peekbank-db: 
+  
+  * `get_datasets()`
+  * `get_subjects()`
+  * `get_trials()`
+  * `get_aoi_regions()`
+  * `get_aoi_data()`
+  * `get_xy_data()`
+  
+**Technical note 1**: You do not have to explicitly establish a connection to the peekbank-db since the `peekbankr` functions will manage these connections. But if you would like to establish your own connection, you can do so with `connect_to_peekbank()` and pass it as an argument to any of the `get_` functions.
+  
+**Technical note 2**: We have tried to optimize the time it takes to get data from the database. But if you try to query and get all of the tokens, it will take a long time.
+  
+```{r, warning=FALSE, message=FALSE}
+# load the library
+library(peekbankr)
+```
+
+## Get datasets
+
+The `get_datasets` function returns a table related to the sources of the dataset, information of the tracker, information of the method (e.g., monitor size and sample rate). 
+
+For example, you can run `get_datasets` without any arguments to return all of the datasets in the database.
+
+```{r}
+d_datasets <- get_datasets()
+head(d_datasets)
+```
+
+
+## Get Subjects
+
+The `get_subjects` function returns information about the subjects in the database. This includes information about:
+
+  * lab's subject ID
+  * language backgrounds (e.g., English learning children, monolingual children) 
+  * sex
+  * age
+
+Again, if you run the function with no arguments, then you get all the information for all subjects in the database.
+
+```{r}
+d_subjects <- get_subjects()
+head(d_subjects)
+```
+
+
+The age argument takes a number indicating the age(s) of children (in months) that you want to analyze. you can use this argument in two ways 
+
+  1. Pass a single number to information about all participants who were tested at that particular age. 
+  2. Pass a range of ages to get information about all participants who were tested within a
+  certain age range. 
+
+For example, you can get the participant information for all of the children who were tested between the ages of 24 and 36 months. 
+
+```{r}
+d_age_range <- get_subjects(age = c(24, 36))
+head(d_age_range)
+```
+
+## Get trials
+
+The `get_trials` function returns a table with information of the trials in the experiments in the database. This includes the following information:
+
+  *Target image
+  *Distractor image
+  *Target side
+  *Language of the stimuli
+  *Target label
+  *Distractor label
+  *Full phrase of the audio file played for that trial
+  *Point of disambiguation 
+
+```{r}
+d_trials <- get_trials()
+
+# view the structure of the data
+#str(d_trials)
+
+# print the unique trials in a particular dataset?
+#unique(d_trials$)
+```  
+
+## Get AOI regions
+
+The `get_aoi_regions()` returning a table with the information of the region of area of interest (AOI) for experiments using eye-trackers. It includes information of the dimensions of the x and y, such as the minimum and maximum dimension of the xy spaces. 
+
+```{r}
+d_aoi_region <- get_aoi_regions()
+
+```
+
+## Get AOI data
+
+The `get_aoi_data` function returns a table with information of the subject's looking behavior in each trial. For example, you can get information about which area that the subject was looking at in a particular trial (e.g., looking away or target or distractor).
+
+```{r}
+d_aoi_data <- get_aoi_data()
+
+# view the structure of the data
+str(d_aoi_data)
+
+#proportion of looking at the target
+
+```
+
+## Get XY data
+
+For experiments using eye-trackers, the `get_xy_data()` function returns a table information of ________
+
+```{r}
+d_xy_data <- get_xy_data()
+
+```
