@@ -64,6 +64,8 @@ get_datasets <- function(connection = NULL) {
 
 #' Get subjects
 #'
+#' @param age A numeric vector of a single age or a min age and max age
+#'   (inclusive), in months
 #' @inheritParams list_peekbank_tables
 #'
 #' @return A `tbl` of Subjects data, filtered down by supplied arguments. If
@@ -73,10 +75,24 @@ get_datasets <- function(connection = NULL) {
 #'
 #' @examples
 #' get_subjects()
-get_subjects <- function(connection = NULL) {
+#' get_subjects(age = c())
+get_subjects <- function(age = NULL, connection = NULL) {
   con <- resolve_connection(connection)
+  input_age <- age
 
   subjects <- dplyr::tbl(con, "subjects")
+
+  if (!is.null(input_age)) {
+    if (length(input_age) == 1) {
+      subjects %<>% dplyr::filter(age == input_age)
+    } else if (length(input_age) == 2) {
+      min_age <- input_age[1]
+      max_age <- input_age[2]
+      subjects %<>% dplyr::filter(age >= min_age & age <= max_age)
+    } else {
+      stop("`age` argument must be of length 1 or 2")
+    }
+  }
 
   if (is.null(connection)) {
     subjects %<>% dplyr::collect()
@@ -154,8 +170,8 @@ get_aoi_regions <- function(connection = NULL) {
 
 #' Get AOI data
 #'
-#' @inheritParams list_peekbank_tables
 #' @inheritParams get_trials
+#' @inheritParams get_subjects
 #'
 #' @return A `tbl` of AOI data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
@@ -164,12 +180,17 @@ get_aoi_regions <- function(connection = NULL) {
 #'
 #' @examples
 #' get_aoi_data(lab_dataset_id = "pomper_saffran_2016")
-get_aoi_data <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NULL) {
+get_aoi_data <- function(dataset_id = NULL, lab_dataset_id = NULL, age = NULL,
+                         connection = NULL) {
   con <- resolve_connection(connection)
 
   aoi_data <- dplyr::tbl(con, "aoi_data")
+
   trials <- get_trials(dataset_id, lab_dataset_id, con)
   aoi_data %<>% dplyr::inner_join(trials, by = "trial_id")
+
+  subjects <- get_subjects(age, con)
+  aoi_data %<>% dplyr::inner_join(subjects, by = "subject_id")
 
   if (is.null(connection)) {
     aoi_data %<>% dplyr::collect()
@@ -182,8 +203,8 @@ get_aoi_data <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = 
 
 #' Get XY data
 #'
-#' @inheritParams list_peekbank_tables
 #' @inheritParams get_trials
+#' @inheritParams get_subjects
 #'
 #' @return A `tbl` of XY data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
@@ -192,12 +213,17 @@ get_aoi_data <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = 
 #'
 #' @examples
 #' get_xy_data(lab_dataset_id = "pomper_saffran_2016")
-get_xy_data <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NULL) {
+get_xy_data <- function(dataset_id = NULL, lab_dataset_id = NULL, age = NULL,
+                        connection = NULL) {
   con <- resolve_connection(connection)
 
   xy_data <- dplyr::tbl(con, "xy_data")
+
   trials <- get_trials(dataset_id, lab_dataset_id, con)
   xy_data %<>% dplyr::inner_join(trials, by = "trial_id")
+
+  subjects <- get_subjects(age, con)
+  xy_data %<>% dplyr::inner_join(subjects, by = "subject_id")
 
   if (is.null(connection)) {
     xy_data %<>% dplyr::collect()

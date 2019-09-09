@@ -4,13 +4,16 @@
 \alias{get_xy_data}
 \title{Get XY data}
 \usage{
-get_xy_data(dataset_id = NULL, lab_dataset_id = NULL,
+get_xy_data(dataset_id = NULL, lab_dataset_id = NULL, age = NULL,
   connection = NULL)
 }
 \arguments{
 \item{dataset_id}{An integer vector of one or more dataset ids}
 
 \item{lab_dataset_id}{A character vector of one or more lab dataset ids}
+
+\item{age}{A numeric vector of a single age or a min age and max age
+(inclusive), in months}
 
 \item{connection}{A connection to the peekbank database}
 }

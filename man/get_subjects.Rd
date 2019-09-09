@@ -4,9 +4,12 @@
 \alias{get_subjects}
 \title{Get subjects}
 \usage{
-get_subjects(connection = NULL)
+get_subjects(age = NULL, connection = NULL)
 }
 \arguments{
+\item{age}{A numeric vector of a single age or a min age and max age
+(inclusive), in months}
+
 \item{connection}{A connection to the peekbank database}
 }
 \value{
@@ -19,4 +22,5 @@ Get subjects
 }
 \examples{
 get_subjects()
+get_subjects(age = c())
 }
