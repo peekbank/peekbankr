@@ -16,7 +16,7 @@ connect_to_peekbank <- function() {
   DBI::dbConnect(RMySQL::MySQL(),
                  host = "34.210.173.143",
                  dbname = "peekbank",
-                 user = "reader", password = "gazeofracoons")
+                 user = "reader", password = "gazeofraccoons")
 }
 
 resolve_connection <- function(connection) {
