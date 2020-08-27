@@ -270,14 +270,12 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 
   aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
 
-  trials <- get_trials(dataset_id = dataset_id, dataset_name = dataset_name,
-                       connection = con)
-  aoi_timepoints %<>% dplyr::inner_join(trials, by = "trial_id")
-
   administrations <- get_administrations(dataset_id = dataset_id,
-                                         dataset_name = dataset_name, age = age,
+                                         dataset_name = dataset_name,
+                                         age = age,
                                          connection = con)
-  aoi_timepoints %<>% dplyr::inner_join(administrations, by = "administration_id")
+  aoi_timepoints %<>%
+    dplyr::semi_join(administrations, by = "administration_id")
 
   if (is.null(connection)) {
     aoi_timepoints %<>% dplyr::collect()
@@ -307,13 +305,10 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL
 
   xy_timepoints <- dplyr::tbl(con, "xy_timepoints")
 
-  trials <- get_trials(dataset_id = dataset_id, dataset_name = dataset_name,
-                       connection = con)
-  xy_timepoints %<>% dplyr::inner_join(trials, by = "trial_id")
-
-  subjects <- get_administrations(dataset_id = dataset_id, dataset_name = dataset_name,
+  administrations <- get_administrations(dataset_id = dataset_id, dataset_name = dataset_name,
                                   age = age, connection = con)
-  xy_timepoints %<>% dplyr::inner_join(administrations, by = "administration_id")
+  xy_timepoints %<>%
+    dplyr::semi_join(administrations, by = "administration_id")
 
   if (is.null(connection)) {
     xy_timepoints %<>% dplyr::collect()
