@@ -111,7 +111,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
   administrations %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
-    subjects %<>% dplyr::collect()
+    administrations %<>% dplyr::collect()
     DBI::dbDisconnect(con)
   }
 
