@@ -277,7 +277,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
   administrations <- get_administrations(dataset_id = dataset_id,
                                          dataset_name = dataset_name, age = age,
                                          connection = con)
-  aoi_timepoints %<>% dplyr::inner_join(aoi_timepoints, by = "subject_id")
+  aoi_timepoints %<>% dplyr::inner_join(administrations, by = "subject_id")
 
   if (is.null(connection)) {
     aoi_timepoints %<>% dplyr::collect()
