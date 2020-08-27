@@ -218,7 +218,7 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL, connection = NUL
   stimuli %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
-    trials %<>% dplyr::collect()
+    stimuli %<>% dplyr::collect()
     DBI::dbDisconnect(con)
   }
 
