@@ -4,16 +4,14 @@
 \alias{get_subjects}
 \title{Get subjects}
 \usage{
-get_subjects(age = NULL, connection = NULL)
+get_subjects(connection = NULL)
 }
 \arguments{
-\item{age}{A numeric vector of a single age or a min age and max age
-(inclusive), in months}
-
 \item{connection}{A connection to the peekbank database}
 }
 \value{
-A `tbl` of Subjects data, filtered down by supplied arguments. If
+A `tbl` of Subjects data. Note that Subjects is a table used to link
+longitudinal Administrations, which is the primary table you probably want. If
   `connection` is supplied, the result remains a remote query, otherwise it
   is retrieved into a local tibble.
 }
@@ -22,5 +20,4 @@ Get subjects
 }
 \examples{
 get_subjects()
-get_subjects(age = c())
 }

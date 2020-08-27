@@ -14,10 +14,9 @@ NULL
 connect_to_peekbank <- function() {
 
   DBI::dbConnect(RMySQL::MySQL(),
-                 host = "ec2-18-237-23-48.us-west-2.compute.amazonaws.com",
+                 host = "34.210.173.143",
                  dbname = "peekbank",
-                 user = "root", password = "NpwvcxhF249PdESheFqS")
-
+                 user = "reader", password = "gazeofracoons")
 }
 
 resolve_connection <- function(connection) {
@@ -62,37 +61,80 @@ get_datasets <- function(connection = NULL) {
 
 }
 
-#' Get subjects
+
+#' Get administrations
 #'
 #' @param age A numeric vector of a single age or a min age and max age
 #'   (inclusive), in months
+#' @param dataset_id An integer vector of one or more dataset ids
+#' @param dataset_name A character vector of one or more dataset names
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Subjects data, filtered down by supplied arguments. If
+#' @return A `tbl` of Administrations data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_administrations()
+#' get_administrations(age = c())
+#' get_administrations(dataset_name = "pomper_saffran_2016")
+get_administrations <- function(age = NULL, dataset_id = NULL,
+                                dataset_name = NULL, connection = NULL) {
+  con <- resolve_connection(connection)
+  input_age <- age
+  input_dataset_id <- dataset_id
+  input_dataset_name <- dataset_name
+
+  administrations <- dplyr::tbl(con, "administrations")
+  datasets <- dplyr::tbl(con, "datasets")
+
+  if (!is.null(dataset_id)) datasets %<>%
+    dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  if (!is.null(dataset_name)) datasets %<>%
+    dplyr::filter(dataset_name %in% input_dataset_name)
+  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  if (num_datasets == 0) stop("No matching datasets found")
+
+  if (!is.null(input_age)) {
+    if (length(input_age) == 1) {
+      administrations %<>% dplyr::filter(age == input_age)
+    } else if (length(input_age) == 2) {
+      min_age <- input_age[1]
+      max_age <- input_age[2]
+      administrations %<>% dplyr::filter(age >= min_age & age <= max_age)
+    } else {
+      stop("`age` argument must be of length 1 or 2")
+    }
+  }
+
+  administrations %<>% dplyr::inner_join(datasets, by = "dataset_id")
+
+  if (is.null(connection)) {
+    subjects %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(administrations)
+}
+
+
+#' Get subjects
+#'
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of Subjects data. Note that Subjects is a table used to link
+#' longitudinal Administrations, which is the primary table you probably want. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
 #'   is retrieved into a local tibble.
 #' @export
 #'
 #' @examples
 #' get_subjects()
-#' get_subjects(age = c())
-get_subjects <- function(age = NULL, connection = NULL) {
+get_subjects <- function(connection = NULL) {
   con <- resolve_connection(connection)
-  input_age <- age
 
   subjects <- dplyr::tbl(con, "subjects")
-
-  if (!is.null(input_age)) {
-    if (length(input_age) == 1) {
-      subjects %<>% dplyr::filter(age == input_age)
-    } else if (length(input_age) == 2) {
-      min_age <- input_age[1]
-      max_age <- input_age[2]
-      subjects %<>% dplyr::filter(age >= min_age & age <= max_age)
-    } else {
-      stop("`age` argument must be of length 1 or 2")
-    }
-  }
 
   if (is.null(connection)) {
     subjects %<>% dplyr::collect()
@@ -100,13 +142,12 @@ get_subjects <- function(age = NULL, connection = NULL) {
   }
 
   return(subjects)
-
 }
 
 #' Get trials
 #'
 #' @param dataset_id An integer vector of one or more dataset ids
-#' @param lab_dataset_id A character vector of one or more lab dataset ids
+#' @param dataset_name A character vector of one or more dataset names
 #' @inheritParams list_peekbank_tables
 #'
 #' @return A `tbl` of Trials data, filtered down by supplied arguments. If
@@ -116,19 +157,20 @@ get_subjects <- function(age = NULL, connection = NULL) {
 #'
 #' @examples
 #' get_trials()
-#' get_trials(lab_dataset_id = "pomper_saffran_2016")
-get_trials <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NULL) {
+#' get_trials(dataset_id = 0)
+#' get_trials(dataset_name = "pomper_saffran_2016")
+get_trials <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL) {
   con <- resolve_connection(connection)
   input_dataset_id <- dataset_id
-  input_lab_dataset_id <- lab_dataset_id
+  input_dataset_name <- dataset_name
 
   trials <- dplyr::tbl(con, "trials")
 
   datasets <- dplyr::tbl(con, "datasets")
   if (!is.null(dataset_id)) datasets %<>%
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
-  if (!is.null(lab_dataset_id)) datasets %<>%
-    dplyr::filter(lab_dataset_id %in% input_lab_dataset_id)
+  if (!is.null(dataset_name)) datasets %<>%
+    dplyr::filter(dataset_name %in% input_dataset_name)
   num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
   if (num_datasets == 0) stop("No matching datasets found")
 
@@ -143,93 +185,141 @@ get_trials <- function(dataset_id = NULL, lab_dataset_id = NULL, connection = NU
 
 }
 
-#' Get AOI regions
+#' Get stimuli
+#'
+#' @param dataset_id An integer vector of one or more dataset ids
+#' @param dataset_name A character vector of one or more dataset names
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of Stimuli data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_stimuli()
+#' get_stimuli(dataset_id = 0)
+#' get_stimuli(dataset_name = "pomper_saffran_2016")
+get_stimuli <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL) {
+  con <- resolve_connection(connection)
+  input_dataset_id <- dataset_id
+  input_dataset_name <- dataset_name
+
+  stimuli <- dplyr::tbl(con, "stimuli")
+
+  datasets <- dplyr::tbl(con, "datasets")
+  if (!is.null(dataset_id)) datasets %<>%
+    dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  if (!is.null(dataset_name)) datasets %<>%
+    dplyr::filter(dataset_name %in% input_dataset_name)
+  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  if (num_datasets == 0) stop("No matching datasets found")
+
+  stimuli %<>% dplyr::inner_join(datasets, by = "dataset_id")
+
+  if (is.null(connection)) {
+    trials %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(stimuli)
+
+}
+
+#' Get AOI region sets
 #'
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of AOI Regions data, filtered down by supplied arguments. If
+#' @return A `tbl` of AOI Region Sets data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
 #'   is retrieved into a local tibble.
 #' @export
 #'
 #' @examples
-#' get_aoi_regions()
-get_aoi_regions <- function(connection = NULL) {
+#' get_aoi_region_sets()
+get_aoi_region_sets <- function(connection = NULL) {
   con <- resolve_connection(connection)
 
-  aoi_regions <- dplyr::tbl(con, "aoi_regions")
+  aoi_region_sets <- dplyr::tbl(con, "aoi_region_sets")
 
   if (is.null(connection)) {
-    aoi_regions %<>% dplyr::collect()
+    aoi_region_sets %<>% dplyr::collect()
     DBI::dbDisconnect(con)
   }
 
-  return(aoi_regions)
+  return(aoi_region_sets)
 
 }
 
-#' Get AOI data
+#' Get AOI timepoints
 #'
 #' @inheritParams get_trials
-#' @inheritParams get_subjects
+#' @inheritParams get_administrations
 #'
-#' @return A `tbl` of AOI data, filtered down by supplied arguments. If
+#' @return A `tbl` of AOI Timepoints data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
 #'   is retrieved into a local tibble.
 #' @export
 #'
 #' @examples
-#' get_aoi_data(lab_dataset_id = "pomper_saffran_2016")
-get_aoi_data <- function(dataset_id = NULL, lab_dataset_id = NULL, age = NULL,
+#' get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
+#' get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
+get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
                          connection = NULL) {
   con <- resolve_connection(connection)
 
-  aoi_data <- dplyr::tbl(con, "aoi_data")
+  aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
 
-  trials <- get_trials(dataset_id, lab_dataset_id, con)
-  aoi_data %<>% dplyr::inner_join(trials, by = "trial_id")
+  trials <- get_trials(dataset_id = dataset_id, dataset_name = dataset_name,
+                       connection = con)
+  aoi_timepoints %<>% dplyr::inner_join(trials, by = "trial_id")
 
-  subjects <- get_subjects(age, con)
-  aoi_data %<>% dplyr::inner_join(subjects, by = "subject_id")
+  administrations <- get_administrations(dataset_id = dataset_id,
+                                         dataset_name = dataset_name, age = age,
+                                         connection = con)
+  aoi_timepoints %<>% dplyr::inner_join(aoi_timepoints, by = "subject_id")
 
   if (is.null(connection)) {
-    aoi_data %<>% dplyr::collect()
+    aoi_timepoints %<>% dplyr::collect()
     DBI::dbDisconnect(con)
   }
 
-  return(aoi_data)
+  return(aoi_timepoints)
 
 }
 
-#' Get XY data
+#' Get XY timepoints
 #'
 #' @inheritParams get_trials
-#' @inheritParams get_subjects
+#' @inheritParams get_administrations
 #'
-#' @return A `tbl` of XY data, filtered down by supplied arguments. If
+#' @return A `tbl` of XY timepoints data, filtered down by supplied arguments. If
 #'   `connection` is supplied, the result remains a remote query, otherwise it
 #'   is retrieved into a local tibble.
 #' @export
 #'
 #' @examples
-#' get_xy_data(lab_dataset_id = "pomper_saffran_2016")
-get_xy_data <- function(dataset_id = NULL, lab_dataset_id = NULL, age = NULL,
+#' get_xy_timepoints(dataset_name = "pomper_saffran_2016")
+#' get_xy_timepoints(age = c())
+get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
                         connection = NULL) {
   con <- resolve_connection(connection)
 
-  xy_data <- dplyr::tbl(con, "xy_data")
+  xy_timepoints <- dplyr::tbl(con, "xy_timepoints")
 
-  trials <- get_trials(dataset_id, lab_dataset_id, con)
-  xy_data %<>% dplyr::inner_join(trials, by = "trial_id")
+  trials <- get_trials(dataset_id = dataset_id, dataset_name = dataset_name,
+                       connection = con)
+  xy_timepoints %<>% dplyr::inner_join(trials, by = "trial_id")
 
-  subjects <- get_subjects(age, con)
-  xy_data %<>% dplyr::inner_join(subjects, by = "subject_id")
+  subjects <- get_administrations(dataset_id = dataset_id, dataset_name = dataset_name,
+                                  age = age, connection = con)
+  xy_timepoints %<>% dplyr::inner_join(administrations, by = "administration_id")
 
   if (is.null(connection)) {
-    xy_data %<>% dplyr::collect()
+    xy_timepoints %<>% dplyr::collect()
     DBI::dbDisconnect(con)
   }
 
-  return(xy_data)
+  return(xy_timepoints)
 
 }
