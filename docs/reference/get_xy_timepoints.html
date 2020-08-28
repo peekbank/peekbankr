@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>List of peekbank tables — list_peekbank_tables • peekbankr</title>
+<title>Get XY timepoints — get_xy_timepoints • peekbankr</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="List of peekbank tables — list_peekbank_tables" />
-<meta property="og:description" content="List of peekbank tables" />
+<meta property="og:title" content="Get XY timepoints — get_xy_timepoints" />
+<meta property="og:description" content="Get XY timepoints" />
 
 
 
@@ -120,20 +120,38 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>List of peekbank tables</h1>
+    <h1>Get XY timepoints</h1>
     <small class="dont-index">Source: <a href='http://github.com/langcog/peekbankr/blob/master/R/peekbankr.R'><code>R/peekbankr.R</code></a></small>
-    <div class="hidden name"><code>list_peekbank_tables.Rd</code></div>
+    <div class="hidden name"><code>get_xy_timepoints.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>List of peekbank tables</p>
+    <p>Get XY timepoints</p>
     </div>
 
-    <pre class="usage"><span class='fu'>list_peekbank_tables</span>(<span class='no'>connection</span>)</pre>
+    <pre class="usage"><span class='fu'>get_xy_timepoints</span>(
+  <span class='kw'>dataset_id</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>dataset_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>age</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>connection</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
+)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>dataset_id</th>
+      <td><p>An integer vector of one or more dataset ids</p></td>
+    </tr>
+    <tr>
+      <th>dataset_name</th>
+      <td><p>A character vector of one or more dataset names</p></td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td><p>A numeric vector of a single age or a min age and max age
+(inclusive), in months</p></td>
+    </tr>
     <tr>
       <th>connection</th>
       <td><p>A connection to the peekbank database</p></td>
@@ -142,14 +160,27 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A vector of the names of tables in peekbank</p>
+    <p>A `tbl` of XY timepoints data, filtered down by supplied arguments. If
+  `connection` is supplied, the result remains a remote query, otherwise it
+  is retrieved into a local tibble.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>con</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='connect_to_peekbank.html'>connect_to_peekbank</a></span>()
-<span class='fu'>list_peekbank_tables</span>(<span class='no'>con</span>)</div><div class='output co'>#&gt;  [1] "admin"             "administrations"   "aoi_region_sets"  
-#&gt;  [4] "aoi_timepoints"    "datasets"          "django_migrations"
-#&gt;  [7] "stimuli"           "subjects"          "trials"           
-#&gt; [10] "xy_timepoints"    </div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>get_xy_timepoints</span>(<span class='kw'>dataset_name</span> <span class='kw'>=</span> <span class='st'>"pomper_saffran_2016"</span>)</div><div class='output co'>#&gt; <span style='color: #555555;'># A tibble: 0 x 6</span><span>
+#&gt; </span><span style='color: #555555;'># … with 6 variables: xy_timepoint_id </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span style='color: #555555;'>, x </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span style='color: #555555;'>, y </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span style='color: #555555;'>, t </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span style='color: #555555;'>,</span><span>
+#&gt; </span><span style='color: #555555;'>#   administration_id </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span style='color: #555555;'>, trial_id </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span></div><div class='input'><span class='fu'>get_xy_timepoints</span>(<span class='kw'>age</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>())</div><div class='output co'>#&gt; </span><span style='color: #555555;'># A tibble: 5,753,077 x 6</span><span>
+#&gt;    xy_timepoint_id     x     y     t administration_id trial_id
+#&gt;              </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span> </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span> </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span> </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>             </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>    </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>
+#&gt; </span><span style='color: #555555;'> 1</span><span>               0   364   602     0                60      256
+#&gt; </span><span style='color: #555555;'> 2</span><span>               1   365   601     8                60      256
+#&gt; </span><span style='color: #555555;'> 3</span><span>               2   378   596    16                60      256
+#&gt; </span><span style='color: #555555;'> 4</span><span>               3   386   599    25                60      256
+#&gt; </span><span style='color: #555555;'> 5</span><span>               4   390   596    33                60      256
+#&gt; </span><span style='color: #555555;'> 6</span><span>               5   387   600    41                60      256
+#&gt; </span><span style='color: #555555;'> 7</span><span>               6   387   599    50                60      256
+#&gt; </span><span style='color: #555555;'> 8</span><span>               7   387   600    58                60      256
+#&gt; </span><span style='color: #555555;'> 9</span><span>               8   390   600    66                60      256
+#&gt; </span><span style='color: #555555;'>10</span><span>               9   390   602    75                60      256
+#&gt; </span><span style='color: #555555;'># … with 5,753,067 more rows</span><span></div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

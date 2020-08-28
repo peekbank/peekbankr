@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>List of peekbank tables — list_peekbank_tables • peekbankr</title>
+<title>Get AOI region sets — get_aoi_region_sets • peekbankr</title>
 
 
 <!-- jquery -->
@@ -39,8 +39,8 @@
 
 
 
-<meta property="og:title" content="List of peekbank tables — list_peekbank_tables" />
-<meta property="og:description" content="List of peekbank tables" />
+<meta property="og:title" content="Get AOI region sets — get_aoi_region_sets" />
+<meta property="og:description" content="Get AOI region sets" />
 
 
 
@@ -120,16 +120,16 @@
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>List of peekbank tables</h1>
+    <h1>Get AOI region sets</h1>
     <small class="dont-index">Source: <a href='http://github.com/langcog/peekbankr/blob/master/R/peekbankr.R'><code>R/peekbankr.R</code></a></small>
-    <div class="hidden name"><code>list_peekbank_tables.Rd</code></div>
+    <div class="hidden name"><code>get_aoi_region_sets.Rd</code></div>
     </div>
 
     <div class="ref-description">
-    <p>List of peekbank tables</p>
+    <p>Get AOI region sets</p>
     </div>
 
-    <pre class="usage"><span class='fu'>list_peekbank_tables</span>(<span class='no'>connection</span>)</pre>
+    <pre class="usage"><span class='fu'>get_aoi_region_sets</span>(<span class='kw'>connection</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -142,14 +142,16 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A vector of the names of tables in peekbank</p>
+    <p>A `tbl` of AOI Region Sets data, filtered down by supplied arguments. If
+  `connection` is supplied, the result remains a remote query, otherwise it
+  is retrieved into a local tibble.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>con</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='connect_to_peekbank.html'>connect_to_peekbank</a></span>()
-<span class='fu'>list_peekbank_tables</span>(<span class='no'>con</span>)</div><div class='output co'>#&gt;  [1] "admin"             "administrations"   "aoi_region_sets"  
-#&gt;  [4] "aoi_timepoints"    "datasets"          "django_migrations"
-#&gt;  [7] "stimuli"           "subjects"          "trials"           
-#&gt; [10] "xy_timepoints"    </div></pre>
+    <pre class="examples"><div class='input'><span class='fu'>get_aoi_region_sets</span>()</div><div class='output co'>#&gt; <span style='color: #555555;'># A tibble: 1 x 9</span><span>
+#&gt;   aoi_region_set_… l_x_max l_x_min l_y_max l_y_min r_x_max r_x_min r_y_max
+#&gt;              </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>   </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>
+#&gt; </span><span style='color: #555555;'>1</span><span>                0     555       0     788     262    </span><span style='text-decoration: underline;'>1</span><span>680    </span><span style='text-decoration: underline;'>1</span><span>125     788
+#&gt; </span><span style='color: #555555;'># … with 1 more variable: r_y_min </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span></div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

@@ -19,13 +19,9 @@ library(peekbankr)
 
 aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
 administrations <- get_administrations(dataset_name = "pomper_saffran_2016")
-trials <- get_trials(dataset_name = "pomper_saffran_2016")
-stimuli <- get_stimuli(dataset_name = "pomper_saffran_2016")
 
 ps_data <- aoi_timepoints %>%
-  left_join(administrations) %>%
-  left_join(trials) %>%
-  left_join(stimuli, by = c("target_id" = "stimulus_id")) 
+  left_join(administrations)
 ```
 
 ### Other relevant GitHub repositories
@@ -34,3 +30,4 @@ ps_data <- aoi_timepoints %>%
 - Interactive data visualizations using shiny: [http://github.com/langcog/peekbank-shiny]()
 - Peek data standard - for importing data: [http://github.com/langcog/peekds]()
 - Peekbank database: [http://github.com/langcog/peekbank]()
+- Peekbank data import: [http://github.com/langcog/peekbank-data-import]()
