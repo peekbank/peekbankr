@@ -274,16 +274,20 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
                                          dataset_name = dataset_name,
                                          age = age,
                                          connection = con)
+
+  # filtering semi-join, our design decision here is to return *only* the
+  # necessary columns from aoi_timepoints
   aoi_timepoints %<>%
     dplyr::semi_join(administrations, by = "administration_id")
 
   if (is.null(connection)) {
-    aoi_timepoints %<>% dplyr::collect()
+    aoi_timepoints %<>%
+      dplyr::collect()
     DBI::dbDisconnect(con)
   }
 
-  return(aoi_timepoints)
 
+  return(aoi_timepoints)
 }
 
 #' Get XY timepoints
