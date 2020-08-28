@@ -108,7 +108,8 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
     }
   }
 
-  administrations %<>% dplyr::inner_join(datasets, by = "dataset_id")
+  administrations %<>% dplyr::inner_join(select(datasets,  dataset_id, dataset_name),
+                                         by = "dataset_id")
 
   if (is.null(connection)) {
     administrations %<>% dplyr::collect()
@@ -174,7 +175,8 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL
   num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  trials %<>% dplyr::inner_join(datasets, by = "dataset_id")
+  trials %<>% dplyr::inner_join(select(datasets,  dataset_id, dataset_name),
+                                by = "dataset_id")
 
   if (is.null(connection)) {
     trials %<>% dplyr::collect()
@@ -215,7 +217,8 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL, connection = NUL
   num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  stimuli %<>% dplyr::inner_join(datasets, by = "dataset_id")
+  stimuli %<>% dplyr::inner_join(select(datasets,  dataset_id, dataset_name),
+                                 by = "dataset_id")
 
   if (is.null(connection)) {
     stimuli %<>% dplyr::collect()
