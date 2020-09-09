@@ -269,14 +269,42 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
 get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
                          connection = NULL) {
+
   con <- resolve_connection(connection)
+  input_age <- age
+  input_dataset_id <- dataset_id
+  input_dataset_name <- dataset_name
 
   aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
+  administrations <- dplyr::tbl(con, "administrations")
+  datasets <- dplyr::tbl(con, "datasets")
 
-  administrations <- get_administrations(dataset_id = dataset_id,
-                                         dataset_name = dataset_name,
-                                         age = age,
-                                         connection = con)
+  if (!is.null(dataset_id)) datasets %<>%
+    dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  if (!is.null(dataset_name)) datasets %<>%
+    dplyr::filter(dataset_name %in% input_dataset_name)
+  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  if (num_datasets == 0) stop("No matching datasets found")
+
+  if (!is.null(input_age)) {
+    if (length(input_age) == 1) {
+      administrations %<>% dplyr::filter(age == input_age)
+    } else if (length(input_age) == 2) {
+      min_age <- input_age[1]
+      max_age <- input_age[2]
+      administrations %<>% dplyr::filter(age >= min_age & age <= max_age)
+    } else {
+      stop("`age` argument must be of length 1 or 2")
+    }
+  }
+
+  administrations %<>% dplyr::inner_join(dplyr::select(datasets,  dataset_id, dataset_name),
+                                         by = "dataset_id")
+
+  # administrations <- get_administrations(dataset_id = dataset_id,
+  #                                        dataset_name = dataset_name,
+  #                                        age = age,
+  #                                        connection = con)
 
   # filtering semi-join, our design decision here is to return *only* the
   # necessary columns from aoi_timepoints
