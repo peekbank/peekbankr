@@ -274,7 +274,8 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 
   aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
   administrations <- get_administrations(age = age, dataset_id = dataset_id,
-                                         dataset_name = dataset_name, connection = con)
+                                         dataset_name = dataset_name, connection = con) %>%
+    collect()
 
   aoi_timepoints %<>% filter(administration_id %in% !!administrations$administration_id)
 

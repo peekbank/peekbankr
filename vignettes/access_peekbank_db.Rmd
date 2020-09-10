@@ -132,7 +132,7 @@ The `get_aoi_timepoints` function returns a table with information of the subjec
 * The `t_norm` field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said). 
 
 ```{r}
-d_aoi_timepoints <- get_aoi_timepoints()
+d_aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
 head(d_aoi_timepoints)
 ```
 
