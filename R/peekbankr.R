@@ -11,12 +11,14 @@ NULL
 #' @examples
 #' con <- connect_to_peekbank()
 #' DBI::dbDisconnect(con)
-connect_to_peekbank <- function() {
+connect_to_peekbank <- function(host = "34.210.173.143",
+                                dbname = "peekbank",
+                                user = "reader",
+                                password = "gazeofraccoons") {
 
   DBI::dbConnect(RMySQL::MySQL(),
-                 host = "34.210.173.143",
-                 dbname = "peekbank",
-                 user = "reader", password = "gazeofraccoons")
+                 host = host, dbname = dbname,
+                 user = user, password = password)
 }
 
 resolve_connection <- function(connection) {
