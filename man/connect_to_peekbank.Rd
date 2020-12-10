@@ -4,7 +4,12 @@
 \alias{connect_to_peekbank}
 \title{Connect to the peekbank database}
 \usage{
-connect_to_peekbank()
+connect_to_peekbank(
+  host = "34.210.173.143",
+  dbname = "peekbank",
+  user = "reader",
+  password = "gazeofraccoons"
+)
 }
 \value{
 A connection to the peekbank database.
