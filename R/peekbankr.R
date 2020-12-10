@@ -11,12 +11,21 @@ NULL
 #' @examples
 #' con <- connect_to_peekbank()
 #' DBI::dbDisconnect(con)
-connect_to_peekbank <- function() {
+connect_to_peekbank <- function(db = "prod") {
 
-  DBI::dbConnect(RMySQL::MySQL(),
-                 host = "34.210.173.143",
-                 dbname = "peekbank",
-                 user = "reader", password = "gazeofraccoons")
+  if (db == "prod") {
+    DBI::dbConnect(RMySQL::MySQL(),
+                   host = "34.210.173.143",
+                   dbname = "peekbank",
+                   user = "reader", password = "gazeofraccoons")
+  } else if (db == "dev") {
+    DBI::dbConnect(RMySQL::MySQL(),
+                   host = "34.210.173.143",
+                   dbname = "peekbank_dev",
+                   user = "reader", password = "gazeofraccoons")
+  } else {
+    error("db label not recognized")
+  }
 }
 
 resolve_connection <- function(connection) {
@@ -166,6 +175,7 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL
   input_dataset_name <- dataset_name
 
   trials <- dplyr::tbl(con, "trials")
+  trial_types <- dplyr::tbl(con, "trial_types")
 
   datasets <- dplyr::tbl(con, "datasets")
   if (!is.null(dataset_id)) datasets %<>%
@@ -175,7 +185,9 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL
   num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  trials %<>% dplyr::inner_join(dplyr::select(datasets,  dataset_id, dataset_name),
+  trials %<>%
+    dplyr::left_join(dplyr::select(trial_types, trial_type_id, dataset_id)) %>%
+    dplyr::inner_join(dplyr::select(datasets,  dataset_id, dataset_name),
                                 by = "dataset_id")
 
   if (is.null(connection)) {
@@ -186,6 +198,49 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL
   return(trials)
 
 }
+
+#' Get trial types
+#'
+#' @param dataset_id An integer vector of one or more dataset ids
+#' @param dataset_name A character vector of one or more dataset names
+#' @inheritParams list_peekbank_tables
+#'
+#' @return A `tbl` of Trial Types data, filtered down by supplied arguments. If
+#'   `connection` is supplied, the result remains a remote query, otherwise it
+#'   is retrieved into a local tibble.
+#' @export
+#'
+#' @examples
+#' get_trial_types()
+#' get_trial_types(dataset_id = 0)
+#' get_trial_types(dataset_name = "pomper_saffran_2016")
+get_trial_types <- function(dataset_id = NULL, dataset_name = NULL, connection = NULL) {
+  con <- resolve_connection(connection)
+  input_dataset_id <- dataset_id
+  input_dataset_name <- dataset_name
+
+  trial_types <- dplyr::tbl(con, "trial_types")
+
+  datasets <- dplyr::tbl(con, "datasets")
+  if (!is.null(dataset_id)) datasets %<>%
+    dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  if (!is.null(dataset_name)) datasets %<>%
+    dplyr::filter(dataset_name %in% input_dataset_name)
+  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  if (num_datasets == 0) stop("No matching datasets found")
+
+  trial_types %<>% dplyr::inner_join(dplyr::select(datasets,  dataset_id, dataset_name),
+                                     by = "dataset_id")
+
+  if (is.null(connection)) {
+    trial_types %<>% dplyr::collect()
+    DBI::dbDisconnect(con)
+  }
+
+  return(trial_types)
+
+}
+
 
 #' Get stimuli
 #'
