@@ -17,5 +17,7 @@ A `tbl` of Datasets data. If `connection` is supplied, the result
 Get datasets
 }
 \examples{
+\dontrun{
 get_datasets()
+}
 }

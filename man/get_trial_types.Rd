@@ -22,7 +22,8 @@ A `tbl` of Trial Types data, filtered down by supplied arguments. If
 Get trial types
 }
 \examples{
+\dontrun{
 get_trial_types()
-get_trial_types(dataset_id = 0)
 get_trial_types(dataset_name = "pomper_saffran_2016")
+}
 }

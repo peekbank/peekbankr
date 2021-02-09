@@ -22,7 +22,8 @@ A `tbl` of Stimuli data, filtered down by supplied arguments. If
 Get stimuli
 }
 \examples{
+\dontrun{
 get_stimuli()
-get_stimuli(dataset_id = 0)
 get_stimuli(dataset_name = "pomper_saffran_2016")
+}
 }

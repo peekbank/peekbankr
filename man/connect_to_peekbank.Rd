@@ -27,6 +27,8 @@ A connection to the peekbank database.
 Connect to the peekbank database
 }
 \examples{
+\dontrun{
 con <- connect_to_peekbank()
 DBI::dbDisconnect(con)
+}
 }

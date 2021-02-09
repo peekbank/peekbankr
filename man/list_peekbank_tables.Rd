@@ -16,6 +16,8 @@ A vector of the names of tables in peekbank
 List of peekbank tables
 }
 \examples{
+\dontrun{
 con <- connect_to_peekbank()
 list_peekbank_tables(con)
+}
 }
