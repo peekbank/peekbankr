@@ -8,7 +8,8 @@ connect_to_peekbank(
   host = "34.210.173.143",
   dbname = "peekbank",
   user = "reader",
-  password = "gazeofraccoons"
+  password = "gazeofraccoons",
+  compress = TRUE
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ connect_to_peekbank(
 \item{user}{Database connection user}
 
 \item{password}{Database connection password}
+
+\item{compress}{Flag to use compression protocol (defaults to TRUE)}
 }
 \value{
 A connection to the peekbank database.

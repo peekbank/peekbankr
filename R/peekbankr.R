@@ -11,6 +11,7 @@ utils::globalVariables(c("trial_type_id"))
 #' @param dbname Database connection db name
 #' @param user Database connection user
 #' @param password Database connection password
+#' @param compress Flag to use compression protocol (defaults to TRUE)
 #'
 #' @return A connection to the peekbank database.
 #' @export
@@ -23,11 +24,14 @@ utils::globalVariables(c("trial_type_id"))
 connect_to_peekbank <- function(host = "34.210.173.143",
                                 dbname = "peekbank",
                                 user = "reader",
-                                password = "gazeofraccoons") {
+                                password = "gazeofraccoons",
+                                compress = TRUE) {
 
-  DBI::dbConnect(RMariaDB::MariaDB(),
+  flags <- if (compress) RMySQL::CLIENT_COMPRESS else 0
+  DBI::dbConnect(RMySQL::MySQL(),
                  host = host, dbname = dbname,
-                 user = user, password = password)
+                 user = user, password = password,
+                 client.flag = flags)
 }
 
 resolve_connection <- function(connection) {
@@ -76,6 +80,9 @@ get_datasets <- function(connection = NULL) {
 
 }
 
+count_datasets <- function(datasets) {
+  datasets %>% dplyr::collect() %>% dplyr::tally() %>% dplyr::pull(.data$n)
+}
 
 #' Get administrations
 #'
@@ -110,7 +117,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
     dplyr::filter(dataset_name %in% input_dataset_name)
-  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
   if (!is.null(input_age)) {
@@ -194,7 +201,7 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
     dplyr::filter(dataset_name %in% input_dataset_name)
-  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
   trial_types %<>% dplyr::select(trial_type_id, dataset_id)
@@ -241,7 +248,7 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
     dplyr::filter(dataset_name %in% input_dataset_name)
-  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
   datasets %<>% dplyr::select(dataset_id, dataset_name)
@@ -286,7 +293,7 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
     dplyr::filter(dataset_name %in% input_dataset_name)
-  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
   datasets %<>% dplyr::select(dataset_id, dataset_name)

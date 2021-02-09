@@ -22,7 +22,7 @@ Imports:
     magrittr (>= 2.0.1),
     purrr (>= 0.3.4),
     rlang (>= 0.4.10),
-    RMariaDB (>= 0.1.1)
+    RMySQL (>= 0.10.21)
 Suggests: 
     knitr,
     rmarkdown
