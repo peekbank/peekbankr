@@ -3,7 +3,14 @@
 #' @importFrom rlang .data
 NULL
 
+utils::globalVariables(c("trial_type_id"))
+
 #' Connect to the peekbank database
+#'
+#' @param host Database connection host
+#' @param dbname Database connection db name
+#' @param user Database connection user
+#' @param password Database connection password
 #'
 #' @return A connection to the peekbank database.
 #' @export
@@ -16,7 +23,7 @@ connect_to_peekbank <- function(host = "34.210.173.143",
                                 user = "reader",
                                 password = "gazeofraccoons") {
 
-  DBI::dbConnect(RMySQL::MySQL(),
+  DBI::dbConnect(RMariaDB::MariaDB(),
                  host = host, dbname = dbname,
                  user = user, password = password)
 }
@@ -314,7 +321,6 @@ get_aoi_region_sets <- function(connection = NULL) {
 #'
 #' @examples
 #' get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
-#' get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
 get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
                          connection = NULL) {
 
@@ -322,10 +328,9 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 
   aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
   administrations <- get_administrations(age = age, dataset_id = dataset_id,
-                                         dataset_name = dataset_name, connection = con) %>%
-    collect()
+                                         dataset_name = dataset_name, connection = con)
 
-  aoi_timepoints %<>% filter(administration_id %in% !!administrations$administration_id)
+  aoi_timepoints %<>% dplyr::semi_join(administrations, by = "administration_id")
 
   if (is.null(connection)) {
     aoi_timepoints %<>%
@@ -348,7 +353,6 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 #'
 #' @examples
 #' get_xy_timepoints(dataset_name = "pomper_saffran_2016")
-#' get_xy_timepoints(age = c())
 get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
                         connection = NULL) {
   con <- resolve_connection(connection)

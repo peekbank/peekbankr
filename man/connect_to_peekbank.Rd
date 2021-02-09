@@ -11,6 +11,15 @@ connect_to_peekbank(
   password = "gazeofraccoons"
 )
 }
+\arguments{
+\item{host}{Database connection host}
+
+\item{dbname}{Database connection db name}
+
+\item{user}{Database connection user}
+
+\item{password}{Database connection password}
+}
 \value{
 A connection to the peekbank database.
 }
