@@ -357,10 +357,12 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
   aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
   administrations <- get_administrations(age = age, dataset_id = dataset_id,
                                          dataset_name = dataset_name,
-                                         connection = con)
+                                         connection = con) %>%
+    dplyr::collect()
 
   aoi_timepoints %<>%
-    dplyr::semi_join(administrations, by = "administration_id")
+    dplyr::filter(administration_id %in% !!administrations$administration_id)
+    # dplyr::semi_join(administrations, by = "administration_id")
 
   if (is.null(connection)) {
     aoi_timepoints %<>%
