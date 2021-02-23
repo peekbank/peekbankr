@@ -263,7 +263,6 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
 
 }
 
-
 #' Get stimuli
 #'
 #' @param dataset_id An integer vector of one or more dataset ids
