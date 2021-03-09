@@ -356,9 +356,9 @@ get_aoi_region_sets <- function(connection = NULL) {
 get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
                          connection = NULL, rle = TRUE) {
 
-  if (rle & !is.null(connection)) {
-    error("Lazy remote queries åre not supported with the RLE table, use rle = FALSE.")
-  }
+  # if (rle & !is.null(connection)) {
+  #   error("Lazy remote queries åre not supported with the RLE table, use rle = FALSE.")
+  # }
 
   con <- resolve_connection(connection)
 
@@ -380,23 +380,23 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
     dplyr::filter(administration_id %in% !!administrations$administration_id)
 
   # collect the table locally
-  if (is.null(connection)) {
+  # if (is.null(connection)) {
     aoi_timepoints %<>%
       dplyr::collect()
     DBI::dbDisconnect(con)
-  }
+  # }
 
   # undo the RLE transform locally
   if (rle) {
     aoi_timepoints <-
       aoi_timepoints %>%
-      group_by(administration_id, trial_id) %>%
-      nest() %>%
-      mutate(rle_vector = map(data,
+      dplyr::group_by(administration_id, trial_id) %>%
+      dplyr::nest() %>%
+      dplyr::mutate(rle_vector = map(data,
                               ~ `class<-`(list(lengths = .$length, values = .$aoi), "rle")),
-             inverse_vector = map(rle_vector, inverse.rle)) %>%
-      select(-data, -rle_vector) %>%
-      unnest(inverse_vector)
+             inverse_vector = purrr::map(rle_vector, inverse.rle)) %>%
+      dplyr::select(-data, -rle_vector) %>%
+      dplyr::unnest(inverse_vector)
   }
 
   return(aoi_timepoints)
