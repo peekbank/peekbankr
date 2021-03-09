@@ -117,7 +117,9 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
     dplyr::filter(dataset_name %in% input_dataset_name)
+
   num_datasets <- count_datasets(datasets)
+
   if (num_datasets == 0) stop("No matching datasets found")
 
   if (!is.null(input_age)) {
@@ -334,7 +336,10 @@ get_aoi_region_sets <- function(connection = NULL) {
 
 }
 
-#' Get AOI timepoints
+#' Get AOI timepoints. Note that by default, under the hood, we are getting
+#' the aoi_timepoints_rle table, which uses run length encoding for compression,
+#' and then undoing this transform. (This compression should be transparent to
+#' the end user).
 #'
 #' @inheritParams get_trials
 #' @inheritParams get_administrations
@@ -347,26 +352,51 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' @examples
 #' \dontrun{
 #' get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
-#' }
-get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
-                               age = NULL, connection = NULL) {
+#' get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
+get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
+                         connection = NULL, rle = TRUE) {
+
+  if (rle & !is.null(connection)) {
+    error("Lazy remote queries åre not supported with the RLE table, use rle = FALSE.")
+  }
 
   con <- resolve_connection(connection)
 
-  aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
   administrations <- get_administrations(age = age, dataset_id = dataset_id,
                                          dataset_name = dataset_name,
                                          connection = con) %>%
     dplyr::collect()
 
+  # if you are using the (default) RLE encoding, then get the RLE version
+  # otherwise get the normal one.
+  if (rle) {
+    aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints_rle")
+  } else {
+    aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
+  }
+
+  # filter down to requested admins
   aoi_timepoints %<>%
     dplyr::filter(administration_id %in% !!administrations$administration_id)
-    # dplyr::semi_join(administrations, by = "administration_id")
 
+  # collect the table locally
   if (is.null(connection)) {
     aoi_timepoints %<>%
       dplyr::collect()
     DBI::dbDisconnect(con)
+  }
+
+  # undo the RLE transform locally
+  if (rle) {
+    aoi_timepoints <-
+      aoi_timepoints %>%
+      group_by(administration_id, trial_id) %>%
+      nest() %>%
+      mutate(rle_vector = map(data,
+                              ~ `class<-`(list(lengths = .$length, values = .$aoi), "rle")),
+             inverse_vector = map(rle_vector, inverse.rle)) %>%
+      select(-data, -rle_vector) %>%
+      unnest(inverse_vector)
   }
 
   return(aoi_timepoints)
