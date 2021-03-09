@@ -388,8 +388,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 
   # undo the RLE transform locally
   if (rle) {
-    aoi_timepoints <-
-      aoi_timepoints %>%
+    aoi_timepoints %<>%
       dplyr::group_by(administration_id, trial_id) %>%
       dplyr::nest() %>%
       dplyr::mutate(rle_vector = map(data,
