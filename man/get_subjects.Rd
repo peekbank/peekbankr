@@ -11,13 +11,15 @@ get_subjects(connection = NULL)
 }
 \value{
 A `tbl` of Subjects data. Note that Subjects is a table used to link
-longitudinal Administrations, which is the primary table you probably want. If
-  `connection` is supplied, the result remains a remote query, otherwise it
-  is retrieved into a local tibble.
+  longitudinal Administrations, which is the primary table you probably want.
+  If `connection` is supplied, the result remains a remote query, otherwise
+  it is retrieved into a local tibble.
 }
 \description{
 Get subjects
 }
 \examples{
+\dontrun{
 get_subjects()
+}
 }

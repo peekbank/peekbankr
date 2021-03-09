@@ -6,10 +6,14 @@ output:
     toc: true
 vignette: >
   %\VignetteIndexEntry{Accessing peekbank-db}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
-  
+
+```{r, include=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
 ## Overview
   
 The `peekbankr` package allows you to access data in the peekbank-db from R. This removes the need to write complex SQL queries in order to get the information you want from the database. This vignette shows some examples of how to use the data loading functions and what the resulting data look like.
@@ -140,7 +144,7 @@ head(d_aoi_timepoints)
 
 For experiments using eye-trackers (as opposed to hand coding from video), the `get_xy_timepoints` function returns a table including the x and y position across time. 
 
-```{r}
+```{r, eval=FALSE}
 d_xy_timepoints <- get_xy_timepoints()
-head(d_xy_timepoints)
+# head(d_xy_timepoints)
 ```

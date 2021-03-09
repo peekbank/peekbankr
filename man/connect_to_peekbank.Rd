@@ -8,8 +8,20 @@ connect_to_peekbank(
   host = "34.210.173.143",
   dbname = "peekbank",
   user = "reader",
-  password = "gazeofraccoons"
+  password = "gazeofraccoons",
+  compress = TRUE
 )
+}
+\arguments{
+\item{host}{Database connection host}
+
+\item{dbname}{Database connection db name}
+
+\item{user}{Database connection user}
+
+\item{password}{Database connection password}
+
+\item{compress}{Flag to use compression protocol (defaults to TRUE)}
 }
 \value{
 A connection to the peekbank database.
@@ -18,6 +30,8 @@ A connection to the peekbank database.
 Connect to the peekbank database
 }
 \examples{
+\dontrun{
 con <- connect_to_peekbank()
 DBI::dbDisconnect(con)
+}
 }

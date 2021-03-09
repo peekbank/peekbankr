@@ -10,13 +10,15 @@ get_aoi_region_sets(connection = NULL)
 \item{connection}{A connection to the peekbank database}
 }
 \value{
-A `tbl` of AOI Region Sets data, filtered down by supplied arguments. If
-  `connection` is supplied, the result remains a remote query, otherwise it
-  is retrieved into a local tibble.
+A `tbl` of AOI Region Sets data, filtered down by supplied arguments.
+  If `connection` is supplied, the result remains a remote query, otherwise
+  it is retrieved into a local tibble.
 }
 \description{
 Get AOI region sets
 }
 \examples{
+\dontrun{
 get_aoi_region_sets()
+}
 }

@@ -22,7 +22,8 @@ A `tbl` of Trials data, filtered down by supplied arguments. If
 Get trials
 }
 \examples{
+\dontrun{
 get_trials()
-get_trials(dataset_id = 0)
 get_trials(dataset_name = "pomper_saffran_2016")
+}
 }
