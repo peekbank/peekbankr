@@ -4,6 +4,9 @@
 NULL
 
 utils::globalVariables(c("trial_type_id"))
+pkg_globals <- new.env()
+pkg_globals$SAMPLE_RATE <- 40 # Hz
+
 
 #' Connect to the peekbank database
 #'
@@ -388,14 +391,21 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 
   # undo the RLE transform locally
   if (rle) {
+    timestep <- 1000/pkg_globals$SAMPLE_RATE
+
     aoi_timepoints %<>%
       dplyr::group_by(administration_id, trial_id) %>%
-      dplyr::nest() %>%
+      tidyr::nest() %>%
       dplyr::mutate(rle_vector = map(data,
                               ~ `class<-`(list(lengths = .$length, values = .$aoi), "rle")),
-             inverse_vector = purrr::map(rle_vector, inverse.rle)) %>%
+             aoi = purrr::map(rle_vector, inverse.rle),
+             t_norm = map(data,
+                          ~ seq(.$t_norm[1], .$t_norm[1] + (sum(.$length)-1)*timestep,
+                                timestep))) %>%
       dplyr::select(-data, -rle_vector) %>%
-      dplyr::unnest(inverse_vector)
+      tidyr::unnest(cols = c(aoi, t_norm)) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(aoi_timepoint_id = 1:n())
   }
 
   return(aoi_timepoints)
