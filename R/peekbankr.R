@@ -95,7 +95,10 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
     dplyr::filter(dataset_name %in% input_dataset_name)
-  num_datasets <- datasets %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  num_datasets <- datasets %>%
+    dplyr::collect() %>%
+    dplyr::tally() %>%
+    dplyr::pull(.data$n)
   if (num_datasets == 0) stop("No matching datasets found")
 
   if (!is.null(input_age)) {
@@ -328,7 +331,8 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
   con <- resolve_connection(connection)
 
   administrations <- get_administrations(age = age, dataset_id = dataset_id,
-                                         dataset_name = dataset_name, connection = con) %>%
+                                         dataset_name = dataset_name,
+                                         connection = con) %>%
     collect()
 
   # if you are using the (default) RLE encoding, then get the RLE version
@@ -351,11 +355,12 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
 
   # undo the RLE transform locally
   if (rle) {
-    aoi_timepoints <- aoi_timepoints %>%
+    aoi_timepoints <-
+      aoi_timepoints %>%
       group_by(administration_id, trial_id) %>%
       nest() %>%
       mutate(rle_vector = map(data,
-                              ~ `class<-`(list(lengths = .$lengths, values = .$values), "rle")),
+                              ~ `class<-`(list(lengths = .$length, values = .$aoi), "rle")),
              inverse_vector = map(rle_vector, inverse.rle)) %>%
       select(-data, -rle_vector) %>%
       unnest(inverse_vector)
