@@ -403,9 +403,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NUL
                           ~ seq(.$t_norm[1], .$t_norm[1] + (sum(.$length)-1)*timestep,
                                 timestep))) %>%
       dplyr::select(-data, -rle_vector) %>%
-      tidyr::unnest(cols = c(aoi, t_norm)) %>%
-      dplyr::ungroup() %>%
-      dplyr::mutate(aoi_timepoint_id = 1:n())
+      tidyr::unnest(cols = c(aoi, t_norm))
   }
 
   return(aoi_timepoints)
