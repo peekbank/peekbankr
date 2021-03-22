@@ -3,3 +3,4 @@
 build_docs.R
 build_docs.sh
 docs
+.*\.Rmd

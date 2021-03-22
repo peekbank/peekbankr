@@ -3,11 +3,6 @@
 #' @importFrom rlang .data
 NULL
 
-utils::globalVariables(c("trial_type_id"))
-pkg_globals <- new.env()
-pkg_globals$SAMPLE_RATE <- 40 # Hz
-
-
 #' Connect to the peekbank database
 #'
 #' @param host Database connection host
@@ -119,25 +114,23 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
   if (!is.null(dataset_id)) datasets %<>%
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(dataset_name %in% input_dataset_name)
-
+    dplyr::filter(.data$dataset_name %in% input_dataset_name)
   num_datasets <- count_datasets(datasets)
-
   if (num_datasets == 0) stop("No matching datasets found")
 
   if (!is.null(input_age)) {
     if (length(input_age) == 1) {
-      administrations %<>% dplyr::filter(age == input_age)
+      administrations %<>% dplyr::filter(.data$age == input_age)
     } else if (length(input_age) == 2) {
       min_age <- input_age[1]
       max_age <- input_age[2]
-      administrations %<>% dplyr::filter(age >= min_age & age <= max_age)
+      administrations %<>% dplyr::filter(.data$age >= min_age & age <= max_age)
     } else {
       stop("`age` argument must be of length 1 or 2")
     }
   }
 
-  datasets %<>% dplyr::select(dataset_id, dataset_name)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   administrations %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
@@ -205,12 +198,12 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
   if (!is.null(dataset_id)) datasets %<>%
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(dataset_name %in% input_dataset_name)
+    dplyr::filter(.data$dataset_name %in% input_dataset_name)
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  trial_types %<>% dplyr::select(trial_type_id, dataset_id)
-  datasets %<>% dplyr::select(dataset_id, dataset_name)
+  trial_types %<>% dplyr::select(.data$trial_type_id, .data$dataset_id)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   trials %<>%
     dplyr::left_join(trial_types, by = "trial_type_id") %>%
     dplyr::inner_join(datasets, by = "dataset_id")
@@ -252,11 +245,11 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   if (!is.null(dataset_id)) datasets %<>%
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(dataset_name %in% input_dataset_name)
+    dplyr::filter(.data$dataset_name %in% input_dataset_name)
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  datasets %<>% dplyr::select(dataset_id, dataset_name)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   trial_types %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
@@ -267,6 +260,7 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   return(trial_types)
 
 }
+
 
 #' Get stimuli
 #'
@@ -296,11 +290,11 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
   if (!is.null(dataset_id)) datasets %<>%
     dplyr::filter(.data$dataset_id %in% input_dataset_id)
   if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(dataset_name %in% input_dataset_name)
+    dplyr::filter(.data$dataset_name %in% input_dataset_name)
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  datasets %<>% dplyr::select(dataset_id, dataset_name)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   stimuli %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
@@ -339,10 +333,7 @@ get_aoi_region_sets <- function(connection = NULL) {
 
 }
 
-#' Get AOI timepoints. Note that by default, under the hood, we are getting
-#' the aoi_timepoints_rle table, which uses run length encoding for compression,
-#' and then undoing this transform. (This compression should be transparent to
-#' the end user).
+#' Get AOI timepoints
 #'
 #' @inheritParams get_trials
 #' @inheritParams get_administrations
@@ -355,55 +346,24 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' @examples
 #' \dontrun{
 #' get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
-#' get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
-get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL, age = NULL,
-                         connection = NULL, rle = TRUE) {
-
-  # if (rle & !is.null(connection)) {
-  #   error("Lazy remote queries åre not supported with the RLE table, use rle = FALSE.")
-  # }
+#' }
+get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
+                               age = NULL, connection = NULL) {
 
   con <- resolve_connection(connection)
 
+  aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
   administrations <- get_administrations(age = age, dataset_id = dataset_id,
                                          dataset_name = dataset_name,
-                                         connection = con) %>%
-    dplyr::collect()
+                                         connection = con)
 
-  # if you are using the (default) RLE encoding, then get the RLE version
-  # otherwise get the normal one.
-  if (rle) {
-    aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints_rle")
-  } else {
-    aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
-  }
-
-  # filter down to requested admins
   aoi_timepoints %<>%
-    dplyr::filter(administration_id %in% !!administrations$administration_id)
+    dplyr::semi_join(administrations, by = "administration_id")
 
-  # collect the table locally
-  # if (is.null(connection)) {
+  if (is.null(connection)) {
     aoi_timepoints %<>%
       dplyr::collect()
     DBI::dbDisconnect(con)
-  # }
-
-  # undo the RLE transform locally
-  if (rle) {
-    timestep <- 1000/pkg_globals$SAMPLE_RATE
-
-    aoi_timepoints %<>%
-      dplyr::group_by(administration_id, trial_id) %>%
-      tidyr::nest() %>%
-      dplyr::mutate(rle_vector = map(data,
-                              ~ `class<-`(list(lengths = .$length, values = .$aoi), "rle")),
-             aoi = purrr::map(rle_vector, inverse.rle),
-             t_norm = map(data,
-                          ~ seq(.$t_norm[1], .$t_norm[1] + (sum(.$length)-1)*timestep,
-                                timestep))) %>%
-      dplyr::select(-data, -rle_vector) %>%
-      tidyr::unnest(cols = c(aoi, t_norm))
   }
 
   return(aoi_timepoints)
