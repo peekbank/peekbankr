@@ -2,10 +2,7 @@
 % Please edit documentation in R/peekbankr.R
 \name{get_aoi_timepoints}
 \alias{get_aoi_timepoints}
-\title{Get AOI timepoints. Note that by default, under the hood, we are getting
-the aoi_timepoints_rle table, which uses run length encoding for compression,
-and then undoing this transform. (This compression should be transparent to
-the end user).}
+\title{Get AOI timepoints}
 \usage{
 get_aoi_timepoints(
   dataset_id = NULL,
@@ -33,14 +30,10 @@ A `tbl` of AOI Timepoints data, filtered down by supplied arguments.
   it is retrieved into a local tibble.
 }
 \description{
-Get AOI timepoints. Note that by default, under the hood, we are getting
-the aoi_timepoints_rle table, which uses run length encoding for compression,
-and then undoing this transform. (This compression should be transparent to
-the end user).
+Get AOI timepoints
 }
 \examples{
 \dontrun{
 get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
-get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
 }
 }

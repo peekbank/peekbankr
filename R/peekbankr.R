@@ -6,7 +6,6 @@ NULL
 pkg_globals <- new.env()
 pkg_globals$SAMPLE_RATE <- 40 # Hz
 
-
 #' Connect to the peekbank database
 #'
 #' @param host Database connection host
@@ -121,7 +120,6 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
     dplyr::filter(.data$dataset_name %in% input_dataset_name)
 
   num_datasets <- count_datasets(datasets)
-
   if (num_datasets == 0) stop("No matching datasets found")
 
   if (!is.null(input_age)) {
@@ -137,7 +135,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
     }
   }
 
-  datasets %<>% dplyr::select(dataset_id, dataset_name)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   administrations %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
@@ -256,7 +254,7 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  datasets %<>% dplyr::select(dataset_id, dataset_name)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   trial_types %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
@@ -267,6 +265,7 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   return(trial_types)
 
 }
+
 
 #' Get stimuli
 #'
@@ -300,7 +299,7 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
-  datasets %<>% dplyr::select(.data$dataset_id, dataset_name)
+  datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   stimuli %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
   if (is.null(connection)) {
@@ -339,10 +338,7 @@ get_aoi_region_sets <- function(connection = NULL) {
 
 }
 
-#' Get AOI timepoints. Note that by default, under the hood, we are getting
-#' the aoi_timepoints_rle table, which uses run length encoding for compression,
-#' and then undoing this transform. (This compression should be transparent to
-#' the end user).
+#' Get AOI timepoints
 #'
 #' @inheritParams get_trials
 #' @inheritParams get_administrations
@@ -356,7 +352,6 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' @examples
 #' \dontrun{
 #' get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
-#' get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
 #' }
 get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
                                age = NULL, rle = TRUE, connection = NULL) {
@@ -390,7 +385,6 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
     timestep <- 1000 / pkg_globals$SAMPLE_RATE
 
     aoi_timepoints %<>%
-      # dplyr::group_by(.data$administration_id, .data$trial_id) %>%
       tidyr::nest(trial_data = -c(.data$administration_id, .data$trial_id)) %>%
       dplyr::mutate(
         rle_vector = purrr::map(.data$trial_data, function(td) {
