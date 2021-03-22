@@ -2,12 +2,16 @@
 % Please edit documentation in R/peekbankr.R
 \name{get_aoi_timepoints}
 \alias{get_aoi_timepoints}
-\title{Get AOI timepoints}
+\title{Get AOI timepoints. Note that by default, under the hood, we are getting
+the aoi_timepoints_rle table, which uses run length encoding for compression,
+and then undoing this transform. (This compression should be transparent to
+the end user).}
 \usage{
 get_aoi_timepoints(
   dataset_id = NULL,
   dataset_name = NULL,
   age = NULL,
+  rle = TRUE,
   connection = NULL
 )
 }
@@ -19,6 +23,8 @@ get_aoi_timepoints(
 \item{age}{A numeric vector of a single age or a min age and max age
 (inclusive), in months}
 
+\item{rle}{Logical indicating whether to use RLE data representation or not}
+
 \item{connection}{A connection to the peekbank database}
 }
 \value{
@@ -27,10 +33,14 @@ A `tbl` of AOI Timepoints data, filtered down by supplied arguments.
   it is retrieved into a local tibble.
 }
 \description{
-Get AOI timepoints
+Get AOI timepoints. Note that by default, under the hood, we are getting
+the aoi_timepoints_rle table, which uses run length encoding for compression,
+and then undoing this transform. (This compression should be transparent to
+the end user).
 }
 \examples{
 \dontrun{
 get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
+get_aoi_timepoints(dataset_name = "pomper_saffran_2016", age = c())
 }
 }

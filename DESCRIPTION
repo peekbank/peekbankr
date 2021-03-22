@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing the Peekbank Database
-Version: 0.1.1.9000
+Version: 0.1.1.9001
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
@@ -22,7 +22,8 @@ Imports:
     magrittr (>= 2.0.1),
     purrr (>= 0.3.4),
     rlang (>= 0.4.10),
-    RMySQL (>= 0.10.21)
+    RMySQL (>= 0.10.21),
+    tidyr (>= 1.1.2)
 Suggests: 
     knitr,
     rmarkdown

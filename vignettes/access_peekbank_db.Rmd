@@ -131,9 +131,9 @@ This function is not expected to be used commonly - this information is retained
 
 ## Get AOI timepoints 
 
-The `get_aoi_timepoints` function returns a table with information of the subject's looking behavior in each trial. For example, you can get information about which area that the subject was looking at in a particular trial (e.g., looking away or target or distractor). 
+The `get_aoi_timepoints()` function returns a table with information of the subject's looking behavior in each trial. For example, you can get information about which area that the subject was looking at in a particular trial (e.g., looking away or target or distractor). 
 
-* The `t_norm` field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said). 
+The `t_norm` field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said). 
 
 ```{r}
 d_aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
@@ -146,5 +146,4 @@ For experiments using eye-trackers (as opposed to hand coding from video), the `
 
 ```{r, eval=FALSE}
 d_xy_timepoints <- get_xy_timepoints()
-# head(d_xy_timepoints)
 ```
