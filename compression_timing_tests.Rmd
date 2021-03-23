@@ -1,0 +1,69 @@
+---
+title: "Timing checks"
+author: "peekbank team"
+date: "3/9/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(peekbankr)
+library(tictoc)
+```
+
+
+Test 2x2 (compressed/not and rled/not)
+
+```{r}
+n_sims <- 10
+
+test_timing <- function (compress, rle, dataset_name = "pomper_saffran_2016") {
+  compressed_con <- connect_to_peekbank(compress = compress)
+  tic()
+  get_aoi_timepoints(dataset_name = dataset_name, 
+                     connection = compressed_con, 
+                     rle = rle)
+  t <- toc()
+  return(t$toc - t$tic)
+}
+
+pomper_timing <- expand_grid(compress = c(TRUE, FALSE), 
+                      rle = c(TRUE, FALSE), 
+                      nsim = 1:n_sims) %>%
+  rowwise() %>%
+  mutate(t = test_timing(compress = compress, rle = rle))
+
+ggplot(pomper_timing, aes(x = compress, y = t, col = rle)) + 
+  stat_summary(fun.data = "mean_cl_boot") + 
+  ylim(0,8) + 
+  ylab("Time (s)") 
+```
+
+Now try on all data. 
+
+```{r}
+all_data_timing <- expand_grid(compress = c(TRUE, FALSE), 
+                      rle = c(TRUE, FALSE), 
+                      nsim = 1:n_sims) %>%
+  rowwise() %>%
+  mutate(t = test_timing(compress = compress, rle = rle, dataset_name = NULL))
+
+ggplot(all_data_timing, aes(x = compress, y = t, col = rle)) + 
+  stat_summary(fun.data = "mean_cl_boot") + 
+  stat_summary(geom= "line") + 
+  ylab("Time (s)") 
+```
+```{r}
+timing <- bind_rows(pomper_timing %>%
+                      mutate(dataset = "ps"), 
+                    all_data_timing %>%
+                      mutate(dataset = "all"))
+
+ggplot(timing, aes(x = compress, y = t, col = rle)) + 
+  stat_summary(fun.data = "mean_cl_boot") + 
+  stat_summary(geom= "line", aes(group = rle)) + 
+  ylab("Time (s)") + 
+  scale_y_log10() + 
+  facet_wrap(~dataset)
+```
+

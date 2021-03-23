@@ -1,0 +1,31 @@
+Package: peekbankr
+Type: Package
+Title: Accessing the Peekbank Database
+Version: 0.1.1.9001
+Authors@R: c(
+    person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
+    person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
+    person("Michael", "Frank", email = "mcfrank@stanford.edu", role = "aut")
+    )
+Description: Tools for connecting to peekbank, an open repository for
+    developmental eye-tracking data.
+Depends: R (>= 4.0.0)
+License: GPL-3
+URL: http://github.com/langcog/peekbankr
+BugReports: http://github.com/langcog/peekbankr/issues
+Encoding: UTF-8
+LazyData: true
+Imports:
+    DBI (>= 1.1.1),
+    dbplyr (>= 2.1.0),
+    dplyr (>= 1.0.4),
+    magrittr (>= 2.0.1),
+    purrr (>= 0.3.4),
+    rlang (>= 0.4.10),
+    RMySQL (>= 0.10.21),
+    tidyr (>= 1.1.2)
+Suggests: 
+    knitr,
+    rmarkdown
+RoxygenNote: 7.1.1
+VignetteBuilder: knitr

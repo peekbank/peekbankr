@@ -1,0 +1,149 @@
+---
+title: "Accessing `peekbank-db`"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Accessing peekbank-db}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r, include=FALSE}
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+## Overview
+  
+The `peekbankr` package allows you to access data in the peekbank-db from R. This removes the need to write complex SQL queries in order to get the information you want from the database. This vignette shows some examples of how to use the data loading functions and what the resulting data look like.
+  
+There are several different `get_` functions that you can use to extract different types of data from the peekbank-db: 
+  
+  * `get_datasets()`
+  * `get_subjects()`
+  * `get_administrations()`
+  * `get_trials()`
+  * `get_stimuli()`
+  * `get_aoi_region_sets()`
+  * `get_aoi_timepoints()`
+  * `get_xy_timepoints()`
+  
+**Technical note 1**: You do not have to explicitly establish a connection to the peekbank-db since the `peekbankr` functions will manage these connections. But if you would like to establish your own connection, you can do so with `connect_to_peekbank()` and pass it as an argument to any of the `get_` functions.
+  
+**Technical note 2**: We have tried to optimize the time it takes to get data from the database. But if you try to query and get all of the timepoint tables, it will still take a long time as you are trying to get 100s of MB of data.
+  
+```{r, warning=FALSE, message=FALSE}
+# load the library
+library(peekbankr)
+```
+
+## Get datasets
+
+The `get_datasets` function returns a table related to the sources of the dataset, information of the tracker, information of the method (e.g., monitor size and sample rate). 
+
+For example, you can run `get_datasets` without any arguments to return all of the datasets in the database.
+
+```{r}
+d_datasets <- get_datasets()
+head(d_datasets)
+```
+
+## Get Subjects
+
+The `get_subjects` function returns information about persistent subject identifiers for noting when subjects have participated in multiple experiments. This includes demographic information (currently only sex and lab-specific subject id). 
+
+```{r}
+d_subjects <- get_subjects()
+head(d_subjects)
+```
+
+
+## Get Administrations
+
+The `get_administrations` function returns information about the specific experimental administrations to subjects in the database. This includes information about:
+
+  * age
+  * monitor size
+  * tracker
+
+Again, if you run the function with no arguments, then you get all the information for all administrations in the database, but you can now also filter on a dataset name or dataset id.
+
+```{r}
+d_administrations <- get_administrations(dataset_name = "pomper_saffran_2016")
+head(d_administrations)
+```
+
+
+The age argument takes a number indicating the age(s) of children (in months) that you want to analyze. you can use this argument in two ways 
+
+  1. Pass a single number to get information about all participants who were tested at that particular age. 
+  2. Pass a range of ages to get information about all participants who were tested within a certain age range. 
+
+For example, you can get the participant information for all of the children who were tested between the ages of 24 and 36 months. 
+
+```{r}
+d_age_range <- get_administrations(age = c(24, 36))
+head(d_age_range)
+```
+
+## Get trials
+
+The `get_trials` function returns a table with information of the trials in the experiments in the database. This includes the following information:
+
+  * Phrase
+  * Language
+  * Point of disambiguation
+  * IDs to link to other tables. 
+
+```{r}
+d_trials <- get_trials()
+head(d_trials)
+```  
+
+This function also takes dataset name and id filters.
+
+## Get stimuli
+
+The `get_stimuli` function returns a table with information of the stimuli in the experiments in the database. This includes the following information:
+
+  * Label
+  * Image
+  * Novelty status
+
+```{r}
+d_stimuli <- get_stimuli()
+head(d_stimuli)
+```  
+
+This function also takes dataset name and id filters.
+
+## Get AOI region sets
+
+The `get_aoi_region_sets()` returning a table with the information of the region of area of interest (AOI) for experiments using eye-trackers. It includes information of the dimensions of the x and y, such as the minimum and maximum dimension of the xy spaces. 
+
+```{r}
+d_aoi_region_sets <- get_aoi_region_sets()
+head(d_aoi_region_sets)
+```
+
+This function is not expected to be used commonly - this information is retained as part of the process of calculating AOIs from XY points.
+
+## Get AOI timepoints 
+
+The `get_aoi_timepoints()` function returns a table with information of the subject's looking behavior in each trial. For example, you can get information about which area that the subject was looking at in a particular trial (e.g., looking away or target or distractor). 
+
+The `t_norm` field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said). 
+
+```{r}
+d_aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
+head(d_aoi_timepoints)
+```
+
+## Get XY timepoints
+
+For experiments using eye-trackers (as opposed to hand coding from video), the `get_xy_timepoints` function returns a table including the x and y position across time. 
+
+```{r, eval=FALSE}
+d_xy_timepoints <- get_xy_timepoints()
+```
