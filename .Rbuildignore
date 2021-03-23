@@ -1,6 +1,0 @@
-^.*\.Rproj$
-^\.Rproj\.user$
-build_docs.R
-build_docs.sh
-docs
-.*\.Rmd
