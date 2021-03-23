@@ -2,3 +2,14 @@ language: r
 cache: packages
 notifications:
   slack: peekbank:c3k8RguYmqaH6fbFU5n1sAm8
+after_success:
+  - chmod +x ./build_docs.sh
+  - travis_wait 30 ./build_docs.sh
+deploy:
+  provider: pages
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  keep-history: true
+  local-dir: docs
+  on:
+    branch: master
