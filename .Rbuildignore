@@ -4,3 +4,5 @@ build_docs.R
 build_docs.sh
 docs
 .*\.Rmd
+_pkgdown.yml
+.travis.yml
