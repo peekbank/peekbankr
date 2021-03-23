@@ -6,3 +6,4 @@ docs
 .*\.Rmd
 _pkgdown.yml
 .travis.yml
+^\.github$
