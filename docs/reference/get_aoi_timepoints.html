@@ -72,7 +72,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">peekbankr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.1.0000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.1.9001</span>
       </span>
     </div>
 
@@ -80,7 +80,7 @@
       <ul class="nav navbar-nav">
         <li>
   <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
+    <span class="fas fa-home fa-lg"></span>
      
   </a>
 </li>
@@ -103,7 +103,7 @@
       <ul class="nav navbar-nav navbar-right">
         <li>
   <a href="http://github.com/langcog/peekbankr/">
-    <span class="fab fa fab fa-github fa-lg"></span>
+    <span class="fab fa-github fa-lg"></span>
      
   </a>
 </li>
@@ -129,12 +129,13 @@
     <p>Get AOI timepoints</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_aoi_timepoints</span>(
-  <span class='kw'>dataset_id</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>dataset_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>age</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>connection</span> <span class='kw'>=</span> <span class='kw'>NULL</span>
-)</pre>
+    <pre class="usage"><span class='fu'>get_aoi_timepoints</span><span class='op'>(</span>
+  dataset_id <span class='op'>=</span> <span class='cn'>NULL</span>,
+  dataset_name <span class='op'>=</span> <span class='cn'>NULL</span>,
+  age <span class='op'>=</span> <span class='cn'>NULL</span>,
+  rle <span class='op'>=</span> <span class='cn'>TRUE</span>,
+  connection <span class='op'>=</span> <span class='cn'>NULL</span>
+<span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -153,6 +154,10 @@
 (inclusive), in months</p></td>
     </tr>
     <tr>
+      <th>rle</th>
+      <td><p>Logical indicating whether to use RLE data representation or not</p></td>
+    </tr>
+    <tr>
       <th>connection</th>
       <td><p>A connection to the peekbank database</p></td>
     </tr>
@@ -160,38 +165,15 @@
 
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A `tbl` of AOI Timepoints data, filtered down by supplied arguments. If
-  `connection` is supplied, the result remains a remote query, otherwise it
-  is retrieved into a local tibble.</p>
+    <p>A `tbl` of AOI Timepoints data, filtered down by supplied arguments.
+  If `connection` is supplied, the result remains a remote query, otherwise
+  it is retrieved into a local tibble.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'>get_aoi_timepoints</span>(<span class='kw'>dataset_name</span> <span class='kw'>=</span> <span class='st'>"pomper_saffran_2016"</span>)</div><div class='output co'>#&gt; <span style='color: #555555;'># A tibble: 226,809 x 5</span><span>
-#&gt;    aoi_timepoint_id aoi        t_norm administration_id trial_id
-#&gt;               </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span> </span><span style='color: #555555;font-style: italic;'>&lt;chr&gt;</span><span>       </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>             </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>    </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>
-#&gt; </span><span style='color: #555555;'> 1</span><span>                0 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        0
-#&gt; </span><span style='color: #555555;'> 2</span><span>                1 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        1
-#&gt; </span><span style='color: #555555;'> 3</span><span>                2 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        2
-#&gt; </span><span style='color: #555555;'> 4</span><span>                3 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        3
-#&gt; </span><span style='color: #555555;'> 5</span><span>                4 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        4
-#&gt; </span><span style='color: #555555;'> 6</span><span>                5 distractor   -</span><span style='color: #BB0000;'>990</span><span>                 0        5
-#&gt; </span><span style='color: #555555;'> 7</span><span>                6 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        6
-#&gt; </span><span style='color: #555555;'> 8</span><span>                7 missing      -</span><span style='color: #BB0000;'>990</span><span>                 0        7
-#&gt; </span><span style='color: #555555;'> 9</span><span>                8 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        8
-#&gt; </span><span style='color: #555555;'>10</span><span>                9 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        9
-#&gt; </span><span style='color: #555555;'># … with 226,799 more rows</span><span></div><div class='input'><span class='fu'>get_aoi_timepoints</span>(<span class='kw'>dataset_name</span> <span class='kw'>=</span> <span class='st'>"pomper_saffran_2016"</span>, <span class='kw'>age</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>())</div><div class='output co'>#&gt; </span><span style='color: #555555;'># A tibble: 226,809 x 5</span><span>
-#&gt;    aoi_timepoint_id aoi        t_norm administration_id trial_id
-#&gt;               </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span> </span><span style='color: #555555;font-style: italic;'>&lt;chr&gt;</span><span>       </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>             </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>    </span><span style='color: #555555;font-style: italic;'>&lt;int&gt;</span><span>
-#&gt; </span><span style='color: #555555;'> 1</span><span>                0 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        0
-#&gt; </span><span style='color: #555555;'> 2</span><span>                1 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        1
-#&gt; </span><span style='color: #555555;'> 3</span><span>                2 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        2
-#&gt; </span><span style='color: #555555;'> 4</span><span>                3 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        3
-#&gt; </span><span style='color: #555555;'> 5</span><span>                4 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        4
-#&gt; </span><span style='color: #555555;'> 6</span><span>                5 distractor   -</span><span style='color: #BB0000;'>990</span><span>                 0        5
-#&gt; </span><span style='color: #555555;'> 7</span><span>                6 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        6
-#&gt; </span><span style='color: #555555;'> 8</span><span>                7 missing      -</span><span style='color: #BB0000;'>990</span><span>                 0        7
-#&gt; </span><span style='color: #555555;'> 9</span><span>                8 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        8
-#&gt; </span><span style='color: #555555;'>10</span><span>                9 target       -</span><span style='color: #BB0000;'>990</span><span>                 0        9
-#&gt; </span><span style='color: #555555;'># … with 226,799 more rows</span><span></div></span></pre>
+    <pre class="examples"><div class='input'><span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='fu'>get_aoi_timepoints</span><span class='op'>(</span>dataset_name <span class='op'>=</span> <span class='st'>"pomper_saffran_2016"</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -207,7 +189,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
