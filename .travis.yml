@@ -1,0 +1,4 @@
+language: r
+cache: packages
+notifications:
+  slack: peekbank:c3k8RguYmqaH6fbFU5n1sAm8
