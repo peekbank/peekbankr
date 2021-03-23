@@ -27,12 +27,12 @@ connect_to_peekbank <- function(host = "34.210.173.143",
                                 user = "reader",
                                 password = "gazeofraccoons",
                                 compress = TRUE) {
-
   flags <- if (compress) RMySQL::CLIENT_COMPRESS else 0
   DBI::dbConnect(RMySQL::MySQL(),
-                 host = host, dbname = dbname,
-                 user = user, password = password,
-                 client.flag = flags)
+    host = host, dbname = dbname,
+    user = user, password = password,
+    client.flag = flags
+  )
 }
 
 resolve_connection <- function(connection) {
@@ -78,11 +78,13 @@ get_datasets <- function(connection = NULL) {
   }
 
   return(datasets)
-
 }
 
 count_datasets <- function(datasets) {
-  datasets %>% dplyr::collect() %>% dplyr::tally() %>% dplyr::pull(.data$n)
+  datasets %>%
+    dplyr::collect() %>%
+    dplyr::tally() %>%
+    dplyr::pull(.data$n)
 }
 
 #' Get administrations
@@ -114,10 +116,14 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
   administrations <- dplyr::tbl(con, "administrations")
   datasets <- dplyr::tbl(con, "datasets")
 
-  if (!is.null(dataset_id)) datasets %<>%
-    dplyr::filter(.data$dataset_id %in% input_dataset_id)
-  if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  if (!is.null(dataset_id)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  }
+  if (!is.null(dataset_name)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  }
 
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
@@ -129,7 +135,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
       min_age <- input_age[1]
       max_age <- input_age[2]
       administrations %<>% dplyr::filter(.data$age >= min_age &
-                                           .data$age <= max_age)
+        .data$age <= max_age)
     } else {
       stop("`age` argument must be of length 1 or 2")
     }
@@ -200,10 +206,14 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
   trial_types <- dplyr::tbl(con, "trial_types")
 
   datasets <- dplyr::tbl(con, "datasets")
-  if (!is.null(dataset_id)) datasets %<>%
-    dplyr::filter(.data$dataset_id %in% input_dataset_id)
-  if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  if (!is.null(dataset_id)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  }
+  if (!is.null(dataset_name)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  }
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
@@ -219,7 +229,6 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
   }
 
   return(trials)
-
 }
 
 #' Get trial types
@@ -247,10 +256,14 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   trial_types <- dplyr::tbl(con, "trial_types")
 
   datasets <- dplyr::tbl(con, "datasets")
-  if (!is.null(dataset_id)) datasets %<>%
-    dplyr::filter(.data$dataset_id %in% input_dataset_id)
-  if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  if (!is.null(dataset_id)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  }
+  if (!is.null(dataset_name)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  }
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
@@ -263,7 +276,6 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   }
 
   return(trial_types)
-
 }
 
 
@@ -292,10 +304,14 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
   stimuli <- dplyr::tbl(con, "stimuli")
 
   datasets <- dplyr::tbl(con, "datasets")
-  if (!is.null(dataset_id)) datasets %<>%
-    dplyr::filter(.data$dataset_id %in% input_dataset_id)
-  if (!is.null(dataset_name)) datasets %<>%
-    dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  if (!is.null(dataset_id)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_id %in% input_dataset_id)
+  }
+  if (!is.null(dataset_name)) {
+    datasets %<>%
+      dplyr::filter(.data$dataset_name %in% input_dataset_name)
+  }
   num_datasets <- count_datasets(datasets)
   if (num_datasets == 0) stop("No matching datasets found")
 
@@ -308,7 +324,6 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
   }
 
   return(stimuli)
-
 }
 
 #' Get AOI region sets
@@ -335,7 +350,6 @@ get_aoi_region_sets <- function(connection = NULL) {
   }
 
   return(aoi_region_sets)
-
 }
 
 #' Get AOI timepoints
@@ -355,12 +369,12 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' }
 get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
                                age = NULL, rle = TRUE, connection = NULL) {
-
   con <- resolve_connection(connection)
 
-  administrations <- get_administrations(age = age, dataset_id = dataset_id,
-                                         dataset_name = dataset_name,
-                                         connection = con) %>%
+  administrations <- get_administrations(
+    age = age, dataset_id = dataset_id, dataset_name = dataset_name,
+    connection = con
+  ) %>%
     dplyr::collect()
 
   # if you are using the (default) RLE encoding, then get the RLE version
@@ -374,7 +388,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
   # filter down to requested admins
   aoi_timepoints %<>%
     dplyr::filter(.data$administration_id %in%
-                    !!administrations$administration_id)
+      !!administrations$administration_id)
 
   # collect the table locally
   aoi_timepoints %<>% dplyr::collect()
@@ -392,9 +406,12 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
         }),
         aoi = purrr::map(.data$rle_vector, inverse.rle),
         t_norm = purrr::map(.data$trial_data, function(td) {
-          seq(td$t_norm[1], td$t_norm[1] + (sum(td$length) - 1) * timestep,
-              timestep)
-        })) %>%
+          seq(
+            td$t_norm[1], td$t_norm[1] + (sum(td$length) - 1) * timestep,
+            timestep
+          )
+        })
+      ) %>%
       dplyr::select(-.data$trial_data, -.data$rle_vector) %>%
       tidyr::unnest(cols = c(.data$aoi, .data$t_norm))
   }
@@ -422,9 +439,11 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
 
   xy_timepoints <- dplyr::tbl(con, "xy_timepoints")
 
-  administrations <- get_administrations(dataset_id = dataset_id,
-                                         dataset_name = dataset_name,
-                                         age = age, connection = con)
+  administrations <- get_administrations(
+    dataset_id = dataset_id,
+    dataset_name = dataset_name,
+    age = age, connection = con
+  )
 
   xy_timepoints %<>%
     dplyr::semi_join(administrations, by = "administration_id")
@@ -435,5 +454,4 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
   }
 
   return(xy_timepoints)
-
 }
