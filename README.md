@@ -2,14 +2,14 @@
 
 The `peekbankr` package allows you to access data in peekbank from R. This removes the need to write complex SQL queries in order to get the information you want from the database. The package vignette provides some examples of how to use the data loading functions and what the resulting data look like.
 
-### Install `peekbankr` from this GitHub repository:
+### Install `peekbankr` from GitHub:
 
 ```
-# install.packages("devtools")
-devtools::install_github("langcog/peekbankr")
+# install.packages("remotes")
+remotes::install_github("langcog/peekbankr")
 ```
 
-### Tutorial
+### Usage
 
 Here's a simple workflow for using `peekbankr` to get data from a single study. 
 
@@ -26,8 +26,8 @@ ps_data <- aoi_timepoints %>%
 
 ### Other relevant GitHub repositories
 
-- Website frontend: [http://github.com/langcog/peekbank-website]()
-- Interactive data visualizations using shiny: [http://github.com/langcog/peekbank-shiny]()
-- Peek data standard - for importing data: [http://github.com/langcog/peekds]()
-- Peekbank database: [http://github.com/langcog/peekbank]()
-- Peekbank data import: [http://github.com/langcog/peekbank-data-import]()
+- Peekbank data import scripts: http://github.com/langcog/peekbank-data-import
+- Peek data standard and data import functions: http://github.com/langcog/peekds
+- Peekbank database: http://github.com/langcog/peekbank
+- Interactive data visualizations using shiny: http://github.com/langcog/peekbank-shiny
+- Website frontend: http://github.com/langcog/peekbank-website
