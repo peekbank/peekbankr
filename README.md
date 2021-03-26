@@ -31,7 +31,7 @@ ps_data <- aoi_timepoints %>%
 ### Data Codebook
 
 For an overview of the individual columns in each dataset, see the following codebook:
-https://docs.google.com/spreadsheets/d/1ggQ3SqJKm4FKcpUuRhXK-K3zgzbAHitTfGzhw1JZ438/edit?usp=sharing
+https://docs.google.com/spreadsheets/d/e/2PACX-1vR4AiOkIzIMbb2C9ksCpu6aWqYaIEiA72voek4y_05y9eY9J6XS5tLhnHZ5xnDk9LxKihicd0gN9BZY/pubhtml
 
 ### Other relevant GitHub repositories
 
