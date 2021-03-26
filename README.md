@@ -28,6 +28,11 @@ ps_data <- aoi_timepoints %>%
   left_join(administrations)
 ```
 
+### Data Codebook
+
+For an overview of the individual columns in each dataset, see the following codebook:
+https://docs.google.com/spreadsheets/d/1ggQ3SqJKm4FKcpUuRhXK-K3zgzbAHitTfGzhw1JZ438/edit?usp=sharing
+
 ### Other relevant GitHub repositories
 
 - Peekbank data import scripts: http://github.com/langcog/peekbank-data-import
