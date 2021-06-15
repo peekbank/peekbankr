@@ -6,31 +6,90 @@ NULL
 pkg_globals <- new.env()
 pkg_globals$SAMPLE_RATE <- 40 # Hz
 
-#' Connect to the peekbank database
+translate_version <- function(db_version, db_args, db_info) {
+
+  # using the peekbankr hosted server
+  if (db_args$host == db_info$host) {
+
+    # current version
+    if (db_version == "current") {
+      db_to_use <- db_info[["current"]]
+      message("Using current database version: '", db_to_use, "'.")
+      return(db_to_use)
+
+      # supported version
+    } else if (db_version %in% db_info[["supported"]]) {
+      db_to_use <- db_version
+      message("Using supported database version: '", db_to_use, "'.")
+      return(db_to_use)
+
+      # historical version
+    } else if (db_version %in% db_info[["historical"]]) {
+      stop("Version '", db_version, "' is no longer hosted by ",
+           "peekbank.stanford.edu; either specify a more recent version or ",
+           "install MySQL Server locally and update db_args.")
+
+      # version not recognized
+    } else {
+      stop("Version '", db_version, "' not found. Specify one of: 'current', ",
+           paste(sprintf("'%s'", db_info$supported), collapse = ", "), ".")
+    }
+
+    # using a different server than the peekbankr hosted one
+  } else {
+    message("Not using hosted database version; no checks will be applied to ",
+            "version specification.")
+    return(db_args$db_name)
+  }
+}
+
+resolve_connection <- function(connection, db_version = NULL, db_args = NULL) {
+  if (is.null(connection)) connect_to_peekbankr(db_version, db_args)
+  else connection
+}
+
+#' Get information on database connection options
 #'
-#' @param host Database connection host
-#' @param dbname Database connection db name
-#' @param user Database connection user
-#' @param password Database connection password
-#' @param compress Flag to use compression protocol (defaults to TRUE)
-#'
-#' @return A connection to the peekbank database.
+#' @return List of database info: host name, current version, supported
+#'   versions, historical versions, username, password
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' con <- connect_to_peekbank()
+#' \donttest{
+#' get_db_info()
+#' }
+get_db_info <- function() {
+  jsonlite::fromJSON("https://peekbank.stanford.edu/peekbank.json")
+}
+
+#' Connect to Peekbank
+#'
+#' @param db_version String of the name of database version to use
+#' @param db_args List with host, user, and password defined
+#' @param compress Flag to use compression protocol (defaults to TRUE)
+#'
+#' @return con A DBIConnection object for the peekbank database
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' con <- connect_to_peekbank(db_version = "current", db_args = NULL)
 #' DBI::dbDisconnect(con)
 #' }
-connect_to_peekbank <- function(host = "34.210.173.143",
-                                dbname = "peekbank",
-                                user = "reader",
-                                password = "gazeofraccoons",
+connect_to_peekbank <- function(db_version = "current", db_args = NULL,
                                 compress = TRUE) {
+
+  db_info <- get_db_info()
   flags <- if (compress) RMySQL::CLIENT_COMPRESS else 0
-  DBI::dbConnect(RMySQL::MySQL(),
-    host = host, dbname = dbname,
-    user = user, password = password,
+
+  if (is.null(db_args)) db_args <- db_info
+
+  DBI::dbConnect(
+    RMySQL::MySQL(),
+    host = db_args$host,
+    dbname = translate_version(db_version, db_args, db_info),
+    user = db_args$user,
+    password = db_args$password,
     client.flag = flags
   )
 }
