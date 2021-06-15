@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">peekbankr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.1.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.1.9002</span>
       </span>
     </div>
 
@@ -73,7 +73,7 @@
       <h1 data-toc-skip>Accessing <code>peekbank-db</code>
 </h1>
             
-            <h4 class="date">2021-03-26</h4>
+            <h4 class="date">2021-06-15</h4>
       
       <small class="dont-index">Source: <a href="http://github.com/langcog/peekbankr/blob/master/vignettes/peekbankr.Rmd"><code>vignettes/peekbankr.Rmd</code></a></small>
       <div class="hidden name"><code>peekbankr.Rmd</code></div>
@@ -109,25 +109,29 @@
 <p>The <code>get_datasets</code> function returns a table related to the sources of the dataset, information of the tracker, information of the method (e.g., monitor size and sample rate).</p>
 <p>For example, you can run <code>get_datasets</code> without any arguments to return all of the datasets in the database.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_datasets.html">get_datasets</a></span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_datasets</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="va">d_datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_datasets.html">get_datasets</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_datasets</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 5
-##   dataset_id lab_dataset_id   dataset_name   shortcite      cite                
-##        &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;          &lt;chr&gt;               
-## 1          0 casillas_tselta… casillas_tsel… Casillas et a… "Casillas, M., Brow…
-## 2          1 perry_cowpig     perry_cowpig   Perry &amp; Saffr… "Perry, L. K., &amp; Sa…
-## 3          2 SwitchingCues    pomper_saffra… Pomper &amp; Saff… "Pomper, R., &amp; Saff…
-## 4          3 adams_marchman_… adams_marchma… Adams et al. … "Adams, K. A., Marc…
-## 5          4 pomper_salientme pomper_salien… Pomper &amp; Saff… "Pomper, R., &amp; Saff…
-## 6          5 reflook_v4       reflook_v4     Yurovsky et a… "Yurovsky, D., Wade…</code></pre>
+##   dataset_id lab_dataset_id   dataset_name   shortcite    cite                  
+##        &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;        &lt;chr&gt;                 
+## 1          0 casillas_tselta… casillas_tsel… Casillas et… "Casillas, M., Brown,…
+## 2          1 perry_cowpig     perry_cowpig   Perry &amp; Saf… "Perry, L. K., &amp; Saff…
+## 3          2 SwitchingCues    pomper_saffra… Pomper &amp; Sa… "Pomper, R., &amp; Saffra…
+## 4          3 adams_marchman_… adams_marchma… Adams et al… "Adams, K. A., Marchm…
+## 5          4 pomper_salientme pomper_salien… Pomper &amp; Sa… "Pomper, R., &amp; Saffra…
+## 6          5 mon2             swingley_asli… Swingley &amp; … "Swingley, D., &amp; Asli…</code></pre>
 </div>
 <div id="get-subjects" class="section level2">
 <h2 class="hasAnchor">
 <a href="#get-subjects" class="anchor"></a>Get Subjects</h2>
 <p>The <code>get_subjects</code> function returns information about persistent subject identifiers for noting when subjects have participated in multiple experiments. This includes demographic information (currently only sex and lab-specific subject id).</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_subjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_subjects.html">get_subjects</a></span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_subjects</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_subjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_subjects.html">get_subjects</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_subjects</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 4
 ##   subject_id sex    native_language lab_subject_id
 ##        &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;         
@@ -148,9 +152,11 @@
 <li>tracker</li>
 </ul>
 <p>Again, if you run the function with no arguments, then you get all the information for all administrations in the database, but you can now also filter on a dataset name or dataset id.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_administrations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_administrations</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_administrations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_administrations</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 12
 ##   administration_id   age lab_age lab_age_units monitor_size_x monitor_size_y
 ##               &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                  &lt;int&gt;          &lt;int&gt;
@@ -168,9 +174,11 @@
 <li>Pass a range of ages to get information about all participants who were tested within a certain age range.</li>
 </ol>
 <p>For example, you can get the participant information for all of the children who were tested between the ages of 24 and 36 months.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_age_range</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">36</span><span class="op">)</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_age_range</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_age_range</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">36</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_age_range</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 12
 ##   administration_id   age lab_age lab_age_units monitor_size_x monitor_size_y
 ##               &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                  &lt;int&gt;          &lt;int&gt;
@@ -193,18 +201,20 @@
 <li>Point of disambiguation</li>
 <li>IDs to link to other tables.</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_trials</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_trials.html">get_trials</a></span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_trials</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_trials</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_trials.html">get_trials</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_trials</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 5
 ##   trial_id trial_order trial_type_id dataset_id dataset_name       
 ##      &lt;int&gt;       &lt;int&gt;         &lt;int&gt;      &lt;int&gt; &lt;chr&gt;              
-## 1     1159           1           334          3 adams_marchman_2018
-## 2     1160           2           335          3 adams_marchman_2018
-## 3     1161           3           336          3 adams_marchman_2018
-## 4     1162           4           337          3 adams_marchman_2018
-## 5     1163           5           338          3 adams_marchman_2018
-## 6     1164           6           339          3 adams_marchman_2018</code></pre>
+## 1      458           1           179          3 adams_marchman_2018
+## 2      459           2           180          3 adams_marchman_2018
+## 3      460           3           181          3 adams_marchman_2018
+## 4      461           4           182          3 adams_marchman_2018
+## 5      462           5           183          3 adams_marchman_2018
+## 6      463           6           184          3 adams_marchman_2018</code></pre>
 <p>This function also takes dataset name and id filters.</p>
 </div>
 <div id="get-stimuli" class="section level2">
@@ -216,10 +226,12 @@
 <li>Image</li>
 <li>Novelty status</li>
 </ul>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_stimuli</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stimuli.html">get_stimuli</a></span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_stimuli</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 8
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_stimuli</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stimuli.html">get_stimuli</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_stimuli</span><span class="op">)</span></code></pre></div>
+<pre><code>## # A tibble: 6 x 10
 ##   stimulus_id stimulus_novelty original_stimulus_label english_stimulus_label
 ##         &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;                   &lt;chr&gt;                 
 ## 1         118 familiar         baby                    baby                  
@@ -228,17 +240,20 @@
 ## 4         121 familiar         doggy                   doggy                 
 ## 5         122 familiar         shoe                    shoe                  
 ## 6         123 familiar         birdie                  birdie                
-## # … with 4 more variables: stimulus_image_path &lt;chr&gt;, lab_stimulus_id &lt;chr&gt;,
-## #   dataset_id &lt;int&gt;, dataset_name &lt;chr&gt;</code></pre>
+## # … with 6 more variables: stimulus_image_path &lt;chr&gt;, lab_stimulus_id &lt;chr&gt;,
+## #   dataset_id &lt;int&gt;, image_description &lt;chr&gt;, image_description_source &lt;chr&gt;,
+## #   dataset_name &lt;chr&gt;</code></pre>
 <p>This function also takes dataset name and id filters.</p>
 </div>
 <div id="get-aoi-region-sets" class="section level2">
 <h2 class="hasAnchor">
 <a href="#get-aoi-region-sets" class="anchor"></a>Get AOI region sets</h2>
 <p>The <code><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets()</a></code> returning a table with the information of the region of area of interest (AOI) for experiments using eye-trackers. It includes information of the dimensions of the x and y, such as the minimum and maximum dimension of the xy spaces.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_aoi_region_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets</a></span><span class="op">(</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_aoi_region_sets</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_aoi_region_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_aoi_region_sets</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 9
 ##   aoi_region_set_id l_x_max l_x_min l_y_max l_y_min r_x_max r_x_min r_y_max
 ##               &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;
@@ -256,9 +271,11 @@
 <a href="#get-aoi-timepoints" class="anchor"></a>Get AOI timepoints</h2>
 <p>The <code><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints()</a></code> function returns a table with information of the subject’s looking behavior in each trial. For example, you can get information about which area that the subject was looking at in a particular trial (e.g., looking away or target or distractor).</p>
 <p>The <code>t_norm</code> field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said).</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="va">d_aoi_timepoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_aoi_timepoints</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">d_aoi_timepoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></code></pre></div>
+<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_aoi_timepoints</span><span class="op">)</span></code></pre></div>
 <pre><code>## # A tibble: 6 x 4
 ##   administration_id trial_id aoi    t_norm
 ##               &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt;
@@ -273,7 +290,7 @@
 <h2 class="hasAnchor">
 <a href="#get-xy-timepoints" class="anchor"></a>Get XY timepoints</h2>
 <p>For experiments using eye-trackers (as opposed to hand coding from video), the <code>get_xy_timepoints</code> function returns a table including the x and y position across time.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_xy_timepoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_xy_timepoints.html">get_xy_timepoints</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
 </div>
   </div>
