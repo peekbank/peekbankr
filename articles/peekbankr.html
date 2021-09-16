@@ -73,7 +73,7 @@
       <h1 data-toc-skip>Accessing <code>peekbank-db</code>
 </h1>
             
-            <h4 class="date">2021-06-15</h4>
+            <h4 class="date">2021-09-16</h4>
       
       <small class="dont-index">Source: <a href="http://github.com/langcog/peekbankr/blob/master/vignettes/peekbankr.Rmd"><code>vignettes/peekbankr.Rmd</code></a></small>
       <div class="hidden name"><code>peekbankr.Rmd</code></div>
@@ -110,18 +110,18 @@
 <p>For example, you can run <code>get_datasets</code> without any arguments to return all of the datasets in the database.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_datasets.html">get_datasets</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_datasets</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 5
-##   dataset_id lab_dataset_id   dataset_name   shortcite    cite                  
-##        &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;          &lt;chr&gt;        &lt;chr&gt;                 
-## 1          0 casillas_tselta… casillas_tsel… Casillas et… "Casillas, M., Brown,…
-## 2          1 perry_cowpig     perry_cowpig   Perry &amp; Saf… "Perry, L. K., &amp; Saff…
-## 3          2 SwitchingCues    pomper_saffra… Pomper &amp; Sa… "Pomper, R., &amp; Saffra…
-## 4          3 adams_marchman_… adams_marchma… Adams et al… "Adams, K. A., Marchm…
-## 5          4 pomper_salientme pomper_salien… Pomper &amp; Sa… "Pomper, R., &amp; Saffra…
-## 6          5 mon2             swingley_asli… Swingley &amp; … "Swingley, D., &amp; Asli…</code></pre>
+<pre><code>## # A tibble: 6 × 5
+##   dataset_id lab_dataset_id        dataset_name          shortcite   cite       
+##        &lt;int&gt; &lt;chr&gt;                 &lt;chr&gt;                 &lt;chr&gt;       &lt;chr&gt;      
+## 1          0 casillas_tseltal_2015 casillas_tseltal_2015 Casillas e… "Casillas,…
+## 2          1 perry_cowpig          perry_cowpig          Perry &amp; Sa… "Perry, L.…
+## 3          2 SwitchingCues         pomper_saffran_2016   Pomper &amp; S… "Pomper, R…
+## 4          3 adams_marchman_2018   adams_marchman_2018   Adams et a… "Adams, K.…
+## 5          4 pomper_salientme      pomper_salientme      Pomper &amp; S… "Pomper, R…
+## 6          5 mon2                  swingley_aslin_2002   Swingley &amp;… "Swingley,…</code></pre>
 </div>
 <div id="get-subjects" class="section level2">
 <h2 class="hasAnchor">
@@ -129,10 +129,10 @@
 <p>The <code>get_subjects</code> function returns information about persistent subject identifiers for noting when subjects have participated in multiple experiments. This includes demographic information (currently only sex and lab-specific subject id).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_subjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_subjects.html">get_subjects</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_subjects</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 4
+<pre><code>## # A tibble: 6 × 4
 ##   subject_id sex    native_language lab_subject_id
 ##        &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;           &lt;chr&gt;         
 ## 1          0 male   other           P3-14moM      
@@ -154,10 +154,10 @@
 <p>Again, if you run the function with no arguments, then you get all the information for all administrations in the database, but you can now also filter on a dataset name or dataset id.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_administrations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_administrations</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 12
+<pre><code>## # A tibble: 6 × 12
 ##   administration_id   age lab_age lab_age_units monitor_size_x monitor_size_y
 ##               &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                  &lt;int&gt;          &lt;int&gt;
 ## 1                68    46      46 months                    NA             NA
@@ -176,10 +176,10 @@
 <p>For example, you can get the participant information for all of the children who were tested between the ages of 24 and 36 months.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_age_range</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">36</span><span class="op">)</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_age_range</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 12
+<pre><code>## # A tibble: 6 × 12
 ##   administration_id   age lab_age lab_age_units monitor_size_x monitor_size_y
 ##               &lt;int&gt; &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;                  &lt;int&gt;          &lt;int&gt;
 ## 1                 5    27      27 months                  1366            768
@@ -203,10 +203,10 @@
 </ul>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_trials</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_trials.html">get_trials</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_trials</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 5
+<pre><code>## # A tibble: 6 × 5
 ##   trial_id trial_order trial_type_id dataset_id dataset_name       
 ##      &lt;int&gt;       &lt;int&gt;         &lt;int&gt;      &lt;int&gt; &lt;chr&gt;              
 ## 1      458           1           179          3 adams_marchman_2018
@@ -228,10 +228,10 @@
 </ul>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_stimuli</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stimuli.html">get_stimuli</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_stimuli</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 10
+<pre><code>## # A tibble: 6 × 10
 ##   stimulus_id stimulus_novelty original_stimulus_label english_stimulus_label
 ##         &lt;int&gt; &lt;chr&gt;            &lt;chr&gt;                   &lt;chr&gt;                 
 ## 1         118 familiar         baby                    baby                  
@@ -251,10 +251,10 @@
 <p>The <code><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets()</a></code> returning a table with the information of the region of area of interest (AOI) for experiments using eye-trackers. It includes information of the dimensions of the x and y, such as the minimum and maximum dimension of the xy spaces.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_aoi_region_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_aoi_region_sets</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 9
+<pre><code>## # A tibble: 6 × 9
 ##   aoi_region_set_id l_x_max l_x_min l_y_max l_y_min r_x_max r_x_min r_y_max
 ##               &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;   &lt;int&gt;
 ## 1                 0     395     359     754     359    1366     971     754
@@ -273,10 +273,10 @@
 <p>The <code>t_norm</code> field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said).</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">d_aoi_timepoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></code></pre></div>
-<pre><code>## Using current database version: 'peekbank'.</code></pre>
+<pre><code>## Using current database version: '2021.1'.</code></pre>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">d_aoi_timepoints</span><span class="op">)</span></code></pre></div>
-<pre><code>## # A tibble: 6 x 4
+<pre><code>## # A tibble: 6 × 4
 ##   administration_id trial_id aoi    t_norm
 ##               &lt;int&gt;    &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt;
 ## 1                68      202 target  -1000
