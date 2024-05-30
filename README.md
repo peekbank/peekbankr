@@ -13,6 +13,28 @@ The `peekbankr` package allows you to access data in peekbank from R. This remov
 remotes::install_github("langcog/peekbankr")
 ```
 
+### Local Installation from Source
+
+When developing, you can run:
+
+```
+install.packages(".", repos = NULL, type="source", dependencies=TRUE)
+```
+
+If it fails to install the `RMySQL` dependency automatically, you can manually trigger the installation using
+
+```
+install.packages("RMySQL")
+```
+
+After making changes, be sure to run 
+
+```
+roxygen2::roxygenise()
+```
+
+to update exports and documentation.
+
 ### Usage
 
 Here's a simple workflow for using `peekbankr` to get data from a single study. 

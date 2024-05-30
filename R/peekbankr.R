@@ -514,3 +514,55 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
 
   return(xy_timepoints)
 }
+
+
+#' Unpack the json sting in the *_aux_data column and turns
+#' it into a nested R list
+#'
+#'
+#' @param df a dataframe in the peekbank format that has an aux data column
+#'
+#' @return the input dataframe, with the *_aux_data column unpacked
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' subjects_table <- unpack_aux_data(df = subjects_table)
+#' }
+unpack_aux_data <- function(df) {
+  all_names <- colnames(df)
+  aux_name <- all_names[str_which(all_names, ".*_aux_data$")]
+  if (length(aux_name) == 0) return(df)
+  aux_list <- df |>
+    ungroup() |>
+    pull(all_of(aux_name)) |>
+    lapply(\(aux) {
+      if(is.na(aux) | is.null(aux)) return(aux)
+      jsonlite::fromJSON(aux)
+    })
+  if(all(is.na(aux_list))) return(df)
+
+  col_names <- purrr::flatten(aux_list) |> names() |> unique()
+  col_names <- col_names[!is.na(col_names)]
+  aux_cols <- lapply(col_names, \(col_name) {
+    sapply(aux_list, \(aux) {aux[col_name]})
+  }) |>
+    `names<-`(value = col_names) |>
+    as_tibble() |>
+    mutate(across(everything(), \(aux) {
+      if (any(sapply(aux, \(aux_val) {typeof(aux_val) == "list"}))) {
+        aux <- lapply(aux, \(aux_val) {
+          if(all(is.na(aux_val))) return(NA)
+          bind_rows(aux_val)
+        })}
+      if (all(sapply(aux, is.atomic))) {
+        aux <- list_simplify(aux, strict = FALSE) # May need a better fix for NAs
+      }
+      aux
+    }))
+  df |>
+    cbind(aux_cols) |>
+    select(-all_of(aux_name)) |>
+    nest("{aux_name}" := all_of(colnames(aux_cols)))
+}
