@@ -544,7 +544,8 @@ unpack_aux_data <- function(df) {
   if(all(is.na(aux_list))) return(df)
 
   col_names <- purrr::flatten(aux_list) |> names() |> unique()
-  col_names <- col_names[!is.na(col_names)]
+  col_names <- col_names[!is.na(col_names) & col_names != ""]
+
   aux_cols <- lapply(col_names, \(col_name) {
     sapply(aux_list, \(aux) {aux[col_name]})
   }) |>
