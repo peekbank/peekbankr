@@ -532,7 +532,7 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
 #' }
 unpack_aux_data <- function(df) {
   all_names <- colnames(df)
-  aux_name <- all_names[str_which(all_names, ".*_aux_data$")]
+  aux_name <- all_names[stringr::str_which(all_names, ".*_aux_data$")]
   if (length(aux_name) == 0) return(df)
   aux_list <- df |>
     ungroup() |>
