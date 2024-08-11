@@ -547,7 +547,12 @@ unpack_aux_data <- function(df) {
   col_names <- col_names[!is.na(col_names) & col_names != ""]
 
   aux_cols <- lapply(col_names, \(col_name) {
-    sapply(aux_list, \(aux) {aux[col_name]})
+    sapply(aux_list, \(aux) {
+      if(!(col_name %in% colnames(aux))){
+        aux[[col_name]] <- NA
+      }
+      aux[col_name]
+      })
   }) |>
     `names<-`(value = col_names) |>
     as_tibble() |>
