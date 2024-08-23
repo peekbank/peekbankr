@@ -548,9 +548,6 @@ unpack_aux_data <- function(df) {
 
   aux_cols <- lapply(col_names, \(col_name) {
     sapply(aux_list, \(aux) {
-      if(!(col_name %in% colnames(aux))){
-        aux[[col_name]] <- NA
-      }
       aux[col_name]
       })
   }) |>
