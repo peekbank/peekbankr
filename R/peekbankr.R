@@ -3,6 +3,8 @@
 #' @importFrom rlang .data
 NULL
 
+options(warn=-1)
+
 pkg_globals <- new.env()
 pkg_globals$SAMPLE_RATE <- 40 # Hz
 
@@ -80,12 +82,14 @@ connect_to_peekbank <- function(db_version = "current", db_args = NULL,
                                 compress = TRUE) {
 
   db_info <- get_db_info()
-  flags <- if (compress) RMySQL::CLIENT_COMPRESS else 0
+
+  flags <- if (compress) RMariaDB::CLIENT_COMPRESS else 0
 
   if (is.null(db_args)) db_args <- db_info
 
+
   DBI::dbConnect(
-    RMySQL::MySQL(),
+    RMariaDB::MariaDB(),
     host = db_args$host,
     dbname = translate_version(db_version, db_args, db_info),
     user = db_args$user,
