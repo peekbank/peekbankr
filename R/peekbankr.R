@@ -465,7 +465,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
       tidyr::nest(trial_data = -c(.data$administration_id, .data$trial_id)) %>%
       dplyr::mutate(
         rle_vector = purrr::map(.data$trial_data, function(td) {
-          `class<-`(list(lengths = td$length, values = td$aoi), "rle")
+          `class<-`(list(lengths = as.integer(td$length), values = td$aoi), "rle")
         }),
         aoi = purrr::map(.data$rle_vector, inverse.rle),
         t_norm = purrr::map(.data$trial_data, function(td) {
