@@ -552,6 +552,21 @@ unpack_aux_data <- function(df) {
 
   aux_cols <- lapply(col_names, \(col_name) {
     sapply(aux_list, \(aux) {
+      # cursed way to make sure that there are no "NULL" strings left over
+      # from weird jsonlite::fromJSON behavior,
+      # check https://github.com/jeroen/jsonlite/issues/70 to see if there has been a fix by now
+      if(length(aux) == 1 &&
+         (is.na(aux) ||
+          is.null(aux[col_name]) ||
+          aux[col_name] == "NULL"
+         ) || (
+         all(is.na(aux)) ||
+         all(is.null(aux[col_name]) ) ||
+         all(aux[col_name] == "NULL")
+         )
+      ){
+        return(NA)
+      }
       aux[col_name]
       })
   }) |>
