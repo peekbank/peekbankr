@@ -469,10 +469,10 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
         }),
         aoi = purrr::map(.data$rle_vector, inverse.rle),
         t_norm = purrr::map(.data$trial_data, function(td) {
-          seq(
+          as.integer(seq(
             td$t_norm[1], td$t_norm[1] + (sum(td$length) - 1) * timestep,
             timestep
-          )
+          ))
         })
       ) %>%
       dplyr::select(-.data$trial_data, -.data$rle_vector) %>%
