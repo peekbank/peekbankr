@@ -557,19 +557,19 @@ unpack_aux_data <- function(df) {
   }) |>
     `names<-`(value = col_names) |>
     as_tibble() |>
-    mutate(across(everything(), \(aux) {
+    dplyr::mutate(across(everything(), \(aux) {
       if (any(sapply(aux, \(aux_val) {typeof(aux_val) == "list"}))) {
         aux <- lapply(aux, \(aux_val) {
           if(all(is.na(aux_val))) return(NA)
-          bind_rows(aux_val)
+          dplyr::bind_rows(aux_val)
         })}
       if (all(sapply(aux, is.atomic))) {
-        aux <- list_simplify(aux, strict = FALSE) # May need a better fix for NAs
+        aux <- purrr::list_simplify(aux, strict = FALSE) # May need a better fix for NAs
       }
       aux
     }))
   df |>
     cbind(aux_cols) |>
-    select(-all_of(aux_name)) |>
-    nest("{aux_name}" := all_of(colnames(aux_cols)))
+    dplyr::select(-all_of(aux_name)) |>
+    tidyr::nest("{aux_name}" := all_of(colnames(aux_cols)))
 }
