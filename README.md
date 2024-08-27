@@ -21,10 +21,10 @@ When developing, you can run:
 install.packages(".", repos = NULL, type="source", dependencies=TRUE)
 ```
 
-If it fails to install the `RMySQL` dependency automatically, you can manually trigger the installation using
+If it fails to install the `RMariaDB` dependency automatically, you can manually trigger the installation using
 
 ```
-install.packages("RMySQL")
+install.packages("RMariaDB")
 ```
 
 After making changes, be sure to run 
