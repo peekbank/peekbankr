@@ -61,7 +61,7 @@ resolve_connection <- function(connection, db_version = NULL, db_args = NULL) {
 #' get_db_info()
 #' }
 get_db_info <- function() {
-  jsonlite::fromJSON("https://langcog.github.io/peekbank-website/peekbank.json")
+  jsonlite::fromJSON("https://peekbank.github.io/peekbank-website/peekbank.json")
 }
 
 #' Connect to Peekbank
