@@ -603,9 +603,8 @@ unpack_aux_data <- function(df) {
 #' get_sql_query("SELECT * FROM datasets")
 #' }
 
-get_sql_query <- function(sql_query_string, connection = NULL,
-                          db_version = "current", db_args = NULL) {
-  con <- resolve_connection(connection, db_version, db_args)
+get_sql_query <- function(sql_query_string, connection = NULL) {
+  con <- resolve_connection(connection)
   if (is.null(con)) return()
 
   returned_sql_query <- dplyr::tbl(con, dplyr::sql(sql_query_string)) %>%
