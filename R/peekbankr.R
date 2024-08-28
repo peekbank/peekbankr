@@ -588,3 +588,30 @@ unpack_aux_data <- function(df) {
     dplyr::select(-all_of(aux_name)) |>
     tidyr::nest("{aux_name}" := all_of(colnames(aux_cols)))
 }
+
+#' Run a SQL Query script on the Peekbank database
+#'
+#' @inheritParams connect_to_peekbank
+#' @param sql_query_string A valid sql query string character
+#' @param connection A connection to the Peekbank database
+#'
+#' @return The database after calling the supplied SQL query
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' get_sql_query("SELECT * FROM datasets")
+#' }
+
+get_sql_query <- function(sql_query_string, connection = NULL,
+                          db_version = "current", db_args = NULL) {
+  con <- resolve_connection(connection, db_version, db_args)
+  if (is.null(con)) return()
+
+  returned_sql_query <- dplyr::tbl(con, dplyr::sql(sql_query_string)) %>%
+    dplyr::collect()
+  if (is.null(connection)) {
+    DBI::dbDisconnect(con)
+  }
+  return(returned_sql_query)
+}
