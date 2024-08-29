@@ -1,7 +1,6 @@
 pandoc: 2.7.3
-pkgdown: 1.6.1
+pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   peekbankr: peekbankr.html
-last_built: 2021-09-16T19:38Z
-
+last_built: 2024-08-29T23:31Z
