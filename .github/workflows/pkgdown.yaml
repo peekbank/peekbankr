@@ -42,7 +42,9 @@ jobs:
         run: R CMD INSTALL .
 
       - name: Deploy package
+        env:
+          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
         run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
+          git config --local user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --local user.name "github-actions[bot]"
           Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE)'
