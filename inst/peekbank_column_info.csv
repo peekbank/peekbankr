@@ -1,0 +1,56 @@
+table,field_name,field_class,description,type,values,example,required?,notes
+administrations,administration_id,PrimaryKey,row identifier for the administrations table indexing from zero,numeric,,0,yes,unique per row
+administrations,dataset_id,ForeignKey,row identifier for datasets indexing from zero (linked to datasets),numeric,,0,yes,linked to datasets.dataset_id
+administrations,subject_id,ForeignKey,row identifier for subjects indexing from zero (linked to subjects),numeric,,0,yes,linked to subjects.subject_id
+administrations,age,FloatField,age of the participant in days (1 month = 30.44 days; 1 year = 365.25 days),numeric,,365.28,no,
+administrations,lab_age,FloatField,lab-internal age recorded for subject (before converting to standardized age in days),numeric,,12,no,
+administrations,lab_age_units,CharField,"unit used for lab-internal age recorded for subject (before converting to standardized age in days); should typically be days, months, or years",numeric,days / months / years,months,no,
+administrations,monitor_size_x,IntegerField,width of the monitor (in pixels),numeric,,1920,no,
+administrations,monitor_size_y,IntegerField,height of the monitor (in pixels),numeric,,1200,no,
+administrations,sample_rate,IntegerField,sampling rate of the eyetracker (in Hz),numeric,,60,no,
+administrations,tracker,CharField,name of the eye-tracker type/ data source (SMI/ iCoder/ Tobii/ etc.),string,,SMI,no,
+administrations,coding_method,CharField,"method used in the experiment for coding gaze data (eyetracking, manual gaze coding, automated gaze coding)",string,eyetracking / manual gaze coding / automated gaze coding,eyetracking,no,
+datasets,dataset_id,PrimaryKey,row identifier for the datasets table indexing from zero,numeric,,0,yes,unique per row
+datasets,lab_dataset_id,CharField,lab-internal short name of the dataset,string,,SwitchingCues,no,
+datasets,dataset_name,CharField,"a descriptive label, could be a short citation. Needs to be unique in the database",string,,pomper_saffran_2016,yes,
+datasets,cite,CharField,full citation (APA format),string,,"Pomper, R., & Saffran, J. R. (2016). Roses are red, socks are blue: Switching dimensions disrupts young children’s language processing. PLoS ONE 11(6): e0158459.",no,
+datasets,shortcite,CharField,shortened citation (author (year) APA-style in-text citation),string,,Pomper & Saffran (2016),no,
+subjects,subject_id,PrimaryKey,database unique participant identifier (indexing from zero),numeric,,0,yes,unique per row
+subjects,sex,CharField,sex of the participants (male/ female/ other/ unspecified),string,female / male / other/ unspecified,female,no,
+subjects,lab_subject_id,CharField,lab unique participant identifer,string,,,no,
+trials,trial_id,PrimaryKey,row identifier for the trials table indexing from zero,numeric,,0,yes,unique per row
+trials,full_phrase,CharField,Full phrase prompting the target,string,,Do you see the ball?,no,
+trials,full_phrase_language,CharField,"language of the full phrase (options: ISO 639-2 language 3 digits code, multiple, artificial); see here for table and information on ISO 639-2 language 3 digits code: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes; other link: https://gist.github.com/gantian127/8345007938faf611fa6d)",,"ISO 639-2 language 3 digits code, multiple, artificial",,no,
+trials,point_of_disambiguation,IntegerField,target onset time (relative to trial onset) in ms,numeric,,1873,no,
+trials,target_side,CharField,part of the screen in which the target stimulus appears (left or right in 2-choice design),string,left / right,left,no,
+trials,lab_trial_id,CharField,internal index assigned to trial within lab,numeric,,1,no,
+trials,aoi_region_set_id,ForeignKey,unique aoi_region identifier (indexing from zero),numeric,,0,no,linked to aoi_region_sets.aoi_region_set_id; not available for hand-coded datasets
+trials,dataset_id,ForeignKey,row identifier for the datasets table indexing from zero,numeric,,0,yes,linked to datasets.dataset_id
+trials,distractor_id,ForeignKey,row identifier for the distractor stimulus indexing from zero,numeric,,0,yes,linked to stimuli.stimulus_id
+trials,target_id,ForeignKey,row identifier for the target stimulus indexing from zero,numeric,,1,yes,linked to stimuli.stimulus_id
+xy_timepoints,xy_timepoint_id,PrimaryKey,row identifier for the xy_timepoints table indexing from zero,numeric,,0,yes,unique per row; no entries for hand-coded datasets
+xy_timepoints,x,IntegerField,"x-coordinate of gaze position at timepoint t (origin (0,0) is bottom left)",numeric,,1498,no,
+xy_timepoints,y,IntegerField,"y-coordinate of gaze position at timepoint t (origin (0,0) is bottom left)",numeric,,505,no,
+xy_timepoints,t,IntegerField,"timepoint/ timestamp in milliseconds (relative to trial onset; first trial frame is 0 ms) (required if you contribute data to this table - if not, e.g. manually coded data, then not required)",numeric,,33.33,yes,
+xy_timepoints,administration_id,ForeignKey,row identifier for the administrations table indexing from zero (linked to administrations),numeric,,0,yes,linked to administrations.administration_id
+xy_timepoints,trial_id,ForeignKey,row identifier for the trials table indexing from zero (linked to trials),numeric,,0,yes,linked to trials.trial_id
+aoi_timepoints,aoi_timepoint_id,PrimaryKey,row identifier for the aoi_timepoints table indexing from zero,numeric,,0,yes,unique per row
+aoi_timepoints,trial_id,ForeignKey,row identifier for the trials table indexing from zero (linked to trials),numeric,,0,yes,linked to trials.trial_id
+aoi_timepoints,aoi,CharField,"name of the looking location (target, distractor, other, missing). other = on-screen looking, but not in the AOI regions for target or distractor. missing = missing data (could be off-screen look, blink, tracker error, etc.)",string,target / distractor / other / missing,target,yes,
+aoi_timepoints,t_norm,IntegerField,"timestamp in ms, centered on the point of disambiguation of the target (= 0 ms)",numeric,,0,yes,
+aoi_timepoints,administration_id,ForeignKey,row identifier for the administrations table indexing from zero (linked to administrations),numeric,,0,yes,linked to administrations.administraion_id
+aoi_region_sets,aoi_region_set_id,PrimaryKey,row identifier for the aoi_region_sets table indexing from zero,numeric,,0,yes,unique per row
+aoi_region_sets,l_x_max,IntegerField,"maximum x-coordinate of the left AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,715,no,
+aoi_region_sets,l_x_min,IntegerField,"minimum x-coordinate of the left AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,3,no,
+aoi_region_sets,l_y_max,IntegerField,"maximum y-coordinate of the left AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,921,no,
+aoi_region_sets,l_y_min,IntegerField,"minimum y-coordinate of the left AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,146,no,
+aoi_region_sets,r_x_max,IntegerField,"maximum x-coordinate of the right AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,1679,no,
+aoi_region_sets,r_x_min,IntegerField,"minimum x-coordinate of the right AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,967,no,
+aoi_region_sets,r_y_max,IntegerField,"maximum y-coordinate of the right AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,921,no,
+aoi_region_sets,r_y_min,IntegerField,"minimum y-coordinate of the right AOI region (with the bottom left corner of the screen as origin (0,0))",numeric,,146,no,
+stimuli,stimulus_id,PrimaryKey,row identifier for the stimuli table indexing from zero,numeric,,0,yes,unique per row
+stimuli,stimulus_label,CharField,label (i.e. target label) assigned to the stimulus,string,,ball,no,
+stimuli,stimulus_novelty,CharField,"whether the stimulus is novel or familiar (options: novel, familiar)",string,novel / familiar,familiar,no,
+stimuli,stimulus_image_path,CharField,relative file path to the visual image stimulus,string,,images/ball.png,no,
+stimuli,lab_stimulus_id,CharField,lab-internal id assigned to the stimulus (possibly empty),string,,ball_01,no,
+stimuli,dataset_id,ForeignKey,row identifier for datasets indexing from zero (linked to datasets),numeric,,0,yes,linked to datasets.dataset_id

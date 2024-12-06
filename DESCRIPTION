@@ -1,27 +1,33 @@
 Package: peekbankr
 Type: Package
-Title: Accessing the Peekbank Database
-Version: 0.1.1.9010
+Title: Accessing the Peekbank Database and working with Peekbank data
+Version: 0.2.0.0
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
-    person("Michael", "Frank", email = "mcfrank@stanford.edu", role = "aut")
+    person("Michael", "Frank", email = "mcfrank@stanford.edu", role = "aut"),
+    person("Linger", "Xu", email = "lingertxu@gmail.com", role = c("aut", "cre")),
     )
-Description: Tools for connecting to peekbank, an open repository for
+Description: Collection of tools for working with peekbank, an open repository for
     developmental eye-tracking data.
 Depends: R (>= 4.0.0)
 License: GPL-3
-URL: http://github.com/langcog/peekbankr
-BugReports: http://github.com/langcog/peekbankr/issues
+URL: http://github.com/peekbank/peekbankr
+BugReports: http://github.com/peekbank/peekbankr/issues
 Encoding: UTF-8
 LazyData: true
 Imports:
     DBI (>= 1.1.1),
     dbplyr (>= 2.1.0),
+    ggplot2 (>= 3.3.3),
     dplyr (>= 1.0.4),
+    glue (>= 1.4.2),
     jsonlite (>= 1.7.2),
     magrittr (>= 2.0.1),
+    osfr (>= 0.2.8),
     purrr (>= 0.3.4),
+    reader (>= 1.0.6),
+    readr (>= 1.4.0),
     rlang (>= 0.4.10),
     tidyr (>= 1.1.2),
     stringr (>= 1.5.1),
