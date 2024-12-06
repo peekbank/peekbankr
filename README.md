@@ -10,7 +10,7 @@ The `peekbankr` package allows you to access data in peekbank from R. This remov
 
 ```
 # install.packages("remotes")
-remotes::install_github("langcog/peekbankr")
+remotes::install_github("peekbank/peekbankr")
 ```
 
 ### Local Installation from Source
@@ -57,8 +57,8 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vR4AiOkIzIMbb2C9ksCpu6aWqYaIEiA7
 
 ### Other relevant GitHub repositories
 
-- Peekbank data import scripts: http://github.com/langcog/peekbank-data-import
-- Peek data standard and data import functions: http://github.com/langcog/peekds
-- Peekbank database: http://github.com/langcog/peekbank
-- Interactive data visualizations using shiny: http://github.com/langcog/peekbank-shiny
-- Website frontend: http://github.com/langcog/peekbank-website
+- Peekbank data import scripts: http://github.com/peekbank/peekbank-data-import
+- Peek data standard and data import functions: http://github.com/peekbank/peekds
+- Peekbank database: http://github.com/peekbank/peekbank
+- Interactive data visualizations using shiny: http://github.com/peekbank/peekbank-shiny
+- Website frontend: http://github.com/peekbank/peekbank-website

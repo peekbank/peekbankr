@@ -61,7 +61,7 @@ resolve_connection <- function(connection, db_version = NULL, db_args = NULL) {
 #' get_db_info()
 #' }
 get_db_info <- function() {
-  jsonlite::fromJSON("https://langcog.github.io/peekbank-website/peekbank.json")
+  jsonlite::fromJSON("https://peekbank.github.io/peekbank-website/peekbank.json")
 }
 
 #' Connect to Peekbank
@@ -469,10 +469,10 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
         }),
         aoi = purrr::map(.data$rle_vector, inverse.rle),
         t_norm = purrr::map(.data$trial_data, function(td) {
-          seq(
+          as.integer(seq(
             td$t_norm[1], td$t_norm[1] + (sum(td$length) - 1) * timestep,
             timestep
-          )
+          ))
         })
       ) %>%
       dplyr::select(-.data$trial_data, -.data$rle_vector) %>%
@@ -587,4 +587,30 @@ unpack_aux_data <- function(df) {
     cbind(aux_cols) |>
     dplyr::select(-all_of(aux_name)) |>
     tidyr::nest("{aux_name}" := all_of(colnames(aux_cols)))
+}
+
+#' Run a SQL Query script on the Peekbank database
+#'
+#' @inheritParams connect_to_peekbank
+#' @param sql_query_string A valid sql query string character
+#' @param connection A connection to the Peekbank database
+#'
+#' @return The database after calling the supplied SQL query
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' get_sql_query("SELECT * FROM datasets")
+#' }
+
+get_sql_query <- function(sql_query_string, connection = NULL) {
+  con <- resolve_connection(connection)
+  if (is.null(con)) return()
+
+  returned_sql_query <- dplyr::tbl(con, dplyr::sql(sql_query_string)) %>%
+    dplyr::collect()
+  if (is.null(connection)) {
+    DBI::dbDisconnect(con)
+  }
+  return(returned_sql_query)
 }
