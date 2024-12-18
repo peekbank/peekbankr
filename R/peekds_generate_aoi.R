@@ -95,6 +95,7 @@ ds.rezero_times <- function(df_table) {
   }
   # center timestamp (0 POD)
   df_out <- df_table %>%
+    dplyr::arrange(.data$trial_id, .data$t) %>%
     dplyr::group_by(.data$administration_id, .data$trial_id) %>%
     dplyr::mutate(t_zeroed = (.data$t - .data$t[1])) %>%
     dplyr::select(-.data$t)
