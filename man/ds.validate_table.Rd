@@ -9,6 +9,7 @@ ds.validate_table(
   df_table,
   table_type,
   cdi_expected,
+  dir_csv,
   is_null_field_required = TRUE
 )
 }
@@ -35,7 +36,7 @@ import
 }
 \examples{
 \dontrun{
-is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data")
+is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
 }
 
 }

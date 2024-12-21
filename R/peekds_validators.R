@@ -16,11 +16,11 @@
 #'
 #' @examples
 #' \dontrun{
-#' is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data")
+#' is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
 #' }
 #'
 #' @export
-ds.validate_table <- function(df_table, table_type, cdi_expected, is_null_field_required = TRUE) {
+ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_null_field_required = TRUE) {
 
   msg_error <- c()
   colnames_table <- colnames(df_table)
@@ -299,6 +299,37 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, is_null_field_
     }
   }
 
+  # STEP 6.5:
+  # if stimuli table, check if there are any invalid image file paths (dont exist or wrong filetype)
+  if (table_type == "stimuli"){
+
+    to_check <- df_table %>% dplyr::filter(!is.na(stimulus_image_path))
+
+    raw_data_dir <- file.path(dir_csv, '..', "raw_data")
+    if (!dir.exists(raw_data_dir)) {
+      print("Attention: raw_data directory not found at ", raw_data_dir, "the current setup expects the raw_data folder to live next to the processed_data folder. If this is not the case, the image filepath checking will not work properly")
+    }
+    not_found <- to_check %>% dplyr::filter(
+      !file.exists(file.path(raw_data_dir, stimulus_image_path))
+    )
+
+    if(nrow(not_found)){
+      missing_files <- paste(not_found$stimulus_image_path, collapse = "\n  ")
+      msg_new <- .msg(sprintf("- stimulus filepaths not found:\n  %s", missing_files))
+      msg_error <- c(msg_error, msg_new)
+    }
+
+    wrong_filetype <- to_check %>% dplyr::filter(
+      !grepl("\\.(jpe?g|png)$", stimulus_image_path)
+    )
+
+    if(nrow(wrong_filetype)){
+      wrong_files <- paste(wrong_filetype$stimulus_image_path, collapse = ", ")
+      print(sprintf("Warning: some stimulus images have a not supported format (jpg, jpeg, png):\n  %s", wrong_files))
+    }
+  }
+
+
   # STEP 7: check if the subjects age is consistently converted in the administration table
   if (table_type == "administrations") {
 
@@ -418,7 +449,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
     if (file.exists(file_csv)) {
       # read in csv file and check if the data is valid
       dict_tables[[table_type]] <- utils::read.csv(file_csv)
-      msg_error <-ds.validate_table(dict_tables[[table_type]], table_type, cdi_expected, is_null_field_required)
+      msg_error <-ds.validate_table(dict_tables[[table_type]], table_type, cdi_expected, dir_csv, is_null_field_required)
       if (!is.null(msg_error)) {
         msg_error <- .msg("The processed data file {table_type} failed to pass
                           the validator for database import with these error
