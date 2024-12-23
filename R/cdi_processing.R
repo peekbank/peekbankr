@@ -1,8 +1,3 @@
-library(dplyr)
-library(tidyr)
-library(here)
-library(purrr)
-
 #' Checks cdi data for inconsistencies, warns about them, and fixes them
 #'
 #' @param cdi_data a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "age", "sex", "measure", "rawscore"
