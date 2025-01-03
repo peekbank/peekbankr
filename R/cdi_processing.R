@@ -141,7 +141,7 @@ populate_cdi_percentiles <- function(subjects_table) {
       by = c("instrument_type", "measure", "reference_age", "language"),
       relationship = "many-to-many"
     ) %>%
-    dplyr::filter(score < rawscore) %>%
+    dplyr::filter(score <= rawscore) %>%
     dplyr::group_by(across(!c(score, norm_percentile))) %>%
     dplyr::slice_max(score, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
