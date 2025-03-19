@@ -1,3 +1,38 @@
+#' Check if a file exists with exact case sensitivity
+#'
+#' @param ... character vectors, containing file paths
+#'
+#' @return logical value: TRUE if the file exists with the exact same case,
+#'   FALSE otherwise
+#'
+#' @examples
+#' \dontrun{
+#' exists <- file.exists.case.sensitive("path/to/image.jpg")
+#' }
+#'
+file.exists.case.sensitive <- function(...) {
+  paths <- file.path(...)
+
+  sapply(paths, function(path) {
+    if (!file.exists(path)) {
+      return(FALSE)
+    }
+
+    path_parts <- strsplit(path, .Platform$file.sep)[[1]]
+    filename <- path_parts[length(path_parts)]
+    dir_path <- if(length(path_parts) > 1) {
+      paste(path_parts[-length(path_parts)], collapse = .Platform$file.sep)
+    } else {
+      "."
+    }
+
+    files_in_dir <- list.files(dir_path)
+
+    return(filename %in% files_in_dir)
+  })
+}
+
+
 #' Check if a dataframe/table is compliant to peekbank json before database
 #' import
 #'
@@ -310,7 +345,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
       print("Attention: raw_data directory not found at ", raw_data_dir, "the current setup expects the raw_data folder to live next to the processed_data folder. If this is not the case, the image filepath checking will not work properly")
     }
     not_found <- to_check %>% dplyr::filter(
-      !file.exists(file.path(raw_data_dir, stimulus_image_path))
+      !file.exists.case.sensitive(file.path(raw_data_dir, stimulus_image_path))
     )
 
     if(nrow(not_found)){
