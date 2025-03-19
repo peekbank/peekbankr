@@ -3,6 +3,7 @@
 export(append_relative_cdi_scores)
 export(cleanup_cdi_data)
 export(connect_to_peekbank)
+export(download_stimuli)
 export(ds.add_aois)
 export(ds.get_json_fields)
 export(ds.get_peekjson)
