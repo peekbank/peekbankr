@@ -9,7 +9,7 @@
 #'
 #' @export
 ds.get_peekjson <- function() {
-  peekjson <- jsonlite::fromJSON(pkg_globals$SCHEMA_FILE)
+  peekjson <- jsonlite::fromJSON(system.file(pkg_globals$SCHEMA_FILE, package = "peekbankr"))
   return(peekjson)
 }
 

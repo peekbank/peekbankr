@@ -1,0 +1,692 @@
+[
+  {
+    "model_class": "AOI_Timepoint",
+    "table": "aoi_timepoints",
+    "fields": [
+      {
+        "field_name": "aoi_timepoint_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "aoi",
+        "field_class": "CharField",
+        "options": {
+          "null": false,
+          "choices": [["target", "target"], ["distractor","distractor"], ["other","other"], ["missing", "missing"]],
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "administration_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Administration",
+          "null": false
+        }
+      },
+      {
+        "field_name": "t_norm",
+        "field_class": "IntegerField",
+        "options": {
+          "null": false
+        }
+      },
+      {
+        "field_name": "trial_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Trial",
+          "null": false
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "AOI_Region_Set",
+    "table": "aoi_region_sets",
+    "fields": [
+      {
+        "field_name": "aoi_region_set_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key": true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "l_x_max",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "l_x_min",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "l_y_max",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "l_y_min",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "r_x_max",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "r_x_min",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "r_y_max",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "r_y_min",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Dataset",
+    "table": "datasets",
+    "fields": [
+      {
+        "field_name": "dataset_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key": true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "lab_dataset_id",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "dataset_name",
+        "field_class": "CharField",
+        "options": {
+          "null": false,
+          "unique": true,
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "shortcite",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "cite",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 1023
+        }
+      },
+      {
+        "field_name": "dataset_aux_data",
+        "field_class": "JSONField",
+        "options": {          
+          "null": true
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Administration",
+    "table": "administrations",
+    "fields": [
+      {
+        "field_name": "administration_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "dataset_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Dataset",
+          "null": false
+        }
+      },
+      {
+        "field_name": "age",
+        "field_class": "FloatField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "lab_age",
+        "field_class": "FloatField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "lab_age_units",
+        "field_class": "CharField",
+        "options": {
+          "max_length": 63,
+          "null": true,
+          "choices": [["days", "days"], ["months", "months"], ["years", "years"], ["epochs", "epochs"]],
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "subject_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Subject",
+          "null": false
+        }
+      },
+      {
+        "field_name": "monitor_size_x",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "monitor_size_y",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "sample_rate",
+        "field_class": "FloatField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "tracker",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "coding_method",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255,
+          "choices": [["eyetracking", "eyetracking"], ["manual gaze coding", "manual gaze coding"], ["automated gaze coding", "automated gaze coding"],
+        ["preprocessed eyetracking", "preprocessed eyetracking"]]
+        }
+      },
+      {
+        "field_name": "administration_aux_data",
+        "field_class": "JSONField",
+        "options": {          
+          "null": true
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Subject",
+    "table": "subjects",
+    "fields": [
+      {
+        "field_name": "subject_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false
+        }
+      },
+
+      {
+        "field_name": "sex",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255,
+          "choices": [["female", "female"],["male", "male"], ["other", "other"], ["unspecified", "unspecified"]]
+        }
+      },
+      {
+        "field_name": "native_language",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "lab_subject_id",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "subject_aux_data",
+        "field_class": "JSONField",
+        "options": {          
+          "null": true
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Trial_Type",
+    "table": "trial_types",
+    "fields": [
+      {
+        "field_name": "trial_type_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "aoi_region_set_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "AOI_Region_Set",
+          "null": true
+        }
+      },
+      {
+        "field_name": "dataset_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Dataset",
+          "null": false
+        }
+      },
+      {
+        "field_name": "distractor_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Stimulus",
+          "null": false,
+          "related_name": "distractor_stimulus"
+        }
+      },
+      {
+        "field_name": "target_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Stimulus",
+          "null": false,
+          "related_name": "target_stimulus"
+        }
+      },
+      {
+        "field_name": "full_phrase",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "max_length": 1023
+        }
+      },
+      {
+        "field_name": "full_phrase_language",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 63,
+          "choices": [["aar","aar"],["abk","abk"],["ace","ace"],["ach","ach"],["ada","ada"],["ady","ady"],["afa","afa"],["afh","afh"],["afr","afr"],["ain","ain"],["aka","aka"],["akk","akk"],["alb","alb"],["ale","ale"],["alg","alg"],["alt","alt"],["amh","amh"],["ang","ang"],["anp","anp"],["apa","apa"],["ara","ara"],["arc","arc"],["arg","arg"],["arm","arm"],["arn","arn"],["arp","arp"],["art","art"],["arw","arw"],["asm","asm"],["ast","ast"],["ath","ath"],["aus","aus"],["ava","ava"],["ave","ave"],["awa","awa"],["aym","aym"],["aze","aze"],["bad","bad"],["bai","bai"],["bak","bak"],["bal","bal"],["bam","bam"],["ban","ban"],["baq","baq"],["bas","bas"],["bat","bat"],["bej","bej"],["bel","bel"],["bem","bem"],["ben","ben"],["ber","ber"],["bho","bho"],["bih","bih"],["bik","bik"],["bin","bin"],["bis","bis"],["bla","bla"],["bnt","bnt"],["tib","tib"],["bos","bos"],["bra","bra"],["bre","bre"],["btk","btk"],["bua","bua"],["bug","bug"],["bul","bul"],["bur","bur"],["byn","byn"],["cad","cad"],["cai","cai"],["car","car"],["cat","cat"],["cau","cau"],["ceb","ceb"],["cel","cel"],["cze","cze"],["cha","cha"],["chb","chb"],["che","che"],["chg","chg"],["chi","chi"],["chk","chk"],["chm","chm"],["chn","chn"],["cho","cho"],["chp","chp"],["chr","chr"],["chu","chu"],["chv","chv"],["chy","chy"],["cmc","cmc"],["cop","cop"],["cor","cor"],["cos","cos"],["cpe","cpe"],["cpf","cpf"],["cpp","cpp"],["cre","cre"],["crh","crh"],["crp","crp"],["csb","csb"],["cus","cus"],["wel","wel"],["dak","dak"],["dan","dan"],["dar","dar"],["day","day"],["del","del"],["den","den"],["ger","ger"],["dgr","dgr"],["din","din"],["div","div"],["doi","doi"],["dra","dra"],["dsb","dsb"],["dua","dua"],["dum","dum"],["dut","dut"],["dyu","dyu"],["dzo","dzo"],["efi","efi"],["egy","egy"],["eka","eka"],["gre","gre"],["elx","elx"],["eng","eng"],["enm","enm"],["epo","epo"],["est","est"],["ewe","ewe"],["ewo","ewo"],["fan","fan"],["fao","fao"],["per","per"],["fat","fat"],["fij","fij"],["fil","fil"],["fin","fin"],["fiu","fiu"],["fon","fon"],["fre","fre"],["frm","frm"],["fro","fro"],["frr","frr"],["frs","frs"],["fry","fry"],["ful","ful"],["fur","fur"],["gaa","gaa"],["gay","gay"],["gba","gba"],["gem","gem"],["geo","geo"],["gez","gez"],["gil","gil"],["gla","gla"],["gle","gle"],["glg","glg"],["glv","glv"],["gmh","gmh"],["goh","goh"],["gon","gon"],["gor","gor"],["got","got"],["grb","grb"],["grc","grc"],["grn","grn"],["gsw","gsw"],["guj","guj"],["gwi","gwi"],["hai","hai"],["hat","hat"],["hau","hau"],["haw","haw"],["heb","heb"],["her","her"],["hil","hil"],["him","him"],["hin","hin"],["hit","hit"],["hmn","hmn"],["hmo","hmo"],["hrv","hrv"],["hsb","hsb"],["hun","hun"],["hup","hup"],["iba","iba"],["ibo","ibo"],["ice","ice"],["ido","ido"],["iii","iii"],["ijo","ijo"],["iku","iku"],["ile","ile"],["ilo","ilo"],["ina","ina"],["inc","inc"],["ind","ind"],["ine","ine"],["inh","inh"],["ipk","ipk"],["ira","ira"],["iro","iro"],["ita","ita"],["jav","jav"],["jbo","jbo"],["jpn","jpn"],["jpr","jpr"],["jrb","jrb"],["kaa","kaa"],["kab","kab"],["kac","kac"],["kal","kal"],["kam","kam"],["kan","kan"],["kar","kar"],["kas","kas"],["kau","kau"],["kaw","kaw"],["kaz","kaz"],["kbd","kbd"],["kha","kha"],["khi","khi"],["khm","khm"],["kho","kho"],["kik","kik"],["kin","kin"],["kir","kir"],["kmb","kmb"],["kok","kok"],["kom","kom"],["kon","kon"],["kor","kor"],["kos","kos"],["kpe","kpe"],["krc","krc"],["krl","krl"],["kro","kro"],["kru","kru"],["kua","kua"],["kum","kum"],["kur","kur"],["kut","kut"],["lad","lad"],["lah","lah"],["lam","lam"],["lao","lao"],["lat","lat"],["lav","lav"],["lez","lez"],["lim","lim"],["lin","lin"],["lit","lit"],["lol","lol"],["loz","loz"],["ltz","ltz"],["lua","lua"],["lub","lub"],["lug","lug"],["lui","lui"],["lun","lun"],["luo","luo"],["lus","lus"],["mac","mac"],["mad","mad"],["mag","mag"],["mah","mah"],["mai","mai"],["mak","mak"],["mal","mal"],["man","man"],["mao","mao"],["map","map"],["mar","mar"],["mas","mas"],["may","may"],["mdf","mdf"],["mdr","mdr"],["men","men"],["mga","mga"],["mic","mic"],["min","min"],["mis","mis"],["mkh","mkh"],["mlg","mlg"],["mlt","mlt"],["mnc","mnc"],["mni","mni"],["mno","mno"],["moh","moh"],["mon","mon"],["mos","mos"],["mul","mul"],["mun","mun"],["mus","mus"],["mwl","mwl"],["mwr","mwr"],["myn","myn"],["myv","myv"],["nah","nah"],["nai","nai"],["nap","nap"],["nau","nau"],["nav","nav"],["nbl","nbl"],["nde","nde"],["ndo","ndo"],["nds","nds"],["nep","nep"],["new","new"],["nia","nia"],["nic","nic"],["niu","niu"],["nno","nno"],["nob","nob"],["nog","nog"],["non","non"],["nor","nor"],["nqo","nqo"],["nso","nso"],["nub","nub"],["nwc","nwc"],["nya","nya"],["nym","nym"],["nyn","nyn"],["nyo","nyo"],["nzi","nzi"],["oci","oci"],["oji","oji"],["ori","ori"],["orm","orm"],["osa","osa"],["oss","oss"],["ota","ota"],["oto","oto"],["paa","paa"],["pag","pag"],["pal","pal"],["pam","pam"],["pan","pan"],["pap","pap"],["pau","pau"],["peo","peo"],["phi","phi"],["phn","phn"],["pli","pli"],["pol","pol"],["pon","pon"],["por","por"],["pra","pra"],["pro","pro"],["pus","pus"],["qaa-qtz","qaa-qtz"],["que","que"],["raj","raj"],["rap","rap"],["rar","rar"],["roa","roa"],["roh","roh"],["rom","rom"],["rum","rum"],["run","run"],["rup","rup"],["rus","rus"],["sad","sad"],["sag","sag"],["sah","sah"],["sai","sai"],["sal","sal"],["sam","sam"],["san","san"],["sas","sas"],["sat","sat"],["scn","scn"],["sco","sco"],["sel","sel"],["sem","sem"],["sga","sga"],["sgn","sgn"],["shn","shn"],["sid","sid"],["sin","sin"],["sio","sio"],["sit","sit"],["sla","sla"],["slo","slo"],["slv","slv"],["sma","sma"],["sme","sme"],["smi","smi"],["smj","smj"],["smn","smn"],["smo","smo"],["sms","sms"],["sna","sna"],["snd","snd"],["snk","snk"],["sog","sog"],["som","som"],["son","son"],["sot","sot"],["spa","spa"],["srd","srd"],["srn","srn"],["srp","srp"],["srr","srr"],["ssa","ssa"],["ssw","ssw"],["suk","suk"],["sun","sun"],["sus","sus"],["sux","sux"],["swa","swa"],["swe","swe"],["syc","syc"],["syr","syr"],["tah","tah"],["tai","tai"],["tam","tam"],["tat","tat"],["tel","tel"],["tem","tem"],["ter","ter"],["tet","tet"],["tgk","tgk"],["tgl","tgl"],["tha","tha"],["tig","tig"],["tir","tir"],["tiv","tiv"],["tkl","tkl"],["tlh","tlh"],["tli","tli"],["tmh","tmh"],["tog","tog"],["ton","ton"],["tpi","tpi"],["tsi","tsi"],["tsn","tsn"],["tso","tso"],["tuk","tuk"],["tum","tum"],["tup","tup"],["tur","tur"],["tut","tut"],["tvl","tvl"],["twi","twi"],["tyv","tyv"],["udm","udm"],["uga","uga"],["uig","uig"],["ukr","ukr"],["umb","umb"],["und","und"],["urd","urd"],["uzb","uzb"],["vai","vai"],["ven","ven"],["vie","vie"],["vol","vol"],["vot","vot"],["wak","wak"],["wal","wal"],["war","war"],["was","was"],["wen","wen"],["wln","wln"],["wol","wol"],["xal","xal"],["xho","xho"],["yao","yao"],["yap","yap"],["yid","yid"],["yor","yor"],["ypk","ypk"],["zap","zap"],["zbl","zbl"],["zen","zen"],["zgh","zgh"],["zha","zha"],["znd","znd"],["zul","zul"],["zun","zun"],["zxx","zxx"],["zza","zza"], ["multiple","multiple"], ["artificial","artificial"], ["other", "other"]]
+
+        }
+      },
+      {
+        "field_name": "point_of_disambiguation",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "target_side",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255,
+          "choices": [["left", "left"], ["right", "right"]]
+        }
+      },
+      {
+        "field_name": "condition",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "lab_trial_id",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "vanilla_trial",
+        "field_class": "BooleanField",
+        "options": {
+          "default": "None",          
+          "null": true
+        }
+      },
+      {
+        "field_name": "trial_type_aux_data",
+        "field_class": "JSONField",
+        "options": {          
+          "null": true
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Trial",
+    "table": "trials",
+    "fields": [
+      {
+        "field_name": "trial_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key": true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "trial_order",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "trial_type_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Trial_Type",
+          "null": false
+        }
+      },
+      {
+        "field_name": "excluded",
+        "field_class": "BooleanField",
+        "options": {
+          "default": "None",          
+          "null": true
+        }
+      },
+      {
+        "field_name": "exclusion_reason",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "trial_aux_data",
+        "field_class": "JSONField",
+        "options": {          
+          "null": true
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Stimulus",
+    "table": "stimuli",
+    "fields": [
+      {
+        "field_name": "stimulus_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "dataset_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Dataset",
+          "null": false
+        }
+      },
+      {
+        "field_name": "stimulus_novelty",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255,
+          "choices": [["novel", "novel"], ["familiar", "familiar"]]
+        }
+      },
+      {
+        "field_name": "original_stimulus_label",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "english_stimulus_label",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "stimulus_image_path",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 1023
+        }
+      },
+      {
+        "field_name": "lab_stimulus_id",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255          
+        }
+      },
+      {
+        "field_name": "image_description",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "image_description_source",
+        "field_class": "CharField",
+        "options": {
+          "null": true,
+          "default": "None",
+          "max_length": 255,
+          "choices": [["image path", "image path"], ["experiment documentation", "experiment documentation"], ["Peekbank discretion", "Peekbank discretion"]]
+        }
+      },
+      {
+        "field_name": "stimulus_aux_data",
+        "field_class": "JSONField",
+        "options": {          
+          "null": true
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "XY_Timepoint",
+    "table": "xy_timepoints",
+    "fields": [
+      {
+        "field_name": "xy_timepoint_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false
+        }
+      },
+      {
+        "field_name": "administration_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Administration",
+          "null": false
+        }
+      },
+      {
+        "field_name": "trial_id",
+        "field_class": "ForeignKey",
+        "options": {
+          "to": "Trial",
+          "null": false
+        }
+      },
+      {
+        "field_name": "x",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "y",
+        "field_class": "IntegerField",
+        "options": {
+          "null": true,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "t_norm",
+        "field_class": "IntegerField",
+        "options": {
+          "null": false
+        }
+      }
+    ]
+  },
+  {
+    "model_class": "Admin",
+    "table": "admin",
+    "fields": [
+      {
+        "field_name": "admin_id",
+        "field_class": "IntegerField",
+        "options": {
+          "primary_key":true,
+          "null": false,
+          "default": "None"
+        }
+      },
+      {
+        "field_name": "date",
+        "field_class": "DateField",
+        "options": {
+          "null": false,
+          "default": "datetime.now",
+          "max_length": 255
+        }
+      },
+      {
+        "field_name": "version",
+        "field_class": "CharField",
+        "options": {
+          "null": false,
+          "default": "None",
+          "max_length": 255
+        }
+      }
+    ]
+  }
+]

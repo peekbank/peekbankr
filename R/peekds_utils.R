@@ -14,9 +14,9 @@ pkg_globals$SAMPLE_DURATION <- 1000 / pkg_globals$SAMPLE_RATE
 pkg_globals$MAX_GAP_LENGTH <- .100 # S
 pkg_globals$MAX_GAP_SAMPLES <- pkg_globals$MAX_GAP_LENGTH /
   (1 / pkg_globals$SAMPLE_RATE)
-pkg_globals$SCHEMA_FILE <- file.path("https://raw.githubusercontent.com",
-                                     "langcog/peekbank/master/static",
-                                     "peekbank-schema.json")
+
+pkg_globals$SCHEMA_FILE <- "peekbank-schema.json"
+
 
 pkg_globals$WORDBANK_ALLOWED_LANGUAGES = c("Danish",
                                            "English (American)",
@@ -76,7 +76,7 @@ na_mode <- function(x) {
 
 # Render the peekbank schema directly from github
 render_schema <- function(x) {
-  schema <- jsonlite::fromJSON(pkg_globals$SCHEMA_FILE)
+  schema <- jsonlite::fromJSON(system.file(pkg_globals$SCHEMA_FILE, package = "peekbankr"))
   table_names <- schema[[2]]
   tables <- schema[[3]]
 
