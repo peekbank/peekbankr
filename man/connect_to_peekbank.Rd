@@ -4,7 +4,13 @@
 \alias{connect_to_peekbank}
 \title{Connect to Peekbank}
 \usage{
-connect_to_peekbank(db_version = "current", db_args = NULL, compress = TRUE)
+connect_to_peekbank(
+  db_version = "current",
+  db_args = NULL,
+  compress = TRUE,
+  host = NULL,
+  port = NULL
+)
 }
 \arguments{
 \item{db_version}{String of the name of database version to use}
@@ -12,6 +18,10 @@ connect_to_peekbank(db_version = "current", db_args = NULL, compress = TRUE)
 \item{db_args}{List with host, user, and password defined}
 
 \item{compress}{Flag to use compression protocol (defaults to TRUE)}
+
+\item{host}{Hostname of the Peekbank server to connect to (defaults hosted PB)}
+
+\item{port}{Port of the Peekbank DB to connect to (defaults to 3306)}
 }
 \value{
 con A DBIConnection object for the peekbank database

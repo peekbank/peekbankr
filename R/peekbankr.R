@@ -76,6 +76,8 @@ get_db_info <- function() {
 #' @param db_version String of the name of database version to use
 #' @param db_args List with host, user, and password defined
 #' @param compress Flag to use compression protocol (defaults to TRUE)
+#' @param host Hostname of the Peekbank server to connect to (defaults hosted PB)
+#' @param port Port of the Peekbank DB to connect to (defaults to 3306)
 #'
 #' @return con A DBIConnection object for the peekbank database
 #' @export
@@ -86,17 +88,20 @@ get_db_info <- function() {
 #' DBI::dbDisconnect(con)
 #' }
 connect_to_peekbank <- function(db_version = "current", db_args = NULL,
-                                compress = TRUE) {
+                                compress = TRUE, host = NULL, port = NULL) {
   db_info <- get_db_info()
 
   flags <- if (compress) RMariaDB::CLIENT_COMPRESS else 0
 
   if (is.null(db_args)) db_args <- db_info
 
+  conn_host <- if (!is.null(host)) host else db_args$host
+  conn_port <- if (!is.null(port)) port else 3306
 
   DBI::dbConnect(
     RMariaDB::MariaDB(),
-    host = db_args$host,
+    host = conn_host,
+    port = conn_port,
     dbname = translate_version(db_version, db_args, db_info),
     user = db_args$user,
     password = db_args$password,
@@ -204,7 +209,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
       min_age <- input_age[1]
       max_age <- input_age[2]
       administrations %<>% dplyr::filter(.data$age >= min_age &
-        .data$age <= max_age)
+                                           .data$age <= max_age)
     } else {
       stop("`age` argument must be of length 1 or 2")
     }
@@ -457,7 +462,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
   # filter down to requested admins
   aoi_timepoints %<>%
     dplyr::filter(.data$administration_id %in%
-      !!administrations$administration_id)
+                    !!administrations$administration_id)
 
   # collect the table locally
   aoi_timepoints %<>% dplyr::collect()
@@ -570,14 +575,14 @@ unpack_aux_data <- function(df) {
       # from weird jsonlite::fromJSON behavior,
       # check https://github.com/jeroen/jsonlite/issues/70 to see if there has been a fix by now
       if (length(aux) == 1 &&
-        (is.na(aux) ||
-          is.null(aux[col_name]) ||
-          aux[col_name] == "NULL"
-        ) || (
-        all(is.na(aux)) ||
-          all(is.null(aux[col_name])) ||
-          all(aux[col_name] == "NULL")
-      )
+          (is.na(aux) ||
+           is.null(aux[col_name]) ||
+           aux[col_name] == "NULL"
+          ) || (
+            all(is.na(aux)) ||
+            all(is.null(aux[col_name])) ||
+            all(aux[col_name] == "NULL")
+          )
       ) {
         return(NA)
       }
@@ -610,7 +615,6 @@ unpack_aux_data <- function(df) {
 
 #' Run a SQL Query script on the Peekbank database
 #'
-#' @inheritParams connect_to_peekbank
 #' @param sql_query_string A valid sql query string character
 #' @param connection A connection to the Peekbank database
 #'

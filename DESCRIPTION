@@ -1,11 +1,13 @@
 Package: peekbankr
 Type: Package
 Title: Accessing the Peekbank Database and working with Peekbank data
-Version: 0.2.4.1
+Version: 0.2.4.2
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
-    person("Michael", "Frank", email = "mcfrank@stanford.edu", role = "aut")
+    person("Michael", "Frank", email = "mcfrank@stanford.edu", role = "aut"),
+    person("Linger", "Xu", email = "lingertxu@gmail.com", role = c("aut")),
+    person("Adrian", "Steffan", email = "adrian.steffan@hotmail.com", role = c("aut"))
     )
 Description: Collection of tools for working with peekbank, an open repository for
     developmental eye-tracking data.
