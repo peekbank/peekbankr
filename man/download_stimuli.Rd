@@ -8,7 +8,10 @@ download_stimuli(
   con,
   local_base_dir = "stimulus_data",
   datasets = c(),
-  skip_existing = T
+  skip_existing = T,
+  debug = F,
+  max_retries = 3,
+  retry_delay = 5
 )
 }
 \arguments{
@@ -18,6 +21,12 @@ download_stimuli(
 If empty (default), downloads stimuli for all datasets.}
 
 \item{skip_existing}{skip downloading a file if a file with that name already exists in that path locally}
+
+\item{debug}{show debug prints}
+
+\item{max_retries}{Maximum number of retry attempts for server errors (default: 3)}
+
+\item{retry_delay}{Delay in seconds between retry attempts (default: 5)}
 }
 \value{
 Returns the stimulus df with an additional column for the paths of the downloaded stimuli

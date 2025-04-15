@@ -647,6 +647,8 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 #' @param local_base_dir Base directory to save files locally (default: here::here("data"))
 #' @param debug Logical, whether to print debugging information (default: TRUE)
 #' @param skip_existing Logical, skip downloading a file if a file with that name already exists in that path locally
+#' @param max_retries Maximum number of retry attempts for server errors (default: 3)
+#' @param retry_delay Delay in seconds between retry attempts (default: 5)
 #'
 #' @return returns paths to downloaded files
 #'
@@ -661,7 +663,8 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 #'   osf_node_id = "pr6wu"
 #' )
 #' }
-download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir = "data", debug = F, skip_existing = TRUE) {
+download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir = "data",
+                               debug = F, skip_existing = TRUE, max_retries = 3, retry_delay = 5) {
   if (!fs::dir_exists(local_base_dir)) {
     fs::dir_create(local_base_dir, recurse = TRUE)
   }
@@ -673,7 +676,7 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
   # Using an environment instead of a list for better indexing
   directory_cache <- new.env(hash = TRUE)
 
-  get_all_items <- function(start_url) {
+  get_all_items <- function(start_url, max_api_retries = max_retries, api_retry_delay = retry_delay) {
     if (exists(start_url, envir = directory_cache, inherits = FALSE)) {
       if (debug) message(glue::glue("Using cached data for: {start_url}"))
       return(get(start_url, envir = directory_cache))
@@ -687,11 +690,46 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 
     while (!is.null(next_url)) {
       if (debug) message(glue::glue("Fetching: {next_url}"))
-      response <- httr::GET(next_url)
-      if (httr::status_code(response) != 200) {
-        stop(glue::glue("Error accessing OSF API: {httr::content(response, 'text')}"))
+
+      # Add retry logic for the GET request
+      response <- NULL
+      attempt <- 1
+      success <- FALSE
+
+      while (!success && attempt <= max_api_retries) {
+        if (attempt > 1) {
+          message(glue::glue("API retry attempt {attempt-1}/{max_api_retries} after waiting {api_retry_delay} seconds..."))
+          Sys.sleep(api_retry_delay)
+        }
+
+        tryCatch({
+          response <- httr::GET(next_url)
+          status_code <- httr::status_code(response)
+
+          if (status_code == 200) {
+            success <- TRUE
+          } else if (status_code >= 500 && status_code < 600 && attempt < max_api_retries) {
+            message(glue::glue("Server error (HTTP {status_code}) when accessing OSF API. Will retry."))
+          } else {
+            # Other errors or final attempt
+            if (attempt >= max_api_retries) {
+              stop(glue::glue("Error accessing OSF API after {max_api_retries} attempts: {httr::content(response, 'text')}"))
+            } else {
+              message(glue::glue("HTTP error {status_code}. Will retry."))
+            }
+          }
+        }, error = function(e) {
+          if (attempt < max_api_retries) {
+            message(glue::glue("Error when accessing OSF API: {e$message}. Will retry."))
+          } else {
+            stop(glue::glue("Failed to access OSF API after {max_api_retries} attempts: {e$message}"))
+          }
+        })
+
+        attempt <- attempt + 1
       }
 
+      # If we've reached here and success is TRUE, we have a valid response
       content <- jsonlite::fromJSON(httr::content(response, "text"))
       if (length(content$data) > 0) {
         all_names <- c(all_names, content$data$attributes$name)
@@ -732,6 +770,39 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
     return(result)
   }
 
+  # Retry function for handling download errors
+  download_with_retry <- function(url, destfile, max_attempts, delay_seconds) {
+    attempt <- 1
+    success <- FALSE
+
+    while (!success && attempt <= max_attempts) {
+      if (attempt > 1) {
+        message(glue::glue("Retry attempt {attempt-1}/{max_attempts} after waiting {delay_seconds} seconds..."))
+        Sys.sleep(delay_seconds)
+      }
+
+      tryCatch({
+        curl::curl_download(url, destfile = destfile, quiet = FALSE)
+        success <- TRUE
+      }, error = function(e) {
+        if (attempt < max_attempts) {
+          if (grepl("HTTP error 5", e$message)) {
+            message(glue::glue("Server error: {e$message}. Will retry."))
+          } else {
+            message(glue::glue("Error: {e$message}. Will retry."))
+          }
+        } else {
+          message(glue::glue("Final attempt failed: {e$message}"))
+          stop(e)
+        }
+      })
+
+      attempt <- attempt + 1
+    }
+
+    return(success)
+  }
+
   path_cache <- new.env(hash = TRUE)
   assign("ROOT", glue::glue("https://api.osf.io/v2/nodes/{osf_node_id}/files/osfstorage"), envir = path_cache)
 
@@ -756,6 +827,8 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 
     current_path <- "ROOT"
     current_url <- get(current_path, envir = path_cache)
+    # the sorting fixes the OSF bug that misses files otherwise
+    current_url <- httr::modify_url(current_url, query = list(sort = "name"))
 
     for (component in dir_structure) {
       next_path <- if (current_path == "") component else fs::path(current_path, component)
@@ -784,6 +857,7 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 
       folder_idx <- which(items$name == component)
       if (length(folder_idx) == 0) {
+        message(glue::glue("Error at: {file_path}"))
         stop(glue::glue("Could not find folder '{component}' in OSF path. Please check the path and try again."))
       }
 
@@ -792,6 +866,8 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
       assign(current_path, current_url, envir = path_cache)
     }
 
+    # the sorting fixes the OSF bug that misses files otherwise
+    current_url <- httr::modify_url(current_url, query = list(sort = "name"))
     items <- get_all_items(current_url)
 
     if (debug) {
@@ -808,25 +884,32 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 
     file_idx <- which(items$name == file_name)
     if (length(file_idx) == 0) {
-      stop(glue::glue("Could not find file '{file_name}' in OSF path"))
+      stop(glue::glue("Could not find file '{file_name}' in OSF path when processing {file_path}"))
     }
 
     download_url <- items$download[file_idx]
     message(glue::glue("Downloading {file_path} to {local_file_path}"))
-    curl::curl_download(
+
+    # Use our retry function instead of direct curl_download
+    download_success <- download_with_retry(
       download_url,
       destfile = local_file_path,
-      quiet = FALSE
+      max_attempts = max_retries,
+      delay_seconds = retry_delay
     )
 
-    downloaded_files[i] <- local_file_path
+    if (!download_success) {
+      warning(glue::glue("Failed to download {file_path} after {max_retries} attempts"))
+    } else {
+      downloaded_files[i] <- local_file_path
+    }
   }
 
   n_downloaded <- length(downloaded_files) - length(skipped_files)
   message(glue::glue("Downloaded {n_downloaded} files from OSF"))
-  if (length(skipped_files) > 0) {
-    message(glue::glue("Skipped {length(skipped_files)} existing files"))
-  }
+  #if (length(skipped_files) > 0) {
+  #  message(glue::glue("Skipped {length(skipped_files)} existing files"))
+  #}
 
   return(downloaded_files)
 }
@@ -842,6 +925,9 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 #' @param datasets Character vector of dataset names to download stimuli for.
 #'                 If empty (default), downloads stimuli for all datasets.
 #' @param skip_existing skip downloading a file if a file with that name already exists in that path locally
+#' @param debug show debug prints
+#' @param max_retries Maximum number of retry attempts for server errors (default: 3)
+#' @param retry_delay Delay in seconds between retry attempts (default: 5)
 #'
 #' @return Returns the stimulus df with an additional column for the paths of the downloaded stimuli
 #'
@@ -858,7 +944,8 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 #' }
 #'
 #' @export
-download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c(), skip_existing=T) {
+download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c(),
+                             skip_existing=T, debug = F, max_retries = 3, retry_delay = 5) {
   stimuli_df <- get_stimuli(connection = con) %>%
     dplyr::collect() %>%
     dplyr::filter(!is.na(stimulus_image_path))
@@ -870,7 +957,8 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
   paths <- stimuli_df %>%
     dplyr::mutate(full_stimulus_path = paste0(dataset_name, "/raw_data/", stimulus_image_path)) %>%
     dplyr::pull(full_stimulus_path) %>%
-    download_osf_files(local_base_dir = local_base_dir, skip_existing = skip_existing)
+    download_osf_files(local_base_dir = local_base_dir, skip_existing = skip_existing, debug = debug,
+                       max_retries = max_retries, retry_delay = retry_delay)
 
 
   return(stimuli_df %>% dplyr::mutate(local_stimulus_path = paths))

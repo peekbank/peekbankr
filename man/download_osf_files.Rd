@@ -9,7 +9,9 @@ download_osf_files(
   osf_node_id = "pr6wu",
   local_base_dir = "data",
   debug = F,
-  skip_existing = TRUE
+  skip_existing = TRUE,
+  max_retries = 3,
+  retry_delay = 5
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ download_osf_files(
 \item{debug}{Logical, whether to print debugging information (default: TRUE)}
 
 \item{skip_existing}{Logical, skip downloading a file if a file with that name already exists in that path locally}
+
+\item{max_retries}{Maximum number of retry attempts for server errors (default: 3)}
+
+\item{retry_delay}{Delay in seconds between retry attempts (default: 5)}
 }
 \value{
 returns paths to downloaded files
