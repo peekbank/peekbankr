@@ -10,7 +10,7 @@ pkg_globals$SAMPLE_RATE <- 40 # Hz
 
 translate_version <- function(db_version, db_args, db_info) {
   # using the peekbankr hosted server
-  if (db_args$host == db_info$host) {
+  if (db_args$host == db_info$host && db_args$port == db_info$port) {
     # current version
     if (db_version == "current") {
       db_to_use <- db_info[["current"]]
@@ -34,7 +34,7 @@ translate_version <- function(db_version, db_args, db_info) {
       # version not recognized
     } else {
       stop(
-        "Version '", db_version, "' not found. Specify one of: 'current', ",
+        "Version '", db_version, "' not supported. Our hosted instance currently offers: 'current', ",
         paste(sprintf("'%s'", db_info$supported), collapse = ", "), "."
       )
     }
@@ -42,7 +42,7 @@ translate_version <- function(db_version, db_args, db_info) {
     # using a different server than the peekbankr hosted one
   } else {
     message(
-      "Not using hosted database version; no checks will be applied to ",
+      "Not using default hosted Peekbank instance; no checks will be applied to ",
       "version specification."
     )
     return(db_args$db_name)
@@ -90,18 +90,19 @@ get_db_info <- function() {
 connect_to_peekbank <- function(db_version = "current", db_args = NULL,
                                 compress = TRUE, host = NULL, port = NULL) {
   db_info <- get_db_info()
+  db_info$port <- if (!is.null(db_info$port)) db_info$port else 3306
 
   flags <- if (compress) RMariaDB::CLIENT_COMPRESS else 0
 
   if (is.null(db_args)) db_args <- db_info
 
-  conn_host <- if (!is.null(host)) host else db_args$host
-  conn_port <- if (!is.null(port)) port else 3306
+  db_args$host <- if (!is.null(host)) host else db_args$host
+  db_args$port <- if (!is.null(port)) port else db_info$port
 
   DBI::dbConnect(
     RMariaDB::MariaDB(),
-    host = conn_host,
-    port = conn_port,
+    host = db_args$host,
+    port = db_args$port,
     dbname = translate_version(db_version, db_args, db_info),
     user = db_args$user,
     password = db_args$password,
