@@ -10,6 +10,7 @@ pkg_globals$SAMPLE_RATE <- 40 # Hz
 
 translate_version <- function(db_version, db_args, db_info) {
   # using the peekbankr hosted server
+
   if (db_args$host == db_info$host && db_args$port == db_info$port) {
     # current version
     if (db_version == "current") {
@@ -45,7 +46,7 @@ translate_version <- function(db_version, db_args, db_info) {
       "Not using default hosted Peekbank instance; no checks will be applied to ",
       "version specification."
     )
-    return(db_args$db_name)
+    return(db_version)
   }
 }
 
