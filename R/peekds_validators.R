@@ -396,6 +396,11 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   # STEP 8: trials table
   if (table_type == "trials"){
 
+    if(any(is.na(df_table$excluded))){
+      msg_new <- .msg("- Column 'excluded' contains NA values. All trials must have excluded set to TRUE or FALSE.")
+      msg_error <- c(msg_error, msg_new)
+    }
+
     # check if there are cases where there is an exclusion reason but excluded is false
     if(any(df_table %>% mutate(incorrectly_included = !excluded & (!is.na(exclusion_reason) & exclusion_reason != "")) %>% pull(incorrectly_included))){
       msg_new <- .msg("- some trials have exclusion reasons even though they are marked as included.")
