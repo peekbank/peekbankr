@@ -501,7 +501,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
         print(.msg("The processed data file {table_type} passed the
                    validator!"))
       }
-    } else if (ds_is_table_required(table_type, coding_methods)) {
+    } else if (ds.is_table_required(table_type, coding_methods)) {
       msg_error_all <- c(msg_error_all, .msg("Cannot find required file: {file_csv}"))
     }
   }
