@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing the Peekbank Database and working with Peekbank data
-Version: 0.2.5.6
+Version: 0.2.5.7
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),

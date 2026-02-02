@@ -506,6 +506,13 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
     }
   }
 
+  # Check if any required files are missing before proceeding to cross-table validation
+  missing_files <- grepl("Cannot find required file", msg_error_all)
+  if (any(missing_files)) {
+    msg_error_all <- c(msg_error_all, .msg("Skipping cross-table validation due to missing required files. Please ensure all required files are present for your coding method(s): {paste(coding_methods, collapse = ', ')}. For eyetracking data without raw xy coordinates, consider using 'preprocessed eyetracking' as the coding_method."))
+    return(msg_error_all)
+  }
+
   #######################################################
   # start cross-table validation
   msg_error <-ds.validate_trial_uniqueness_constraint(dict_tables[['aoi_timepoints']])
