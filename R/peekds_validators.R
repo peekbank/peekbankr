@@ -123,6 +123,9 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         msg_new <- .msg("- Column {fieldname} cannot contain NA values.")
         msg_error <- c(msg_error, msg_new)
       }
+    } else if (!is_null_allowed && any(is.na(content_tb))) {
+      msg_new <- .msg("- Column {fieldname} cannot contain NA values.")
+      msg_error <- c(msg_error, msg_new)
     }
 
     # step 1.5 check if any aux data is a top level list by mistake
@@ -569,6 +572,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
       errors <- c()
 
       one_not_in_two <- table_1 %>%
+        dplyr::filter(!is.na(.data[[join_id]])) %>%
         dplyr::anti_join(table_2, by = join_id)
       if(nrow(one_not_in_two) != 0){
         print(one_not_in_two)
@@ -576,6 +580,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
       }
 
       two_not_in_one <- table_2 %>%
+        dplyr::filter(!is.na(.data[[join_id]])) %>%
         dplyr::anti_join(table_1, by = join_id)
       if(nrow(two_not_in_one) != 0){
         print(two_not_in_one)
