@@ -549,7 +549,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   if("xy_timepoints" %in% table_list){
     table_pairs <- table_pairs %>%
       append(list(c("aoi_region_sets", "trial_types", "aoi_region_set_id"))) %>%
-      append(list(c("administrations", "xy_timepoints", "administration_id")))
+      append(list(c("xy_timepoints", "administrations", "administration_id", "forward")))
   }
 
   # check if there are any orphaned ids left with no connection to other tables
@@ -560,6 +560,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
       table_1 <- dict_tables[[vec[1]]]
       table_2 <- dict_tables[[vec[2]]]
       join_id <- vec[3]
+      direction <- if (length(vec) >= 4) vec[4] else "both"
 
       if(vec[1] == "stimuli" && vec[2] == "trial_types"){
         table_2 <- table_2 %>% pivot_longer(
@@ -571,20 +572,24 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 
       errors <- c()
 
-      one_not_in_two <- table_1 %>%
-        dplyr::filter(!is.na(.data[[join_id]])) %>%
-        dplyr::anti_join(table_2, by = join_id)
-      if(nrow(one_not_in_two) != 0){
-        print(one_not_in_two)
-        errors <- c(errors, .msg("Global issue: - not all {join_id} in {vec[1]} have a match in {vec[2]}"))
+      if (direction %in% c("both", "forward")) {
+        one_not_in_two <- table_1 %>%
+          dplyr::filter(!is.na(.data[[join_id]])) %>%
+          dplyr::anti_join(table_2, by = join_id)
+        if(nrow(one_not_in_two) != 0){
+          print(one_not_in_two)
+          errors <- c(errors, .msg("Global issue: - not all {join_id} in {vec[1]} have a match in {vec[2]}"))
+        }
       }
 
-      two_not_in_one <- table_2 %>%
-        dplyr::filter(!is.na(.data[[join_id]])) %>%
-        dplyr::anti_join(table_1, by = join_id)
-      if(nrow(two_not_in_one) != 0){
-        print(two_not_in_one)
-        errors <- c(errors, .msg("Global issue: - not all {join_id} in {vec[2]} have a match in {vec[1]}"))
+      if (direction %in% c("both", "reverse")) {
+        two_not_in_one <- table_2 %>%
+          dplyr::filter(!is.na(.data[[join_id]])) %>%
+          dplyr::anti_join(table_1, by = join_id)
+        if(nrow(two_not_in_one) != 0){
+          print(two_not_in_one)
+          errors <- c(errors, .msg("Global issue: - not all {join_id} in {vec[2]} have a match in {vec[1]}"))
+        }
       }
 
       return(errors)
