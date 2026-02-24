@@ -5,6 +5,15 @@ NULL
 
 options(warn = -1)
 
+validate_dataset_args <- function(dataset_id, dataset_name) {
+  if (!is.null(dataset_id) && !is.numeric(dataset_id)) {
+    stop("dataset_id must be numeric. Did you mean to use dataset_name = \"", dataset_id, "\"?")
+  }
+  if (!is.null(dataset_name) && !is.character(dataset_name)) {
+    stop("dataset_name must be a character string.")
+  }
+}
+
 pkg_globals <- new.env()
 pkg_globals$SAMPLE_RATE <- 40 # Hz
 
@@ -186,6 +195,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
                                 dataset_name = NULL, connection = NULL) {
   con <- resolve_connection(connection)
   input_age <- age
+  validate_dataset_args(dataset_id, dataset_name)
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
@@ -275,6 +285,7 @@ get_subjects <- function(connection = NULL) {
 get_trials <- function(dataset_id = NULL, dataset_name = NULL,
                        connection = NULL) {
   con <- resolve_connection(connection)
+  validate_dataset_args(dataset_id, dataset_name)
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
@@ -326,6 +337,7 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
 get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
                             connection = NULL) {
   con <- resolve_connection(connection)
+  validate_dataset_args(dataset_id, dataset_name)
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
@@ -374,6 +386,7 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
 get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
                         connection = NULL) {
   con <- resolve_connection(connection)
+  validate_dataset_args(dataset_id, dataset_name)
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
