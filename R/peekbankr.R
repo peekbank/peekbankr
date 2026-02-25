@@ -100,7 +100,7 @@ get_db_info <- function() {
 connect_to_peekbank <- function(db_version = "current", db_args = NULL,
                                 compress = TRUE, host = NULL, port = NULL) {
   db_info <- get_db_info()
-  db_info$port <- if (!is.null(db_info$port)) db_info$port else 3306
+  db_info$port <- if (!is.null(db_info$port)) db_info$port else 3307
 
   flags <- if (compress) RMariaDB::CLIENT_COMPRESS else 0
 
