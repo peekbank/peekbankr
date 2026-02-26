@@ -186,6 +186,9 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
                         at 40HZ.")
         msg_error <- c(msg_error, msg_new)
       }
+      if (any(is.na(df_table$x) & is.na(df_table$y))) {
+        msg_error <- c(msg_error, "- x and y coordinates are both NA for some xy_timepoints entries.")
+      }
     }
 
     # STEP 4.2:
@@ -547,6 +550,10 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   )
 
   if("xy_timepoints" %in% table_list){
+    if (!("aoi_region_sets" %in% names(dict_tables)) || all(is.na(dict_tables[["trials"]]$aoi_region_set_id))) {
+      stop("Dataset has xy_timepoints but is missing valid aoi_region_sets data. ",
+           "Please provide an aoi_region_sets table and ensure aoi_region_set_id values in trials are not all NA.")
+    }
     table_pairs <- table_pairs %>%
       append(list(c("aoi_region_sets", "trial_types", "aoi_region_set_id"))) %>%
       append(list(c("xy_timepoints", "administrations", "administration_id", "forward")))
