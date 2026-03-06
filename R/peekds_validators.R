@@ -318,6 +318,15 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         msg_new <- .msg("- Some subject(s) have CDI responses that have a language that does not follow the Wordbank specification.")
         msg_error <- c(msg_error, msg_new)
       }
+
+      # check for duplicate CDI scores per subject
+      cdi_dupes <- cdi %>%
+        dplyr::group_by(lab_subject_id, instrument_type, measure, age, language) %>%
+        dplyr::filter(dplyr::n() > 1)
+      if (nrow(cdi_dupes) > 0) {
+        dupe_ids <- unique(cdi_dupes$lab_subject_id)
+        msg_error <- c(msg_error, .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}"))
+      }
     }
   }
 
