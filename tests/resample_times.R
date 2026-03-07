@@ -32,14 +32,38 @@ df_trial <- tibble(t_norm = c(33, 66, 99, 1032, 1065),
 resampled <-ds.resample_times(df_trial, table_type = "aoi_timepoints")
 
 
-# collision - multiple values at a timepoint
-df_trial <- tibble(t_norm = c(1, 33, 33, 99), 
-                   aoi = c("missing", "target","distractor","distractor"), 
-                   administration_id = 1, 
-                   trial_id = 1, 
+# collision - multiple values at a timepoint (should error)
+df_trial <- tibble(t_norm = c(1, 33, 33, 99),
+                   aoi = c("missing", "target","distractor","distractor"),
+                   administration_id = 1,
+                   trial_id = 1,
                    point_of_disambiguation = 0)
 
-resampled <-ds.resample_times(df_trial, table_type = "aoi_timepoints")
+tryCatch(
+  { ds.resample_times(df_trial, table_type = "aoi_timepoints")
+    stop("Expected an error for duplicate t_norm values but none was thrown") },
+  error = function(e) {
+    if (!grepl("monotonically increasing", e$message))
+      stop(e)
+  }
+)
+
+
+# non-ascending t_norm values / timestamp reset (should error)
+df_trial <- tibble(t_norm = c(33, 66, 99, 50, 165),
+                   aoi = c("target","target","missing","distractor","distractor"),
+                   administration_id = 1,
+                   trial_id = 1,
+                   point_of_disambiguation = 0)
+
+tryCatch(
+  { ds.resample_times(df_trial, table_type = "aoi_timepoints")
+    stop("Expected an error for non-ascending t_norm values but none was thrown") },
+  error = function(e) {
+    if (!grepl("monotonically increasing", e$message))
+      stop(e)
+  }
+)
 
 
 # time-points that are already at the resampled points
