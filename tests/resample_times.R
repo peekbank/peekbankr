@@ -1,4 +1,5 @@
 # test file fords.resample_times
+library(peekbankr)
 library(tibble)
 
 # friendly case
