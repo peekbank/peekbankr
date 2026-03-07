@@ -521,7 +521,7 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
 #'
 #' @examples
 #' \dontrun{
-#' get_xy_timepoints(dataset_name = "pomper_saffran_2016")
+#' get_xy_timepoints(dataset_name = "reflook_v4")
 #' }
 get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
                               age = NULL, connection = NULL) {
