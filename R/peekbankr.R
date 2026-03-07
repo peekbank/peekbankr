@@ -980,3 +980,48 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
 
   return(stimuli_df %>% dplyr::mutate(local_stimulus_path = paths))
 }
+
+
+#' Download dataset README files from OSF to a temporary folder
+#'
+#' Downloads README files for Peekbank datasets from OSF. Note that READMEs
+#' always reflect the latest version of the dataset on OSF.
+#'
+#' @param datasets Character vector of dataset names. If empty (default),
+#'   downloads READMEs for all datasets.
+#' @param local_base_dir Directory to save README files to (default: "dataset_readmes")
+#'
+#' @return No return value, called for side effects. README files are saved to
+#'   the specified directory and the path is printed via message.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' get_readmes()
+#' get_readmes(datasets = c("pomper_saffran_2016"))
+#' }
+get_readmes <- function(datasets = c(), local_base_dir = "dataset_readmes") {
+  dataset_names <- datasets
+  if (length(dataset_names) == 0) {
+    resp <- httr::GET("https://api.osf.io/v2/nodes/pr6wu/files/osfstorage",
+                      query = list(sort = "name"))
+    content <- jsonlite::fromJSON(httr::content(resp, "text"))
+    dataset_names <- content$data$attributes$name
+  }
+
+  if (!dir.exists(local_base_dir)) dir.create(local_base_dir, recursive = TRUE)
+
+  staging_dir <- file.path(tempdir(), "peekbank_readmes_staging")
+  for (ds_name in dataset_names) {
+    tryCatch({
+      suppressMessages(download_osf_files(paste0(ds_name, "/README.md"),
+                         local_base_dir = staging_dir, skip_existing = FALSE))
+      src <- file.path(staging_dir, ds_name, "README.md")
+      dst <- file.path(local_base_dir, paste0(ds_name, ".md"))
+      if (file.exists(src)) file.copy(src, dst, overwrite = TRUE)
+    }, error = function(e) {})
+  }
+  unlink(staging_dir, recursive = TRUE)
+
+  message("READMEs saved to: ", local_base_dir)
+}
