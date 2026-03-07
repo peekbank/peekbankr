@@ -199,9 +199,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
                         at 40HZ.")
         msg_error <- c(msg_error, msg_new)
       }
-      if (any(is.na(df_table$x) & is.na(df_table$y))) {
-        msg_error <- c(msg_error, "- x and y coordinates are both NA for some xy_timepoints entries.")
-      }
+
     }
 
     # STEP 4.2:
