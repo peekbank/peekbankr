@@ -30,7 +30,7 @@ con A DBIConnection object for the peekbank database
 Connect to Peekbank
 }
 \examples{
-\donttest{
+\dontrun{
 con <- connect_to_peekbank(db_version = "current", db_args = NULL)
 DBI::dbDisconnect(con)
 }

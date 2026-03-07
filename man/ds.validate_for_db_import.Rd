@@ -18,6 +18,10 @@ should end in "processed_data"}
 \item{cdi_expected}{specifies whether cdi_data is to be expected to be present in the imported data}
 
 \item{file_ext}{the default is ".csv"}
+
+\item{is_null_field_required}{by default is set to TRUE which means that
+all the columns in the json file are required; when set to FALSE, fields
+that are allowed null values are not required}
 }
 \value{
 an empty string if all tables passed the validator; otherwise, the

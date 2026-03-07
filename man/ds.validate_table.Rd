@@ -19,6 +19,12 @@ ds.validate_table(
 \item{table_type}{the type of dataframe, for the most updated table types
 specified by schema, please use functionds.list_ds_tables()}
 
+\item{cdi_expected}{specifies whether cdi_data is to be expected to be
+present in the imported data; only relevant for subjects table}
+
+\item{dir_csv}{the folder directory containing all the csv files, used for
+stimulus image path validation}
+
 \item{is_null_field_required}{by default is set to TRUE which means that
 all the columns in the json file are required; when user specifically
 sets this to FALSE, then the fields that are allowed null values are not

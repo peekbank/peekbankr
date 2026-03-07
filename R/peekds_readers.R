@@ -47,7 +47,7 @@ ds.get_json_fields <- function(table_type) {
 
 #' List the tables required based on coding method
 #'
-#' @param coding_method a list of strings indicating the methods used in the experiment for
+#' @param coding_methods a list of strings indicating the methods used in the experiment for
 #'   coding gaze data, to get the list of current coding methods, please use
 #'   functionds.list_coding_methods()
 #'
@@ -55,7 +55,7 @@ ds.get_json_fields <- function(table_type) {
 #'
 #' @examples
 #' \dontrun{
-#' table_list <-ds.list_ds_tables(coding_method = "manual gaze coding")
+#' table_list <-ds.list_ds_tables(coding_methods = "manual gaze coding")
 #' }
 #'
 #' @export

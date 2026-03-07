@@ -1,4 +1,5 @@
 # test file fords.resample_times
+library(tibble)
 
 # friendly case
 df_trial <- tibble(t_norm = c(33, 66, 99, 132, 165), 

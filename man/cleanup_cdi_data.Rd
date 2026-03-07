@@ -16,7 +16,7 @@ a cleaned up version of the cdi data
 Checks cdi data for inconsistencies, warns about them, and fixes them
 }
 \examples{
-\donttest{
+\dontrun{
 clean_cdi_data <- all_subjects \%>\%
   unnest(subject_aux_data) \%>\%
   filter(!is.na(cdi_responses)) \%>\%

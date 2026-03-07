@@ -17,6 +17,8 @@ download_stimuli(
 \arguments{
 \item{con}{A database connection object created by connect_to_peekbank()}
 
+\item{local_base_dir}{Local directory path where stimulus images will be saved (default: "stimulus_data")}
+
 \item{datasets}{Character vector of dataset names to download stimuli for.
 If empty (default), downloads stimuli for all datasets.}
 

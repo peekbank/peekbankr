@@ -66,7 +66,7 @@ translate_version <- function(db_version, db_args, db_info) {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' get_db_info()
 #' }
 get_db_info <- function() {
@@ -85,7 +85,7 @@ get_db_info <- function() {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' con <- connect_to_peekbank(db_version = "current", db_args = NULL)
 #' DBI::dbDisconnect(con)
 #' }
@@ -938,6 +938,7 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 #' the full paths to the stimulus images on OSF, and downloads them to a local directory.
 #'
 #' @param con A database connection object created by connect_to_peekbank()
+#' @param local_base_dir Local directory path where stimulus images will be saved (default: "stimulus_data")
 #' @param datasets Character vector of dataset names to download stimuli for.
 #'                 If empty (default), downloads stimuli for all datasets.
 #' @param skip_existing skip downloading a file if a file with that name already exists in that path locally

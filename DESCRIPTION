@@ -16,7 +16,7 @@ License: GPL-3
 URL: http://github.com/peekbank/peekbankr
 BugReports: http://github.com/peekbank/peekbankr/issues
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 Imports:
     DBI (>= 1.1.1),
     dbplyr (>= 2.1.0),
@@ -36,8 +36,9 @@ Imports:
     tidyr (>= 1.1.2),
     stringr (>= 1.5.1),
     RMariaDB (>= 1.3.2)
-Suggests: 
+Suggests:
     knitr,
-    rmarkdown
-RoxygenNote: 7.3.1
+    rmarkdown,
+    tibble
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr

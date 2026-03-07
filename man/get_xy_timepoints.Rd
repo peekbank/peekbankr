@@ -31,6 +31,6 @@ Get XY timepoints
 }
 \examples{
 \dontrun{
-get_xy_timepoints(dataset_name = "pomper_saffran_2016")
+get_xy_timepoints(dataset_name = "reflook_v4")
 }
 }

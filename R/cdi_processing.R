@@ -6,7 +6,7 @@
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' clean_cdi_data <- all_subjects %>%
 #'   unnest(subject_aux_data) %>%
 #'   filter(!is.na(cdi_responses)) %>%
@@ -57,7 +57,7 @@ cleanup_cdi_data <- function(cdi_data) {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' full_cdi_data <- all_subjects %>%
 #'   unnest(subject_aux_data) %>%
 #'   filter(!is.na(cdi_responses)) %>%
@@ -95,7 +95,7 @@ populate_cdi_percentiles <- function(subjects_table) {
     stop("Output columns already exist: ", paste(existing_output_cols, collapse = ", "))
   }
 
-  norms_tables <- readRDS("data/cdi_benchmarks_2022/norms_tables.rds")
+  norms_tables <- readRDS(system.file("extdata", "cdi_benchmarks_2022", "norms_tables.rds", package = "peekbankr"))
 
   cdi_norms_long <- norms_tables %>%
     purrr::imap(\(table, name){
@@ -178,7 +178,7 @@ populate_cdi_percentiles <- function(subjects_table) {
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' cdi_data <- all_subjects %>%
 #'   unnest(subject_aux_data) %>%
 #'   filter(!is.na(cdi_responses)) %>%

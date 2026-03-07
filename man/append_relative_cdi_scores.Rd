@@ -16,7 +16,7 @@ the input table with an added "cdi_relative" column that contains the percentage
 Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure
 }
 \examples{
-\donttest{
+\dontrun{
 cdi_data <- all_subjects \%>\%
   unnest(subject_aux_data) \%>\%
   filter(!is.na(cdi_responses)) \%>\%

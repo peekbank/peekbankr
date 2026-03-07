@@ -8,11 +8,7 @@
 ds.validate_trial_uniqueness_constraint(df_aoi_timepoints)
 }
 \arguments{
-\item{df_table}{the aoi_timepoints dataframe}
-
-\item{cdi_expected}{specifies whether cdi_data is to be expected to be present in the imported data;
-only relevant for subjects table.
-We could consider creating a special table type, so that invalid combinations of table_type and cdi_expected cannot happen, but it does not break anything, so low priority}
+\item{df_aoi_timepoints}{the aoi_timepoints dataframe}
 }
 \value{
 an empty string when all the administration_ids are unique within each trial_id;
@@ -24,7 +20,7 @@ Check if within aoi_timepoints table, there is no duplication in all the adminis
 }
 \examples{
 \dontrun{
-is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = FALSE)
+is_valid <-ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
 }
 
 }

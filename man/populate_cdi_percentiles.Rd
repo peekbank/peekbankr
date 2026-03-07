@@ -16,7 +16,7 @@ the input table with added columns containing the reference age used, the refere
 Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.
 }
 \examples{
-\donttest{
+\dontrun{
 full_cdi_data <- all_subjects \%>\%
   unnest(subject_aux_data) \%>\%
   filter(!is.na(cdi_responses)) \%>\%

@@ -1,7 +1,9 @@
+# This test requires a database connection and should only be run manually
+if (identical(Sys.getenv("PEEKBANK_TEST_DB"), "true")) {
+
 library(peekbankr)
 library(dplyr)
 library(tidyr)
-library(here)
 
 con <- connect_to_peekbank(db_version = "grant_2024_dev")
 all_aoi_timepoints <- get_aoi_timepoints(connection = con, rle=FALSE)
@@ -22,3 +24,5 @@ cdi_data <- all_subjects %>%
   peekbankr::cleanup_cdi_data() %>%
   peekbankr::append_relative_cdi_scores() %>%
   peekbankr::populate_cdi_percentiles()
+
+}

@@ -39,6 +39,10 @@ file.exists.case.sensitive <- function(...) {
 #' @param df_table the dataframe to be saved
 #' @param table_type the type of dataframe, for the most updated table types
 #'   specified by schema, please use functionds.list_ds_tables()
+#' @param cdi_expected specifies whether cdi_data is to be expected to be
+#'   present in the imported data; only relevant for subjects table
+#' @param dir_csv the folder directory containing all the csv files, used for
+#'   stimulus image path validation
 #' @param is_null_field_required by default is set to TRUE which means that
 #'   all the columns in the json file are required; when user specifically
 #'   sets this to FALSE, then the fields that are allowed null values are not
@@ -438,18 +442,14 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 #' Check if within aoi_timepoints table, there is no duplication in all the administration_ids
 #'   associated with each individual trial_id
 #'
-#' @param df_table the aoi_timepoints dataframe
-#' @param cdi_expected specifies whether cdi_data is to be expected to be present in the imported data;
-#'      only relevant for subjects table.
-#'      We could consider creating a special table type, so that invalid combinations of table_type and cdi_expected cannot happen, but it does not break anything, so low priority
-#'
+#' @param df_aoi_timepoints the aoi_timepoints dataframe
 #'
 #' @return an empty string when all the administration_ids are unique within each trial_id;
 #'   Otherwise, the error message will be returned.
 #'
 #' @examples
 #' \dontrun{
-#' is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = FALSE)
+#' is_valid <-ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
 #' }
 #'
 #' @export
@@ -469,8 +469,11 @@ ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
 #'
 #' @param dir_csv the folder directory containing all the csv files, the path
 #'   should end in "processed_data"
-#' @param file_ext the default is ".csv"
 #' @param cdi_expected specifies whether cdi_data is to be expected to be present in the imported data
+#' @param file_ext the default is ".csv"
+#' @param is_null_field_required by default is set to TRUE which means that
+#'   all the columns in the json file are required; when set to FALSE, fields
+#'   that are allowed null values are not required
 #'
 #' @return an empty string if all tables passed the validator; otherwise, the
 #'   function returns a list of messages describing detailed issues that needs

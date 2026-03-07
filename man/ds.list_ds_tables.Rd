@@ -7,7 +7,7 @@
 ds.list_ds_tables(coding_methods = c("eyetracking"))
 }
 \arguments{
-\item{coding_method}{a list of strings indicating the methods used in the experiment for
+\item{coding_methods}{a list of strings indicating the methods used in the experiment for
 coding gaze data, to get the list of current coding methods, please use
 functionds.list_coding_methods()}
 }
@@ -19,7 +19,7 @@ List the tables required based on coding method
 }
 \examples{
 \dontrun{
-table_list <-ds.list_ds_tables(coding_method = "manual gaze coding")
+table_list <-ds.list_ds_tables(coding_methods = "manual gaze coding")
 }
 
 }
