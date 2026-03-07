@@ -68,6 +68,15 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     msg_error <- c(msg_error, .msg("- invalid columns found in {table_type}: {unwanted_columns}."))
   }
 
+  # check for non-UTF-8 characters in all character columns
+  char_cols <- names(df_table)[sapply(df_table, is.character)]
+  for (col in char_cols) {
+    non_utf8 <- which(!validUTF8(df_table[[col]]))
+    if (length(non_utf8) > 0) {
+      msg_error <- c(msg_error, .msg("- Column {col} in {table_type} contains non-UTF-8 characters in {length(non_utf8)} row(s) (first rows: {paste(head(non_utf8), collapse = ', ')}). Please ensure all text is UTF-8 encoded."))
+    }
+  }
+
   # start checking field/column one by one
   for (idx in 1:length(fieldnames_json)) {
     fieldname <- fieldnames_json[idx]
