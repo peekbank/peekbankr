@@ -193,6 +193,18 @@ ds.resample_times <- function(df_table, table_type) {
               re-zeroed and normalized first before being resampled!"))
   }
 
+  # check that t_norm is monotonically increasing within each trial
+  non_monotonic <- df_table %>%
+    dplyr::group_by(.data$administration_id, .data$trial_id) %>%
+    dplyr::filter(dplyr::lag(.data$t_norm, default = -Inf) >= .data$t_norm) %>%
+    dplyr::ungroup()
+
+  if (nrow(non_monotonic) > 0) {
+    affected <- non_monotonic %>%
+      dplyr::distinct(.data$administration_id, .data$trial_id)
+    stop(.msg("t_norm values are not monotonically increasing within {nrow(affected)} trial(s). This may indicate timestamp resets within a trial. Affected administration_id/trial_id pairs: {paste(affected$administration_id, affected$trial_id, sep = '/', collapse = ', ')}"))
+  }
+
   # main resampling call
   if (table_type == "aoi_timepoints") {
     # start resampling process by iterating through every trial within every
