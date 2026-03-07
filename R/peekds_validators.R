@@ -559,9 +559,9 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   )
 
   if("xy_timepoints" %in% table_list){
-    if (!("aoi_region_sets" %in% names(dict_tables)) || all(is.na(dict_tables[["trials"]]$aoi_region_set_id))) {
+    if (!("aoi_region_sets" %in% names(dict_tables)) || all(is.na(dict_tables[["trial_types"]]$aoi_region_set_id))) {
       stop("Dataset has xy_timepoints but is missing valid aoi_region_sets data. ",
-           "Please provide an aoi_region_sets table and ensure aoi_region_set_id values in trials are not all NA.")
+           "Please provide an aoi_region_sets table and ensure aoi_region_set_id values in trial_types are not all NA.")
     }
     table_pairs <- table_pairs %>%
       append(list(c("aoi_region_sets", "trial_types", "aoi_region_set_id"))) %>%
