@@ -59,14 +59,6 @@ translate_version <- function(db_version, db_args, db_info) {
   }
 }
 
-resolve_connection <- function(connection, db_version = NULL, db_args = NULL) {
-  if (is.null(connection)) {
-    connect_to_peekbankr(db_version, db_args)
-  } else {
-    connection
-  }
-}
-
 #' Get information on database connection options
 #'
 #' @return List of database info: host name, current version, supported
@@ -121,7 +113,16 @@ connect_to_peekbank <- function(db_version = "current", db_args = NULL,
 }
 
 resolve_connection <- function(connection) {
-  if (is.null(connection)) connect_to_peekbank() else connection
+  if (is.null(connection)) {
+    warning("No connection provided. Defaulting to connect_to_peekbank(db_version = 'current'). ",
+            "This can result in mismatched database versions if you are using a different version elsewhere. ",
+            "This implicit behavior is deprecated and will be removed in a future version. ",
+            "Please create a connection explicitly with connect_to_peekbank() and pass it via the connection argument.",
+            call. = FALSE)
+    connect_to_peekbank()
+  } else {
+    connection
+  }
 }
 
 #' List of peekbank tables
