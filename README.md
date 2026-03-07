@@ -9,6 +9,7 @@ The `peekbankr` package allows you to access data in peekbank from R. This remov
 ### Install `peekbankr` from GitHub:
 
 ```
+install.packages("RMariaDB")
 # install.packages("remotes")
 remotes::install_github("peekbank/peekbankr")
 ```
@@ -18,13 +19,8 @@ remotes::install_github("peekbank/peekbankr")
 When developing, you can run:
 
 ```
+# install.packages("RMariaDB")
 install.packages(".", repos = NULL, type="source", dependencies=TRUE)
-```
-
-If it fails to install the `RMariaDB` dependency automatically, you can manually trigger the installation using
-
-```
-install.packages("RMariaDB")
 ```
 
 After making changes, be sure to run 
@@ -43,8 +39,10 @@ Here's a simple workflow for using `peekbankr` to get data from a single study.
 library(tidyverse)
 library(peekbankr)
 
-aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016")
-administrations <- get_administrations(dataset_name = "pomper_saffran_2016")
+con <- connect_to_peekbank()
+
+aoi_timepoints <- get_aoi_timepoints(connection = con, dataset_name = "pomper_saffran_2016")
+administrations <- get_administrations(connection = con, dataset_name = "pomper_saffran_2016")
 
 ps_data <- aoi_timepoints %>%
   left_join(administrations)
