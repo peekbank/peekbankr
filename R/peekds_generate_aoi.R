@@ -196,7 +196,7 @@ ds.resample_times <- function(df_table, table_type) {
   # check that t_norm is monotonically increasing within each trial
   non_monotonic <- df_table %>%
     dplyr::group_by(.data$administration_id, .data$trial_id) %>%
-    dplyr::filter(dplyr::lag(.data$t_norm, default = -Inf) >= .data$t_norm) %>%
+    dplyr::filter(dplyr::lag(.data$t_norm, default = -.Machine$integer.max) >= .data$t_norm) %>%
     dplyr::ungroup()
 
   if (nrow(non_monotonic) > 0) {
