@@ -23,13 +23,18 @@ resampled <-ds.resample_times(df_trial, table_type = "aoi_timepoints")
 
 
 # what happens in a large gap?
-df_trial <- tibble(t_norm = c(33, 66, 99, 1032, 1065), 
-                   aoi = c("target","target","distractor","missing","distractor"), 
-                   administration_id = 1, 
-                   trial_id = 1, 
+df_trial <- tibble(t_norm = c(33, 66, 99, 1032, 1065),
+                   aoi = c("target","target","distractor","missing","distractor"),
+                   administration_id = 1,
+                   trial_id = 1,
                    point_of_disambiguation = 0)
 
 resampled <-ds.resample_times(df_trial, table_type = "aoi_timepoints")
+
+# resampled points inside the large gap (between 99 and 1032) should be missing
+gap_points <- resampled[resampled$t_norm > 99 & resampled$t_norm < 1032, ]
+stopifnot(nrow(gap_points) > 0)
+stopifnot(all(gap_points$aoi == "missing"))
 
 
 # collision - multiple values at a timepoint (should error)

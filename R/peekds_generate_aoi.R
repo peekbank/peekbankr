@@ -1,3 +1,16 @@
+# returns a logical vector indicating which resampled points fall inside
+# large gaps (>3x median interval) between consecutive original timepoints
+find_gap_points <- function(t_origin, t_resampled) {
+  if (length(t_origin) < 2) return(rep(FALSE, length(t_resampled)))
+  gap_threshold <- 3 * stats::median(diff(t_origin))
+  original_gaps <- diff(t_origin)
+  interval_idx <- findInterval(t_resampled, t_origin)
+  # clamp to valid index range so original_gaps[safe_idx] doesn't drop elements
+  safe_idx <- pmax(pmin(interval_idx, length(original_gaps)), 1)
+  interval_idx > 0 & interval_idx < length(t_origin) &
+    original_gaps[safe_idx] > gap_threshold
+}
+
 # key private function to do resampling of aois within a single trial uses
 # approxfun to resample because missingness is coded as an integer and
 # interpolation is "constant" then no "gaps" between AOIs are filled. actually
@@ -21,6 +34,8 @@ resample_aoi_trial <- function(df_trial) {
   aoi_resampled <- stats::approx(x = t_origin, y = aoi_num, xout = t_resampled,
                                  method = "constant", rule = 2,
                                  ties = "ordered")$y
+  aoi_resampled[find_gap_points(t_origin, t_resampled)] <- 4  # missing
+
   aoi_resampled_recoded <- aoi_resampled %>%
     dplyr::recode("1" = "target", "2" = "distractor",
                   "3" = "other", "4" = "missing")
@@ -60,6 +75,10 @@ resample_xy_trial <- function(df_trial) {
   y_resampled <- stats::approx(x = t_origin, y = y_origin, xout = t_resampled,
                                method = "constant", rule = 2,
                                ties = "ordered")$y
+
+  in_gap <- find_gap_points(t_origin, t_resampled)
+  x_resampled[in_gap] <- MISSING_CONST
+  y_resampled[in_gap] <- MISSING_CONST
 
   # replace missing values
   x_resampled[x_resampled == MISSING_CONST] <- NA
