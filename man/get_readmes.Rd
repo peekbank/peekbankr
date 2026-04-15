@@ -4,15 +4,17 @@
 \alias{get_readmes}
 \title{Download dataset README files from OSF to a temporary folder}
 \usage{
-get_readmes(datasets = c())
+get_readmes(datasets = c(), local_base_dir = "dataset_readmes")
 }
 \arguments{
 \item{datasets}{Character vector of dataset names. If empty (default),
 downloads READMEs for all datasets.}
+
+\item{local_base_dir}{Directory to save README files to (default: "dataset_readmes")}
 }
 \value{
 No return value, called for side effects. README files are saved to
-  a temporary directory and the path is printed via message.
+  the specified directory and the path is printed via message.
 }
 \description{
 Downloads README files for Peekbank datasets from OSF. Note that READMEs
