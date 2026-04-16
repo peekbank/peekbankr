@@ -52,7 +52,7 @@ file.exists.case.sensitive <- function(...) {
 #'   \describe{
 #'     \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
 #'     \item{warnings}{Named list of validation warnings (suppressable). Names are warning IDs
-#'       (e.g. \code{"duplicate_cdi"}).}
+#'       (e.g. \code{"cdi_collision"}).}
 #'   }
 #'
 #' @examples
@@ -341,7 +341,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         dplyr::filter(dplyr::n() > 1)
       if (nrow(cdi_dupes) > 0) {
         dupe_ids <- unique(cdi_dupes$lab_subject_id)
-        msg_warning[["duplicate_cdi"]] <- .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}")
+        msg_warning[["cdi_collision"]] <- .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}")
       }
     }
   }
@@ -478,7 +478,7 @@ ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
 #'   all the columns in the json file are required; when set to FALSE, fields
 #'   that are allowed null values are not required
 #' @param suppress_warnings character vector of warning IDs to silence.
-#'   Currently supported: \code{"duplicate_cdi"}.
+#'   Currently supported: \code{"cdi_collision"}.
 #'
 #' @return A list with two elements:
 #'   \describe{
@@ -495,7 +495,7 @@ ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
 #'
 #' # suppress known warnings for a specific dataset
 #' result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE,
-#'                                     suppress_warnings = c("duplicate_cdi"))
+#'                                     suppress_warnings = c("cdi_collision"))
 #' }
 #'
 #' @export

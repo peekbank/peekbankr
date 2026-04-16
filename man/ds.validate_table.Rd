@@ -34,8 +34,8 @@ required.}
 A list with two elements:
   \describe{
     \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
-    \item{warnings}{Named list of validation warnings (non-blocking). Names are warning IDs
-      (e.g. \code{"duplicate_cdi"}).}
+    \item{warnings}{Named list of validation warnings (suppressable). Names are warning IDs
+      (e.g. \code{"cdi_collision"}).}
   }
 }
 \description{
@@ -46,7 +46,7 @@ import
 \dontrun{
 result <- ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
 result$errors    # blocking issues
-result$warnings  # informational warnings
+result$warnings  # warnings that can be opted out of on a case by case basis
 }
 
 }

@@ -25,13 +25,13 @@ all the columns in the json file are required; when set to FALSE, fields
 that are allowed null values are not required}
 
 \item{suppress_warnings}{character vector of warning IDs to silence.
-Currently supported: \code{"duplicate_cdi"}.}
+Currently supported: \code{"cdi_collision"}.}
 }
 \value{
 A list with two elements:
   \describe{
     \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
-    \item{warnings}{Character vector of validation warnings (non-blocking), or NULL if none.
+    \item{warnings}{Character vector of validation warnings (suppressible), or NULL if none.
       Warnings matching \code{suppress_warnings} are excluded.}
   }
 }
@@ -42,11 +42,11 @@ check all csv files against database schema for database import
 \dontrun{
 result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE)
 result$errors    # blocking issues
-result$warnings  # informational warnings
+result$warnings  # warnings that can be opted out of on a case by case basis
 
 # suppress known warnings for a specific dataset
 result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE,
-                                    suppress_warnings = c("duplicate_cdi"))
+                                    suppress_warnings = c("cdi_collision"))
 }
 
 }
