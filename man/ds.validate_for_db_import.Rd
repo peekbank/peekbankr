@@ -8,7 +8,8 @@ ds.validate_for_db_import(
   dir_csv,
   cdi_expected,
   file_ext = ".csv",
-  is_null_field_required = TRUE
+  is_null_field_required = TRUE,
+  suppress_warnings = c()
 )
 }
 \arguments{
@@ -22,18 +23,30 @@ should end in "processed_data"}
 \item{is_null_field_required}{by default is set to TRUE which means that
 all the columns in the json file are required; when set to FALSE, fields
 that are allowed null values are not required}
+
+\item{suppress_warnings}{character vector of warning IDs to silence.
+Currently supported: \code{"duplicate_cdi"}.}
 }
 \value{
-an empty string if all tables passed the validator; otherwise, the
-  function returns a list of messages describing detailed issues that needs
-  to be fixed
+A list with two elements:
+  \describe{
+    \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
+    \item{warnings}{Character vector of validation warnings (non-blocking), or NULL if none.
+      Warnings matching \code{suppress_warnings} are excluded.}
+  }
 }
 \description{
 check all csv files against database schema for database import
 }
 \examples{
 \dontrun{
-msg_error_all <-ds.validate_for_db_import(dir_csv = "./processed_data")
+result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE)
+result$errors    # blocking issues
+result$warnings  # informational warnings
+
+# suppress known warnings for a specific dataset
+result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE,
+                                    suppress_warnings = c("duplicate_cdi"))
 }
 
 }

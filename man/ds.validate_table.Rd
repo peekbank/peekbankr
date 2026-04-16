@@ -31,10 +31,12 @@ sets this to FALSE, then the fields that are allowed null values are not
 required.}
 }
 \value{
-an empty string when the input data frame is compliant with json
-  specification, such as having all the required columns, primary key field
-  has unique values, etc. Otherwise, the function returns a list of messages
-  describing detailed issues that needs to be fixed
+A list with two elements:
+  \describe{
+    \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
+    \item{warnings}{Named list of validation warnings (non-blocking). Names are warning IDs
+      (e.g. \code{"duplicate_cdi"}).}
+  }
 }
 \description{
 Check if a dataframe/table is compliant to peekbank json before database
@@ -42,7 +44,9 @@ import
 }
 \examples{
 \dontrun{
-is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
+result <- ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
+result$errors    # blocking issues
+result$warnings  # informational warnings
 }
 
 }

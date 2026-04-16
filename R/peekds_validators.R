@@ -48,20 +48,25 @@ file.exists.case.sensitive <- function(...) {
 #'   sets this to FALSE, then the fields that are allowed null values are not
 #'   required.
 #'
-#' @return an empty string when the input data frame is compliant with json
-#'   specification, such as having all the required columns, primary key field
-#'   has unique values, etc. Otherwise, the function returns a list of messages
-#'   describing detailed issues that needs to be fixed
+#' @return A list with two elements:
+#'   \describe{
+#'     \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
+#'     \item{warnings}{Named list of validation warnings (suppressable). Names are warning IDs
+#'       (e.g. \code{"duplicate_cdi"}).}
+#'   }
 #'
 #' @examples
 #' \dontrun{
-#' is_valid <-ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
+#' result <- ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
+#' result$errors    # blocking issues
+#' result$warnings  # warnings that can be opted out of on a case by case basis
 #' }
 #'
 #' @export
 ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_null_field_required = TRUE) {
 
   msg_error <- c()
+  msg_warning <- list()
   colnames_table <- colnames(df_table)
 
   fields_json <-ds.get_json_fields(table_type = table_type)
@@ -336,7 +341,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         dplyr::filter(dplyr::n() > 1)
       if (nrow(cdi_dupes) > 0) {
         dupe_ids <- unique(cdi_dupes$lab_subject_id)
-        msg_error <- c(msg_error, .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}"))
+        msg_warning[["duplicate_cdi"]] <- .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}")
       }
     }
   }
@@ -434,7 +439,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     }
   }
 
-  return(msg_error)
+  return(list(errors = msg_error, warnings = msg_warning))
 }
 
 #' Check if within aoi_timepoints table, there is no duplication in all the administration_ids
@@ -472,18 +477,29 @@ ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
 #' @param is_null_field_required by default is set to TRUE which means that
 #'   all the columns in the json file are required; when set to FALSE, fields
 #'   that are allowed null values are not required
+#' @param suppress_warnings character vector of warning IDs to silence.
+#'   Currently supported: \code{"duplicate_cdi"}.
 #'
-#' @return an empty string if all tables passed the validator; otherwise, the
-#'   function returns a list of messages describing detailed issues that needs
-#'   to be fixed
+#' @return A list with two elements:
+#'   \describe{
+#'     \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
+#'     \item{warnings}{Character vector of validation warnings (suppressible), or NULL if none.
+#'       Warnings matching \code{suppress_warnings} are excluded.}
+#'   }
 #'
 #' @examples
 #' \dontrun{
-#' msg_error_all <-ds.validate_for_db_import(dir_csv = "./processed_data")
+#' result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE)
+#' result$errors    # blocking issues
+#' result$warnings  # warnings that can be opted out of on a case by case basis
+#'
+#' # suppress known warnings for a specific dataset
+#' result <- ds.validate_for_db_import(dir_csv = "./processed_data", cdi_expected = TRUE,
+#'                                     suppress_warnings = c("duplicate_cdi"))
 #' }
 #'
 #' @export
-ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", is_null_field_required = TRUE) {
+ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", is_null_field_required = TRUE, suppress_warnings = c()) {
 
   if(missing(cdi_expected)){
     stop("Need to specifiy cdi_expected boolean argument to validator")
@@ -504,6 +520,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   # admin table is not required
   # table_list <- table_list[table_list != "admin"];
   msg_error_all <- c()
+  msg_warning_all <- list()
 
   #######################################################
   # start checking each table format against json
@@ -514,11 +531,12 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
     if (file.exists(file_csv)) {
       # read in csv file and check if the data is valid
       dict_tables[[table_type]] <- utils::read.csv(file_csv)
-      msg_error <-ds.validate_table(dict_tables[[table_type]], table_type, cdi_expected, dir_csv, is_null_field_required)
-      if (!is.null(msg_error)) {
+      result <-ds.validate_table(dict_tables[[table_type]], table_type, cdi_expected, dir_csv, is_null_field_required)
+      msg_warning_all <- c(msg_warning_all, result$warnings)
+      if (!is.null(result$errors)) {
         msg_error <- .msg("The processed data file {table_type} failed to pass
                           the validator for database import with these error
-                          messsages:\n {paste(msg_error, collapse = '\n')}")
+                          messsages:\n {paste(result$errors, collapse = '\n')}")
         # cat(crayon::bgMagenta(msg_error), "\n")
         message(msg_error)
         msg_error_all <- c(msg_error_all, msg_error)
@@ -535,7 +553,8 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   missing_files <- grepl("Cannot find required file", msg_error_all)
   if (any(missing_files)) {
     msg_error_all <- c(msg_error_all, .msg("Skipping cross-table validation due to missing required files. Please ensure all required files are present for your coding method(s): {paste(coding_methods, collapse = ', ')}. For eyetracking data without raw xy coordinates, consider using 'preprocessed eyetracking' as the coding_method."))
-    return(msg_error_all)
+    msg_warning_all <- msg_warning_all[!names(msg_warning_all) %in% suppress_warnings]
+    return(list(errors = msg_error_all, warnings = unlist(msg_warning_all)))
   }
 
   #######################################################
@@ -624,5 +643,6 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 
   msg_error_all <- c(msg_error_all, errors_orphans)
 
-  return(msg_error_all)
+  msg_warning_all <- msg_warning_all[!names(msg_warning_all) %in% suppress_warnings]
+  return(list(errors = msg_error_all, warnings = unlist(msg_warning_all)))
 }
