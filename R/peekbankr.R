@@ -79,7 +79,16 @@ get_db_info <- function() {
 #' @param db_args List with host, user, and password defined
 #' @param compress Flag to use compression protocol (defaults to TRUE)
 #' @param host Hostname of the Peekbank server to connect to (defaults hosted PB)
-#' @param port Port of the Peekbank DB to connect to (defaults to 3306)
+#' @param port Port of the Peekbank DB to connect to (defaults to 3307)
+#' @param ssl How to handle TLS. One of:
+#'   * `"auto"` (default): verify against the shipped CA for the hosted
+#'     Peekbank instance; skip TLS for connections to `127.0.0.1`,
+#'     `localhost`, or `::1`; otherwise leave it to the connector defaults.
+#'   * `"disabled"`: do not require TLS (useful for plaintext local servers
+#'     when running on RMariaDB versions that would otherwise
+#'     refuse the connection).
+#'   * Path to a PEM file: use that as the CA to verify the server cert
+#'     (useful for self-hosted deployments with their own self-signed cert).
 #'
 #' @return con A DBIConnection object for the peekbank database
 #' @export
@@ -90,7 +99,8 @@ get_db_info <- function() {
 #' DBI::dbDisconnect(con)
 #' }
 connect_to_peekbank <- function(db_version = "current", db_args = NULL,
-                                compress = TRUE, host = NULL, port = NULL) {
+                                compress = TRUE, host = NULL, port = NULL,
+                                ssl = "auto") {
   db_info <- get_db_info()
   db_info$port <- if (!is.null(db_info$port)) db_info$port else 3307
 
@@ -101,15 +111,55 @@ connect_to_peekbank <- function(db_version = "current", db_args = NULL,
   db_args$host <- if (!is.null(host)) host else db_args$host
   db_args$port <- if (!is.null(port)) port else db_info$port
 
-  DBI::dbConnect(
-    RMariaDB::MariaDB(),
-    host = db_args$host,
-    port = db_args$port,
-    dbname = translate_version(db_version, db_args, db_info),
-    user = db_args$user,
-    password = db_args$password,
-    client.flag = flags
-  )
+  ssl_args <- resolve_ssl_args(db_args$host, db_args$port, ssl, db_info)
+
+  do.call(DBI::dbConnect, c(
+    list(
+      RMariaDB::MariaDB(),
+      host = db_args$host,
+      port = db_args$port,
+      dbname = translate_version(db_version, db_args, db_info),
+      user = db_args$user,
+      password = db_args$password,
+      client.flag = flags
+    ),
+    ssl_args
+  ))
+}
+
+# Translate the user-facing `ssl` argument into RMariaDB::dbConnect arguments.
+# Returns a (possibly empty) list with some of: ssl.ca, default.file.
+resolve_ssl_args <- function(host, port, ssl, db_info) {
+  if (identical(ssl, "auto")) {
+    is_hosted <- !is.null(host) &&
+      host == db_info$host && port == db_info$port
+    if (is_hosted) {
+      return(list(ssl.ca = system.file("certs/peekbank-ca.pem",
+                                       package = "peekbankr")))
+    }
+    if (!is.null(host) && host %in% c("127.0.0.1", "localhost", "::1")) {
+      return(list(default.file = no_tls_option_file()))
+    }
+    return(list())
+  }
+  if (identical(ssl, "disabled")) {
+    return(list(default.file = no_tls_option_file()))
+  }
+  if (is.character(ssl) && length(ssl) == 1) {
+    if (!file.exists(ssl)) {
+      stop("`ssl` was set to '", ssl,
+           "' but that file does not exist. Pass \"auto\", \"disabled\", ",
+           "or a path to a PEM file.")
+    }
+    return(list(ssl.ca = ssl))
+  }
+  stop("`ssl` must be \"auto\", \"disabled\", or a path to a PEM file.")
+}
+
+no_tls_option_file <- function() {
+  f <- tempfile(fileext = ".cnf")
+  writeLines(c("[client]", "ssl-verify-server-cert=0"), f)
+  f
 }
 
 resolve_connection <- function(connection) {

@@ -9,7 +9,8 @@ connect_to_peekbank(
   db_args = NULL,
   compress = TRUE,
   host = NULL,
-  port = NULL
+  port = NULL,
+  ssl = "auto"
 )
 }
 \arguments{
@@ -21,7 +22,17 @@ connect_to_peekbank(
 
 \item{host}{Hostname of the Peekbank server to connect to (defaults hosted PB)}
 
-\item{port}{Port of the Peekbank DB to connect to (defaults to 3306)}
+\item{port}{Port of the Peekbank DB to connect to (defaults to 3307)}
+
+\item{ssl}{How to handle TLS. One of:
+* `"auto"` (default): verify against the shipped CA for the hosted
+  Peekbank instance; skip TLS for connections to `127.0.0.1`,
+  `localhost`, or `::1`; otherwise leave it to the connector defaults.
+* `"disabled"`: do not require TLS (useful for plaintext local servers
+  when running on MariaDB Connector/C >= 3.4, which would otherwise
+  refuse the connection).
+* Path to a PEM file: use that as the CA to verify the server cert
+  (useful for self-hosted deployments with their own self-signed cert).}
 }
 \value{
 con A DBIConnection object for the peekbank database

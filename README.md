@@ -47,3 +47,21 @@ administrations <- get_administrations(connection = con, dataset_name = "pomper_
 ps_data <- aoi_timepoints %>%
   left_join(administrations)
 ```
+
+### TLS / SSL
+
+`connect_to_peekbank()` handles TLS automatically via the `ssl` argument (default `"auto"`):
+
+* The hosted Peekbank instance is contacted over TLS and verified against a CA cert shipped inside the package; nothing to configure.
+* Connections to `127.0.0.1` or `localhost` skip TLS enforcement, so a local `peekbank` docker stack running without TLS works out of the box.
+* For any other host, TLS handling is left to the connector defaults.
+
+To override:
+
+```
+# Custom self-hosted server with its own self-signed cert:
+connect_to_peekbank(host = "db.example.org", ssl = "/path/to/my-ca.pem")
+
+# Force plaintext (e.g. an unusual non-localhost development setup):
+connect_to_peekbank(host = "192.168.1.42", ssl = "disabled")
+```
