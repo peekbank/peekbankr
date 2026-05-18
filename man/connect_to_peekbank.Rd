@@ -29,7 +29,7 @@ connect_to_peekbank(
   Peekbank instance; skip TLS for connections to `127.0.0.1`,
   `localhost`, or `::1`; otherwise leave it to the connector defaults.
 * `"disabled"`: do not require TLS (useful for plaintext local servers
-  when running on MariaDB Connector/C >= 3.4, which would otherwise
+  when running on RMariaDB versions that would otherwise
   refuse the connection).
 * Path to a PEM file: use that as the CA to verify the server cert
   (useful for self-hosted deployments with their own self-signed cert).}
