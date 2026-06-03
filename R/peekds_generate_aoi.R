@@ -21,8 +21,11 @@ resample_aoi_trial <- function(df_trial) {
   data_origin <- df_trial$aoi
 
   # create the new timestamps for resampling
-  t_start <- min(t_origin) - (min(t_origin) %% pkg_globals$SAMPLE_DURATION)
-  t_resampled <- seq(from = t_start, to = max(t_origin),
+  # round min/max to avoid sub-ms floating point errors from upstream rezero/normalize
+  t_min <- round(min(t_origin))
+  t_max <- round(max(t_origin))
+  t_start <- t_min - (t_min %% pkg_globals$SAMPLE_DURATION)
+  t_resampled <- seq(from = t_start, to = t_max,
                      by = pkg_globals$SAMPLE_DURATION)
 
   # exchange strings values with integers for resampling
@@ -57,8 +60,11 @@ resample_xy_trial <- function(df_trial) {
   y_origin <- df_trial$y
 
   # create the new timestamps for resampling
-  t_start <- min(t_origin) - (min(t_origin) %% pkg_globals$SAMPLE_DURATION)
-  t_resampled <- seq(from = t_start, to = max(t_origin),
+  # round min/max to avoid sub-ms floating point errors from upstream rezero/normalize
+  t_min <- round(min(t_origin))
+  t_max <- round(max(t_origin))
+  t_start <- t_min - (t_min %% pkg_globals$SAMPLE_DURATION)
+  t_resampled <- seq(from = t_start, to = t_max,
                      by = pkg_globals$SAMPLE_DURATION)
 
   # because of the behavior of approx, we need numerical values for missingness
