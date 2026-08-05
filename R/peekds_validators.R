@@ -1,3 +1,7 @@
+collapse_warnings <- function(warnings) {
+  vapply(warnings, function(w) paste(w, collapse = " "), character(1))
+}
+
 #' Check if a file exists with exact case sensitivity
 #'
 #' @param ... character vectors, containing file paths
@@ -373,7 +377,12 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 
     raw_data_dir <- file.path(dir_csv, '..', "raw_data")
     if (!dir.exists(raw_data_dir)) {
-      print("Attention: raw_data directory not found at ", raw_data_dir, "the current setup expects the raw_data folder to live next to the processed_data folder. If this is not the case, the image filepath checking will not work properly")
+      message(paste0(
+        "raw_data directory not found at ", raw_data_dir,
+        ". The current setup expects the raw_data folder to live next to the ",
+        "processed_data folder. If this is not the case, the image filepath ",
+        "checking will not work properly."
+      ))
     }
     not_found <- to_check %>% dplyr::filter(
       !file.exists.case.sensitive(file.path(raw_data_dir, stimulus_image_path))
@@ -391,7 +400,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 
     if(nrow(wrong_filetype)){
       wrong_files <- paste(wrong_filetype$stimulus_image_path, collapse = ", ")
-      print(sprintf("Warning: some stimulus images have a not supported format (jpg, jpeg, png):\n  %s", wrong_files))
+      msg_warning[["stimulus_image_filetype"]] <- .msg("- some stimulus images have an unsupported format (supported: jpg, jpeg, png): {wrong_files}")
     }
   }
 
@@ -402,7 +411,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     # in the case of years, we need to differentiate when converting:
     # if all years are given in full numbers, the conversion is not *12, but rather *12 + 6
     years_given_full <- !any(df_table %>%
-                               dplyr::filter(lab_age_units == "years") %>%
+                               dplyr::filter(lab_age_units == "years", !is.na(lab_age)) %>%
                                dplyr::mutate(year_is_decimal = lab_age-floor(lab_age) != 0) %>%
                                dplyr::pull(year_is_decimal)
                              )
@@ -478,7 +487,9 @@ ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
 #'   all the columns in the json file are required; when set to FALSE, fields
 #'   that are allowed null values are not required
 #' @param suppress_warnings character vector of warning IDs to silence.
-#'   Currently supported: \code{"cdi_collision"}.
+#'   Currently supported: \code{"cdi_collision"} (duplicate CDI entries for the same
+#'   subject/instrument/measure/age/language) and \code{"stimulus_image_filetype"}
+#'   (stimulus images in a format other than jpg/jpeg/png).
 #'
 #' @return A list with two elements:
 #'   \describe{
@@ -554,7 +565,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   if (any(missing_files)) {
     msg_error_all <- c(msg_error_all, .msg("Skipping cross-table validation due to missing required files. Please ensure all required files are present for your coding method(s): {paste(coding_methods, collapse = ', ')}. For eyetracking data without raw xy coordinates, consider using 'preprocessed eyetracking' as the coding_method."))
     msg_warning_all <- msg_warning_all[!names(msg_warning_all) %in% suppress_warnings]
-    return(list(errors = msg_error_all, warnings = unlist(msg_warning_all)))
+    return(list(errors = msg_error_all, warnings = collapse_warnings(msg_warning_all)))
   }
 
   #######################################################
@@ -643,6 +654,74 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 
   msg_error_all <- c(msg_error_all, errors_orphans)
 
+  msg_error_all <- c(msg_error_all,
+                     check_aoi_consistency(dict_tables, dir_csv, file_ext))
+
   msg_warning_all <- msg_warning_all[!names(msg_warning_all) %in% suppress_warnings]
-  return(list(errors = msg_error_all, warnings = unlist(msg_warning_all)))
+  return(list(errors = msg_error_all, warnings = collapse_warnings(msg_warning_all)))
+}
+
+# When a dataset ships x/y coordinates and AOI regions, its AOIs have to be
+# the ones those coordinates imply (as opposed to e.g. mismatching coding provided
+# by the lab or an erroneous reimplementation of the aoi computiation)
+
+check_aoi_consistency <- function(dict_tables, dir_csv, file_ext = ".csv") {
+  tbl_names <- c("xy_timepoints", "aoi_region_sets", "aoi_timepoints",
+                 "trials", "trial_types", "administrations")
+
+  tb <- purrr::map(purrr::set_names(tbl_names), function(name) {
+    if (!is.null(dict_tables[[name]])) return(dict_tables[[name]])
+    f <- file.path(dir_csv, paste0(name, file_ext))
+    if (file.exists(f)) utils::read.csv(f) else NULL
+  })
+
+  # nothing to hold the aoi column against
+  if (any(vapply(tb, is.null, logical(1)))) return(NULL)
+  if (all(is.na(tb$trial_types$aoi_region_set_id))) return(NULL)
+
+  joined <- tb$xy_timepoints %>%
+    dplyr::inner_join(
+      tb$aoi_timepoints %>% dplyr::select(trial_id, administration_id, t_norm, shipped_aoi = aoi),
+      by = c("trial_id", "administration_id", "t_norm")) %>%
+    dplyr::inner_join(tb$trials %>% dplyr::select(trial_id, trial_type_id), by = "trial_id") %>%
+    dplyr::inner_join(
+      tb$trial_types %>% dplyr::select(trial_type_id, target_side, aoi_region_set_id),
+      by = "trial_type_id") %>%
+    dplyr::filter(!is.na(aoi_region_set_id)) %>%
+    dplyr::inner_join(tb$aoi_region_sets, by = "aoi_region_set_id") %>%
+    dplyr::inner_join(
+      tb$administrations %>% dplyr::select(administration_id, monitor_size_x, monitor_size_y),
+      by = "administration_id")
+  if (nrow(joined) == 0) return(NULL)
+
+  # "aoi" is now the aoi as produced by our computation, while shipped_aoi is the one from the csv
+  joined <- ds.compute_aois(joined)
+
+  # Writing a coordinate to CSV loses precision, so a samples sitting near the edge
+  # can sometimes flip category. Skip samples sitting on an edge for these checks (in case of true mismatches
+  # there should always be other violating points).
+  EPS <- 1e-6
+  on_edge <- with(joined,
+    abs(x - l_x_min) < EPS | abs(x - l_x_max) < EPS |
+    abs(y - l_y_min) < EPS | abs(y - l_y_max) < EPS |
+    abs(x - r_x_min) < EPS | abs(x - r_x_max) < EPS |
+    abs(y - r_y_min) < EPS | abs(y - r_y_max) < EPS)
+
+  on_edge[is.na(on_edge)] <- FALSE
+  cmp <- joined[!on_edge, ]
+  if (nrow(cmp) == 0) return(NULL)
+
+  # future proofing the check: sentinel instead of !=, which would yield NA and then fabricate all-NA rows
+  no_value <- "<no aoi>"
+  shipped <- dplyr::coalesce(as.character(cmp$shipped_aoi), no_value)
+  computed <- dplyr::coalesce(as.character(cmp$aoi), no_value)
+  bad <- cmp[shipped != computed, ]
+  if (nrow(bad) == 0) return(NULL)
+
+  .msg(paste0(
+    "Global issue: aoi_timepoints do not match the AOIs implied by xy_timepoints ",
+    "+ aoi_region_sets: {nrow(bad)} of {nrow(cmp)} samples. ",
+    "When a dataset has x/y coordinates and AOI regions, the AOIs must be computed ",
+    "from them; use ds.compute_aois() rather than a lab-provided aoi column."
+  ))
 }

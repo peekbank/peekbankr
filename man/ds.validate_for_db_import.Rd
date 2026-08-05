@@ -25,7 +25,9 @@ all the columns in the json file are required; when set to FALSE, fields
 that are allowed null values are not required}
 
 \item{suppress_warnings}{character vector of warning IDs to silence.
-Currently supported: \code{"cdi_collision"}.}
+Currently supported: \code{"cdi_collision"} (duplicate CDI entries for the same
+subject/instrument/measure/age/language) and \code{"stimulus_image_filetype"}
+(stimulus images in a format other than jpg/jpeg/png).}
 }
 \value{
 A list with two elements:
