@@ -169,3 +169,56 @@ print.peekbank_connection <- function(x, ...) {
       " version ", x$tag, ")\n", sep = "")
   invisible(x)
 }
+
+# ---- data files (raw_data / processed_data / READMEs) -----------------------
+# Peekbank's files live in the companion datapages.peekbank_files dataset on
+# Redivis: a single file-index table `files` whose file names are the
+# OSF-era relative paths (<dataset>/raw_data/..., <dataset>/README.md).
+
+peekbank_files_reference <- "peekbank_files:frvk"
+
+pb_files_dataset <- function() {
+  redivis::redivis$organization(peekbank_organization)$dataset(
+    peekbank_files_reference)
+}
+
+# tibble of (file_id, file_name, size) for files under a name prefix
+pb_files_query <- function(prefix) {
+  if (!redivis_available()) return(NULL)
+  sql <- sprintf(
+    "SELECT file_id, file_name, size FROM files WHERE STARTS_WITH(file_name, '%s')",
+    gsub("'", "\\\\'", prefix))
+  pb_try(quiet_redivis(pb_files_dataset()$query(sql)$to_tibble()))
+}
+
+# download rows of a pb_files_query() result, recreating the relative paths
+# under local_base_dir; returns the local paths (NA for failures)
+pb_download_files <- function(files, local_base_dir, skip_existing = TRUE) {
+  paths <- rep(NA_character_, nrow(files))
+  for (i in seq_len(nrow(files))) {
+    dest <- file.path(local_base_dir, files$file_name[i])
+    paths[i] <- dest
+    if (skip_existing && file.exists(dest) &&
+        file.size(dest) == files$size[i]) {
+      next
+    }
+    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
+    scratch <- file.path(tempdir(), paste0("peekbankr_dl_", i))
+    dir.create(scratch, recursive = TRUE, showWarnings = FALSE)
+    ok <- pb_try({
+      f <- redivis::redivis$file(files$file_id[i])
+      f$get()
+      f$download(path = scratch, overwrite = TRUE)
+      TRUE
+    })
+    got <- list.files(scratch, full.names = TRUE)
+    if (isTRUE(ok) && length(got) == 1) {
+      file.rename(got[1], dest)
+    } else {
+      paths[i] <- NA_character_
+      message("Failed to download ", files$file_name[i])
+    }
+    unlink(scratch, recursive = TRUE)
+  }
+  paths
+}

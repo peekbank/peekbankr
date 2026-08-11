@@ -861,11 +861,12 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 }
 
 
-#' Download stimulus images from OSF for Peekbank repository
+#' Download stimulus images for the Peekbank repository
 #'
-#' This function downloads stimulus images for selected Peekbank datasets from OSF.
-#' It retrieves stimulus metadata from a Peekbank database connection, constructs
-#' the full paths to the stimulus images on OSF, and downloads them to a local directory.
+#' This function downloads stimulus images for selected Peekbank datasets from
+#' the peekbank_files dataset on Redivis. It retrieves stimulus metadata from a
+#' Peekbank database connection, constructs the full stimulus file paths, and
+#' downloads them to a local directory.
 #'
 #' @param con A database connection object created by connect_to_peekbank()
 #' @param local_base_dir Local directory path where stimulus images will be saved (default: "stimulus_data")
@@ -901,21 +902,44 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
     stimuli_df <- stimuli_df %>% dplyr::filter(dataset_name %in% datasets)
   }
 
-  paths <- stimuli_df %>%
-    dplyr::mutate(full_stimulus_path = paste0(dataset_name, "/raw_data/", stimulus_image_path)) %>%
-    dplyr::pull(full_stimulus_path) %>%
-    download_osf_files(local_base_dir = local_base_dir, skip_existing = skip_existing, debug = debug,
-                       max_retries = max_retries, retry_delay = retry_delay)
+  wanted <- stimuli_df %>%
+    dplyr::mutate(full_stimulus_path = paste0(dataset_name, "/raw_data/",
+                                              stimulus_image_path))
 
+  # files live in the peekbank_files dataset on Redivis; one query per
+  # dataset keeps the file listing small
+  listings <- lapply(unique(wanted$dataset_name), function(ds) {
+    pb_files_query(paste0(ds, "/raw_data/"))
+  })
+  index <- dplyr::bind_rows(listings)
+  files <- dplyr::inner_join(
+    wanted %>% dplyr::distinct(full_stimulus_path),
+    index, by = c("full_stimulus_path" = "file_name")) %>%
+    dplyr::rename(file_name = full_stimulus_path)
 
-  return(stimuli_df %>% dplyr::mutate(local_stimulus_path = paths))
+  missing <- setdiff(wanted$full_stimulus_path, files$file_name)
+  if (length(missing) > 0) {
+    message(length(missing), " stimulus files were not found in the ",
+            "peekbank_files dataset (e.g. ", missing[1], ")")
+  }
+
+  local <- pb_download_files(files, local_base_dir,
+                             skip_existing = skip_existing)
+  path_map <- stats::setNames(local, files$file_name)
+  message("Downloaded ", sum(!is.na(local)), " stimulus files from Redivis")
+
+  return(wanted %>%
+    dplyr::mutate(local_stimulus_path =
+                    unname(path_map[full_stimulus_path])) %>%
+    dplyr::select(-full_stimulus_path))
 }
 
 
-#' Download dataset README files from OSF to a temporary folder
+#' Download dataset README files
 #'
-#' Downloads README files for Peekbank datasets from OSF. Note that READMEs
-#' always reflect the latest version of the dataset on OSF.
+#' Downloads README files for Peekbank datasets from the peekbank_files
+#' dataset on Redivis. Note that READMEs reflect the latest released version
+#' of the files dataset.
 #'
 #' @param datasets Character vector of dataset names. If empty (default),
 #'   downloads READMEs for all datasets.
@@ -931,25 +955,24 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
 #' get_readmes(datasets = c("pomper_saffran_2016"))
 #' }
 get_readmes <- function(datasets = c(), local_base_dir = "dataset_readmes") {
-  dataset_names <- datasets
-  if (length(dataset_names) == 0) {
-    resp <- httr::GET("https://api.osf.io/v2/nodes/pr6wu/files/osfstorage",
-                      query = list(sort = "name"))
-    content <- jsonlite::fromJSON(httr::content(resp, "text"))
-    dataset_names <- content$data$attributes$name
+  # READMEs live at <dataset>/README.md in the peekbank_files dataset
+  index <- pb_files_query("")
+  if (is.null(index)) return(invisible(NULL))
+  readmes <- index[grepl("^[^/]+/README\\.md$", index$file_name), ]
+  if (length(datasets) > 0) {
+    readmes <- readmes[sub("/README\\.md$", "", readmes$file_name) %in%
+                         datasets, ]
   }
 
   if (!dir.exists(local_base_dir)) dir.create(local_base_dir, recursive = TRUE)
 
   staging_dir <- file.path(tempdir(), "peekbank_readmes_staging")
-  for (ds_name in dataset_names) {
-    tryCatch({
-      suppressMessages(download_osf_files(paste0(ds_name, "/README.md"),
-                         local_base_dir = staging_dir, skip_existing = FALSE))
-      src <- file.path(staging_dir, ds_name, "README.md")
-      dst <- file.path(local_base_dir, paste0(ds_name, ".md"))
-      if (file.exists(src)) file.copy(src, dst, overwrite = TRUE)
-    }, error = function(e) {})
+  local <- pb_download_files(readmes, staging_dir, skip_existing = FALSE)
+  for (i in seq_len(nrow(readmes))) {
+    if (is.na(local[i])) next
+    ds_name <- sub("/README\\.md$", "", readmes$file_name[i])
+    file.copy(local[i], file.path(local_base_dir, paste0(ds_name, ".md")),
+              overwrite = TRUE)
   }
   unlink(staging_dir, recursive = TRUE)
 
