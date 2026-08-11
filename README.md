@@ -1,45 +1,40 @@
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/langcog/peekbankr/workflows/R-CMD-check/badge.svg)](https://github.com/langcog/peekbankr/actions)
+[![R-CMD-check](https://github.com/peekbank/peekbankr/actions/workflows/check.yml/badge.svg)](https://github.com/peekbank/peekbankr/actions)
 <!-- badges: end -->
 
 # An R interface to peekbank
 
-The `peekbankr` package allows you to access data in peekbank from R. This removes the need to write complex SQL queries in order to get the information you want from the database. The package vignette provides some examples of how to use the data loading functions and what the resulting data look like.
+The `peekbankr` package allows you to access data in
+[Peekbank](https://peekbank.github.io/peekbank-website/), an open database of
+developmental eye-tracking data, from R. Data are retrieved from the
+versioned [peekbank dataset on Redivis](https://redivis.com/datapages/datasets/peekbank);
+the `get_` functions return tidy tables without you having to write queries.
+The package vignette provides examples of the data loading functions and
+what the resulting data look like.
 
-### Install `peekbankr` from GitHub:
+### Installation
 
-```
-install.packages("RMariaDB")
+`peekbankr` uses the `redivis` client (not on CRAN) to access the data:
+
+```r
+install.packages("redivis", repos = "https://langcog.r-universe.dev", type = "source")
 # install.packages("remotes")
 remotes::install_github("peekbank/peekbankr")
 ```
 
-### Local Installation from Source
-
-When developing, you can run:
-
-```
-# install.packages("RMariaDB")
-install.packages(".", repos = NULL, type="source", dependencies=TRUE)
-```
-
-After making changes, be sure to run 
-
-```
-roxygen2::roxygenise()
-```
-
-to update exports and documentation.
+The first data request will open a browser window to authorize Redivis
+access (free account). For non-interactive use, set a `REDIVIS_API_TOKEN`
+environment variable instead.
 
 ### Usage
 
-Here's a simple workflow for using `peekbankr` to get data from a single study. 
+Here's a simple workflow for using `peekbankr` to get data from a single study.
 
-```
+```r
 library(tidyverse)
 library(peekbankr)
 
-con <- connect_to_peekbank()
+con <- connect_to_peekbank()   # pins the current database version
 
 aoi_timepoints <- get_aoi_timepoints(connection = con, dataset_name = "pomper_saffran_2016")
 administrations <- get_administrations(connection = con, dataset_name = "pomper_saffran_2016")
@@ -48,20 +43,30 @@ ps_data <- aoi_timepoints %>%
   left_join(administrations)
 ```
 
-### TLS / SSL
+### Database versions
 
-`connect_to_peekbank()` handles TLS automatically via the `ssl` argument (default `"auto"`):
+Peekbank is released in named versions (e.g. `2026.1`). By default
+`connect_to_peekbank()` uses the latest release and prints which one that
+is; pass `db_version = "2025.1"` (or a Redivis version tag like `"v1.2"`)
+to pin an earlier release for reproducibility. `get_db_info()` lists the
+available versions.
 
-* The hosted Peekbank instance is contacted over TLS and verified against a CA cert shipped inside the package; nothing to configure.
-* Connections to `127.0.0.1` or `localhost` skip TLS enforcement, so a local `peekbank` docker stack running without TLS works out of the box.
-* For any other host, TLS handling is left to the connector defaults.
+### Data files
 
-To override:
+Raw data, processed intermediates, and per-dataset READMEs live in the
+companion [peekbank_files dataset](https://redivis.com/datapages/datasets/peekbank_files):
 
+```r
+get_readmes(datasets = "pomper_saffran_2016")          # dataset documentation
+stimuli <- download_stimuli(con, datasets = "reflook_v4")  # stimulus images
 ```
-# Custom self-hosted server with its own self-signed cert:
-connect_to_peekbank(host = "db.example.org", ssl = "/path/to/my-ca.pem")
 
-# Force plaintext (e.g. an unusual non-localhost development setup):
-connect_to_peekbank(host = "192.168.1.42", ssl = "disabled")
-```
+### Development
+
+After making changes, run `roxygen2::roxygenise()` to update exports and
+documentation, and `testthat::test_local()` for the offline test suite. Two
+gated suites need environment variables: `PEEKBANK_NETWORK_TESTS=true`
+(live Redivis reads) and `PEEKBANK_FIXTURES_DIR=<path>` (characterization
+against the MySQL-era fixtures; see
+[peekbank-datapage](https://github.com/peekbank/peekbank-datapage)
+`migration/capture_fixtures.R`).
