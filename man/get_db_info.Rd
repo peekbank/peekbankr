@@ -7,11 +7,16 @@
 get_db_info()
 }
 \value{
-List of database info: host name, current version, supported
-  versions, historical versions, username, password
+List of database info: `current` (the Peekbank release that is the
+  latest Redivis version) and `versions` (a named vector mapping Peekbank
+  release names to Redivis dataset version tags)
 }
 \description{
-Get information on database connection options
+As of peekbankr 0.4, data are retrieved from the versioned peekbank
+dataset on Redivis (\url{https://redivis.com/datapages/datasets/peekbank})
+rather than a MySQL server. Version information is discovered from the
+Redivis dataset itself: each Redivis version carries a `release_info`
+table naming the Peekbank release it holds.
 }
 \examples{
 \dontrun{

@@ -14,35 +14,33 @@ connect_to_peekbank(
 )
 }
 \arguments{
-\item{db_version}{String of the name of database version to use}
+\item{db_version}{String of the name of database version to use: "current"
+(the default; resolves to the latest Redivis version), a Peekbank
+release name (e.g. "2025.1"), or a Redivis version tag (e.g. "v1.2")}
 
-\item{db_args}{List with host, user, and password defined}
+\item{db_args}{Deprecated, ignored (retained for backwards compatibility)}
 
-\item{compress}{Flag to use compression protocol (defaults to TRUE)}
+\item{compress}{Deprecated, ignored}
 
-\item{host}{Hostname of the Peekbank server to connect to (defaults hosted PB)}
+\item{host}{Deprecated, ignored}
 
-\item{port}{Port of the Peekbank DB to connect to (defaults to 3307)}
+\item{port}{Deprecated, ignored}
 
-\item{ssl}{How to handle TLS. One of:
-* `"auto"` (default): verify against the shipped CA for the hosted
-  Peekbank instance; skip TLS for connections to `127.0.0.1`,
-  `localhost`, or `::1`; otherwise leave it to the connector defaults.
-* `"disabled"`: do not require TLS (useful for plaintext local servers
-  when running on RMariaDB versions that would otherwise
-  refuse the connection).
-* Path to a PEM file: use that as the CA to verify the server cert
-  (useful for self-hosted deployments with their own self-signed cert).}
+\item{ssl}{Deprecated, ignored}
 }
 \value{
-con A DBIConnection object for the peekbank database
+A `peekbank_connection` handle pinning the resolved version
 }
 \description{
-Connect to Peekbank
+As of peekbankr 0.4, data are retrieved from the versioned peekbank
+dataset on Redivis rather than a MySQL server. `connect_to_peekbank()`
+now returns a lightweight handle that pins a database version (Redivis
+dataset version); it no longer opens a DBI connection. Existing code that
+passes the result via the `connection` argument of the `get_` functions
+continues to work.
 }
 \examples{
 \dontrun{
-con <- connect_to_peekbank(db_version = "current", db_args = NULL)
-DBI::dbDisconnect(con)
+con <- connect_to_peekbank(db_version = "current")
 }
 }
