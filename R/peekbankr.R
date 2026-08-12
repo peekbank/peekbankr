@@ -17,52 +17,17 @@ validate_dataset_args <- function(dataset_id, dataset_name) {
 pkg_globals <- new.env()
 pkg_globals$SAMPLE_RATE <- 40 # Hz
 
-translate_version <- function(db_version, db_args, db_info) {
-  # using the peekbankr hosted server
-
-  if (db_args$host == db_info$host && db_args$port == db_info$port) {
-    # current version
-    if (db_version == "current") {
-      db_to_use <- db_info[["current"]]
-      message("Using current database version: '", db_to_use, "'.")
-      return(db_to_use)
-
-      # supported version
-    } else if (db_version %in% db_info[["supported"]]) {
-      db_to_use <- db_version
-      message("Using supported database version: '", db_to_use, "'.")
-      return(db_to_use)
-
-      # historical version
-    } else if (db_version %in% db_info[["historical"]]) {
-      stop(
-        "Version '", db_version, "' is no longer hosted by ",
-        "peekbank.stanford.edu; either specify a more recent version or ",
-        "install MySQL Server locally and update db_args."
-      )
-
-      # version not recognized
-    } else {
-      stop(
-        "Version '", db_version, "' not supported. Our hosted instance currently offers: 'current', ",
-        paste(sprintf("'%s'", db_info$supported), collapse = ", "), "."
-      )
-    }
-
-    # using a different server than the peekbankr hosted one
-  } else {
-    message(
-      "Not using default hosted Peekbank instance; no checks will be applied to ",
-      "version specification."
-    )
-    return(db_version)
-  }
-}
-
 #' Get information on database connection options
 #'
-#' @return List of database info: host name, current version, supported
-#'   versions, historical versions, username, password
+#' As of peekbankr 0.4, data are retrieved from the versioned peekbank
+#' dataset on Redivis (\url{https://redivis.com/datapages/datasets/peekbank})
+#' rather than a MySQL server. Version information is discovered from the
+#' Redivis dataset itself: each Redivis version carries a `release_info`
+#' table naming the Peekbank release it holds.
+#'
+#' @return List of database info: `current` (the Peekbank release that is the
+#'   latest Redivis version) and `versions` (a named vector mapping Peekbank
+#'   release names to Redivis dataset version tags)
 #' @export
 #'
 #' @examples
@@ -70,96 +35,53 @@ translate_version <- function(db_version, db_args, db_info) {
 #' get_db_info()
 #' }
 get_db_info <- function() {
-  jsonlite::fromJSON("https://peekbank.github.io/peekbank-website/peekbank.json")
+  rm_ <- release_map()
+  if (is.null(rm_)) return(NULL)
+  list(
+    current = names(rm_$map)[rm_$map == rm_$current_tag],
+    versions = rm_$map
+  )
 }
 
 #' Connect to Peekbank
 #'
-#' @param db_version String of the name of database version to use
-#' @param db_args List with host, user, and password defined
-#' @param compress Flag to use compression protocol (defaults to TRUE)
-#' @param host Hostname of the Peekbank server to connect to (defaults hosted PB)
-#' @param port Port of the Peekbank DB to connect to (defaults to 3307)
-#' @param ssl How to handle TLS. One of:
-#'   * `"auto"` (default): verify against the shipped CA for the hosted
-#'     Peekbank instance; skip TLS for connections to `127.0.0.1`,
-#'     `localhost`, or `::1`; otherwise leave it to the connector defaults.
-#'   * `"disabled"`: do not require TLS (useful for plaintext local servers
-#'     when running on RMariaDB versions that would otherwise
-#'     refuse the connection).
-#'   * Path to a PEM file: use that as the CA to verify the server cert
-#'     (useful for self-hosted deployments with their own self-signed cert).
+#' As of peekbankr 0.4, data are retrieved from the versioned peekbank
+#' dataset on Redivis rather than a MySQL server. `connect_to_peekbank()`
+#' now returns a lightweight handle that pins a database version (Redivis
+#' dataset version); it no longer opens a DBI connection. Existing code that
+#' passes the result via the `connection` argument of the `get_` functions
+#' continues to work.
 #'
-#' @return con A DBIConnection object for the peekbank database
+#' @param db_version String of the name of database version to use: "current"
+#'   (the default; resolves to the latest Redivis version), a Peekbank
+#'   release name (e.g. "2025.1"), or a Redivis version tag (e.g. "v1.2")
+#' @param db_args Deprecated, ignored (retained for backwards compatibility)
+#' @param compress Deprecated, ignored
+#' @param host Deprecated, ignored
+#' @param port Deprecated, ignored
+#' @param ssl Deprecated, ignored
+#'
+#' @return A `peekbank_connection` handle pinning the resolved version
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' con <- connect_to_peekbank(db_version = "current", db_args = NULL)
-#' DBI::dbDisconnect(con)
+#' con <- connect_to_peekbank(db_version = "current")
 #' }
 connect_to_peekbank <- function(db_version = "current", db_args = NULL,
                                 compress = TRUE, host = NULL, port = NULL,
                                 ssl = "auto") {
-  db_info <- get_db_info()
-  db_info$port <- if (!is.null(db_info$port)) db_info$port else 3307
-
-  flags <- if (compress) RMariaDB::CLIENT_COMPRESS else 0
-
-  if (is.null(db_args)) db_args <- db_info
-
-  db_args$host <- if (!is.null(host)) host else db_args$host
-  db_args$port <- if (!is.null(port)) port else db_info$port
-
-  ssl_args <- resolve_ssl_args(db_args$host, db_args$port, ssl, db_info)
-
-  do.call(DBI::dbConnect, c(
-    list(
-      RMariaDB::MariaDB(),
-      host = db_args$host,
-      port = db_args$port,
-      dbname = translate_version(db_version, db_args, db_info),
-      user = db_args$user,
-      password = db_args$password,
-      client.flag = flags
-    ),
-    ssl_args
-  ))
-}
-
-# Translate the user-facing `ssl` argument into RMariaDB::dbConnect arguments.
-# Returns a (possibly empty) list with some of: ssl.ca, default.file.
-resolve_ssl_args <- function(host, port, ssl, db_info) {
-  if (identical(ssl, "auto")) {
-    is_hosted <- !is.null(host) &&
-      host == db_info$host && port == db_info$port
-    if (is_hosted) {
-      return(list(ssl.ca = system.file("certs/peekbank-ca.pem",
-                                       package = "peekbankr")))
-    }
-    if (!is.null(host) && host %in% c("127.0.0.1", "localhost", "::1")) {
-      return(list(default.file = no_tls_option_file()))
-    }
-    return(list())
+  if (!is.null(db_args) || !is.null(host) || !is.null(port)) {
+    warning("peekbankr now reads from the peekbank dataset on Redivis; ",
+            "`db_args`, `host`, and `port` are deprecated and ignored. ",
+            "To read a local copy of the database, see the peekbank ",
+            "documentation.", call. = FALSE)
   }
-  if (identical(ssl, "disabled")) {
-    return(list(default.file = no_tls_option_file()))
-  }
-  if (is.character(ssl) && length(ssl) == 1) {
-    if (!file.exists(ssl)) {
-      stop("`ssl` was set to '", ssl,
-           "' but that file does not exist. Pass \"auto\", \"disabled\", ",
-           "or a path to a PEM file.")
-    }
-    return(list(ssl.ca = ssl))
-  }
-  stop("`ssl` must be \"auto\", \"disabled\", or a path to a PEM file.")
-}
-
-no_tls_option_file <- function() {
-  f <- tempfile(fileext = ".cnf")
-  writeLines(c("[client]", "ssl-verify-server-cert=0"), f)
-  f
+  ver <- resolve_version(db_version)
+  structure(
+    list(release = ver$release, tag = ver$tag),
+    class = "peekbank_connection"
+  )
 }
 
 resolve_connection <- function(connection) {
@@ -170,8 +92,12 @@ resolve_connection <- function(connection) {
             "Please create a connection explicitly with connect_to_peekbank() and pass it via the connection argument.",
             call. = FALSE)
     connect_to_peekbank()
-  } else {
+  } else if (inherits(connection, "peekbank_connection")) {
     connection
+  } else {
+    stop("`connection` must be a peekbank_connection from ",
+         "connect_to_peekbank(). As of peekbankr 0.4, DBI/MySQL connections ",
+         "are no longer supported.", call. = FALSE)
   }
 }
 
@@ -188,7 +114,13 @@ resolve_connection <- function(connection) {
 #' list_peekbank_tables(con)
 #' }
 list_peekbank_tables <- function(connection) {
-  DBI::dbListTables(connection)
+  con <- resolve_connection(connection)
+  tables <- pb_try(quiet_redivis(
+    vapply(pb_dataset(con$tag)$list_tables(), function(t) {
+      if (!is.null(t$name)) t$name else t$properties$name
+    }, character(1))))
+  if (is.null(tables)) return(NULL)
+  sort(unname(tables))
 }
 
 #' Get datasets
@@ -205,15 +137,7 @@ list_peekbank_tables <- function(connection) {
 #' }
 get_datasets <- function(connection = NULL) {
   con <- resolve_connection(connection)
-
-  datasets <- dplyr::tbl(con, "datasets")
-
-  if (is.null(connection)) {
-    datasets %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
-
-  return(datasets)
+  pb_table(con, "datasets")
 }
 
 count_datasets <- function(datasets) {
@@ -250,8 +174,8 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
-  administrations <- dplyr::tbl(con, "administrations")
-  datasets <- dplyr::tbl(con, "datasets")
+  administrations <- pb_table(con, "administrations")
+  datasets <- pb_table(con, "datasets")
 
   if (!is.null(dataset_id)) {
     datasets %<>%
@@ -281,11 +205,6 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
   datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   administrations %<>% dplyr::inner_join(datasets, by = "dataset_id")
 
-  if (is.null(connection)) {
-    administrations %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
-
   return(administrations)
 }
 
@@ -306,15 +225,7 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
 #' }
 get_subjects <- function(connection = NULL) {
   con <- resolve_connection(connection)
-
-  subjects <- dplyr::tbl(con, "subjects")
-
-  if (is.null(connection)) {
-    subjects %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
-
-  return(subjects)
+  pb_table(con, "subjects")
 }
 
 #' Get trials
@@ -340,10 +251,10 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
-  trials <- dplyr::tbl(con, "trials")
-  trial_types <- dplyr::tbl(con, "trial_types")
+  trials <- pb_table(con, "trials")
+  trial_types <- pb_table(con, "trial_types")
 
-  datasets <- dplyr::tbl(con, "datasets")
+  datasets <- pb_table(con, "datasets")
   if (!is.null(dataset_id)) {
     datasets %<>%
       dplyr::filter(.data$dataset_id %in% input_dataset_id)
@@ -360,11 +271,6 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
   trials %<>%
     dplyr::left_join(trial_types, by = "trial_type_id") %>%
     dplyr::inner_join(datasets, by = "dataset_id")
-
-  if (is.null(connection)) {
-    trials %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
 
   return(trials)
 }
@@ -392,9 +298,9 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
-  trial_types <- dplyr::tbl(con, "trial_types")
+  trial_types <- pb_table(con, "trial_types")
 
-  datasets <- dplyr::tbl(con, "datasets")
+  datasets <- pb_table(con, "datasets")
   if (!is.null(dataset_id)) {
     datasets %<>%
       dplyr::filter(.data$dataset_id %in% input_dataset_id)
@@ -408,11 +314,6 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
 
   datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   trial_types %<>% dplyr::inner_join(datasets, by = "dataset_id")
-
-  if (is.null(connection)) {
-    trial_types %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
 
   return(trial_types)
 }
@@ -441,9 +342,9 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
   input_dataset_id <- dataset_id
   input_dataset_name <- dataset_name
 
-  stimuli <- dplyr::tbl(con, "stimuli")
+  stimuli <- pb_table(con, "stimuli")
 
-  datasets <- dplyr::tbl(con, "datasets")
+  datasets <- pb_table(con, "datasets")
   if (!is.null(dataset_id)) {
     datasets %<>%
       dplyr::filter(.data$dataset_id %in% input_dataset_id)
@@ -457,11 +358,6 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
 
   datasets %<>% dplyr::select(.data$dataset_id, .data$dataset_name)
   stimuli %<>% dplyr::inner_join(datasets, by = "dataset_id")
-
-  if (is.null(connection)) {
-    stimuli %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
 
   return(stimuli)
 }
@@ -481,15 +377,7 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
 #' }
 get_aoi_region_sets <- function(connection = NULL) {
   con <- resolve_connection(connection)
-
-  aoi_region_sets <- dplyr::tbl(con, "aoi_region_sets")
-
-  if (is.null(connection)) {
-    aoi_region_sets %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
-
-  return(aoi_region_sets)
+  pb_table(con, "aoi_region_sets")
 }
 
 #' Get AOI timepoints
@@ -514,49 +402,55 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
   administrations <- get_administrations(
     age = age, dataset_id = dataset_id, dataset_name = dataset_name,
     connection = con
-  ) %>%
-    dplyr::collect()
+  )
 
   # if you are using the (default) RLE encoding, then get the RLE version
-  # otherwise get the normal one.
+  # otherwise get the normal one; filtering happens server-side on Redivis.
+  # ORDER BY matters: the RLE decode below assumes runs arrive in time order
+  # within each administration x trial
   if (rle) {
-    aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints_rle")
+    sql <- sprintf(
+      "SELECT * FROM aoi_timepoints_rle WHERE %s ORDER BY administration_id, trial_id, t_norm",
+      sql_id_filter("administration_id", administrations$administration_id))
   } else {
-    aoi_timepoints <- dplyr::tbl(con, "aoi_timepoints")
+    sql <- sprintf(
+      "SELECT * FROM aoi_timepoints WHERE %s ORDER BY aoi_timepoint_id",
+      sql_id_filter("administration_id", administrations$administration_id))
   }
-
-  # filter down to requested admins
-  aoi_timepoints %<>%
-    dplyr::filter(.data$administration_id %in%
-                    !!administrations$administration_id)
-
-  # collect the table locally
-  aoi_timepoints %<>% dplyr::collect()
-  DBI::dbDisconnect(con)
+  aoi_timepoints <- pb_query(con, sql)
+  if (is.null(aoi_timepoints)) return(NULL)
 
   # undo the RLE transform locally
   if (rle) {
-    timestep <- 1000 / pkg_globals$SAMPLE_RATE
-
-    aoi_timepoints %<>%
-      tidyr::nest(trial_data = -c(.data$administration_id, .data$trial_id)) %>%
-      dplyr::mutate(
-        rle_vector = purrr::map(.data$trial_data, function(td) {
-          `class<-`(list(lengths = as.integer(td$length), values = td$aoi), "rle")
-        }),
-        aoi = purrr::map(.data$rle_vector, inverse.rle),
-        t_norm = purrr::map(.data$trial_data, function(td) {
-          as.integer(seq(
-            td$t_norm[1], td$t_norm[1] + (sum(td$length) - 1) * timestep,
-            timestep
-          ))
-        })
-      ) %>%
-      dplyr::select(-.data$trial_data, -.data$rle_vector) %>%
-      tidyr::unnest(cols = c(.data$aoi, .data$t_norm))
+    aoi_timepoints <- decode_rle_timepoints(aoi_timepoints)
   }
 
   return(aoi_timepoints)
+}
+
+# expand a run-length-encoded AOI timepoints table (one row per run of a
+# constant AOI within an administration x trial, with t_norm the run start
+# and `length` the run length in samples) back to one row per 25 ms sample.
+# Rows must be ordered by t_norm within each administration x trial.
+decode_rle_timepoints <- function(aoi_timepoints) {
+  timestep <- 1000 / pkg_globals$SAMPLE_RATE
+
+  aoi_timepoints %>%
+    tidyr::nest(trial_data = -c(.data$administration_id, .data$trial_id)) %>%
+    dplyr::mutate(
+      rle_vector = purrr::map(.data$trial_data, function(td) {
+        `class<-`(list(lengths = as.integer(td$length), values = td$aoi), "rle")
+      }),
+      aoi = purrr::map(.data$rle_vector, inverse.rle),
+      t_norm = purrr::map(.data$trial_data, function(td) {
+        as.integer(seq(
+          td$t_norm[1], td$t_norm[1] + (sum(td$length) - 1) * timestep,
+          timestep
+        ))
+      })
+    ) %>%
+    dplyr::select(-.data$trial_data, -.data$rle_vector) %>%
+    tidyr::unnest(cols = c(.data$aoi, .data$t_norm))
 }
 
 #' Get XY timepoints
@@ -577,21 +471,16 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
                               age = NULL, connection = NULL) {
   con <- resolve_connection(connection)
 
-  xy_timepoints <- dplyr::tbl(con, "xy_timepoints")
-
   administrations <- get_administrations(
     dataset_id = dataset_id,
     dataset_name = dataset_name,
     age = age, connection = con
   )
 
-  xy_timepoints %<>%
-    dplyr::semi_join(administrations, by = "administration_id")
-
-  if (is.null(connection)) {
-    xy_timepoints %<>% dplyr::collect()
-    DBI::dbDisconnect(con)
-  }
+  sql <- sprintf(
+    "SELECT * FROM xy_timepoints WHERE %s ORDER BY xy_timepoint_id",
+    sql_id_filter("administration_id", administrations$administration_id))
+  xy_timepoints <- pb_query(con, sql)
 
   return(xy_timepoints)
 }
@@ -618,8 +507,8 @@ unpack_aux_data <- function(df) {
     return(df)
   }
   aux_list <- df |>
-    ungroup() |>
-    pull(all_of(aux_name)) |>
+    dplyr::ungroup() |>
+    dplyr::pull(dplyr::all_of(aux_name)) |>
     lapply(\(aux) {
       if (is.na(aux) | is.null(aux)) {
         return(aux)
@@ -656,7 +545,7 @@ unpack_aux_data <- function(df) {
     })
   }) |>
     `names<-`(value = col_names) |>
-    as_tibble() |>
+    dplyr::as_tibble() |>
     dplyr::mutate(across(everything(), \(aux) {
       if (any(sapply(aux, \(aux_val) {
         typeof(aux_val) == "list"
@@ -675,8 +564,8 @@ unpack_aux_data <- function(df) {
     }))
   df |>
     cbind(aux_cols) |>
-    dplyr::select(-all_of(aux_name)) |>
-    tidyr::nest("{aux_name}" := all_of(colnames(aux_cols)))
+    dplyr::select(-dplyr::all_of(aux_name)) |>
+    tidyr::nest("{aux_name}" := dplyr::all_of(colnames(aux_cols)))
 }
 
 #' Run a SQL Query script on the Peekbank database
@@ -693,16 +582,7 @@ unpack_aux_data <- function(df) {
 #' }
 get_sql_query <- function(sql_query_string, connection = NULL) {
   con <- resolve_connection(connection)
-  if (is.null(con)) {
-    return()
-  }
-
-  returned_sql_query <- dplyr::tbl(con, dplyr::sql(sql_query_string)) %>%
-    dplyr::collect()
-  if (is.null(connection)) {
-    DBI::dbDisconnect(con)
-  }
-  return(returned_sql_query)
+  pb_query(con, sql_query_string)
 }
 
 
@@ -981,11 +861,12 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 }
 
 
-#' Download stimulus images from OSF for Peekbank repository
+#' Download stimulus images for the Peekbank repository
 #'
-#' This function downloads stimulus images for selected Peekbank datasets from OSF.
-#' It retrieves stimulus metadata from a Peekbank database connection, constructs
-#' the full paths to the stimulus images on OSF, and downloads them to a local directory.
+#' This function downloads stimulus images for selected Peekbank datasets from
+#' the peekbank_files dataset on Redivis. It retrieves stimulus metadata from a
+#' Peekbank database connection, constructs the full stimulus file paths, and
+#' downloads them to a local directory.
 #'
 #' @param con A database connection object created by connect_to_peekbank()
 #' @param local_base_dir Local directory path where stimulus images will be saved (default: "stimulus_data")
@@ -1021,21 +902,44 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
     stimuli_df <- stimuli_df %>% dplyr::filter(dataset_name %in% datasets)
   }
 
-  paths <- stimuli_df %>%
-    dplyr::mutate(full_stimulus_path = paste0(dataset_name, "/raw_data/", stimulus_image_path)) %>%
-    dplyr::pull(full_stimulus_path) %>%
-    download_osf_files(local_base_dir = local_base_dir, skip_existing = skip_existing, debug = debug,
-                       max_retries = max_retries, retry_delay = retry_delay)
+  wanted <- stimuli_df %>%
+    dplyr::mutate(full_stimulus_path = paste0(dataset_name, "/raw_data/",
+                                              stimulus_image_path))
 
+  # files live in the peekbank_files dataset on Redivis; one query per
+  # dataset keeps the file listing small
+  listings <- lapply(unique(wanted$dataset_name), function(ds) {
+    pb_files_query(paste0(ds, "/raw_data/"))
+  })
+  index <- dplyr::bind_rows(listings)
+  files <- dplyr::inner_join(
+    wanted %>% dplyr::distinct(full_stimulus_path),
+    index, by = c("full_stimulus_path" = "file_name")) %>%
+    dplyr::rename(file_name = full_stimulus_path)
 
-  return(stimuli_df %>% dplyr::mutate(local_stimulus_path = paths))
+  missing <- setdiff(wanted$full_stimulus_path, files$file_name)
+  if (length(missing) > 0) {
+    message(length(missing), " stimulus files were not found in the ",
+            "peekbank_files dataset (e.g. ", missing[1], ")")
+  }
+
+  local <- pb_download_files(files, local_base_dir,
+                             skip_existing = skip_existing)
+  path_map <- stats::setNames(local, files$file_name)
+  message("Downloaded ", sum(!is.na(local)), " stimulus files from Redivis")
+
+  return(wanted %>%
+    dplyr::mutate(local_stimulus_path =
+                    unname(path_map[full_stimulus_path])) %>%
+    dplyr::select(-full_stimulus_path))
 }
 
 
-#' Download dataset README files from OSF to a temporary folder
+#' Download dataset README files
 #'
-#' Downloads README files for Peekbank datasets from OSF. Note that READMEs
-#' always reflect the latest version of the dataset on OSF.
+#' Downloads README files for Peekbank datasets from the peekbank_files
+#' dataset on Redivis. Note that READMEs reflect the latest released version
+#' of the files dataset.
 #'
 #' @param datasets Character vector of dataset names. If empty (default),
 #'   downloads READMEs for all datasets.
@@ -1051,25 +955,24 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
 #' get_readmes(datasets = c("pomper_saffran_2016"))
 #' }
 get_readmes <- function(datasets = c(), local_base_dir = "dataset_readmes") {
-  dataset_names <- datasets
-  if (length(dataset_names) == 0) {
-    resp <- httr::GET("https://api.osf.io/v2/nodes/pr6wu/files/osfstorage",
-                      query = list(sort = "name"))
-    content <- jsonlite::fromJSON(httr::content(resp, "text"))
-    dataset_names <- content$data$attributes$name
+  # READMEs live at <dataset>/README.md in the peekbank_files dataset
+  index <- pb_files_query("")
+  if (is.null(index)) return(invisible(NULL))
+  readmes <- index[grepl("^[^/]+/README\\.md$", index$file_name), ]
+  if (length(datasets) > 0) {
+    readmes <- readmes[sub("/README\\.md$", "", readmes$file_name) %in%
+                         datasets, ]
   }
 
   if (!dir.exists(local_base_dir)) dir.create(local_base_dir, recursive = TRUE)
 
   staging_dir <- file.path(tempdir(), "peekbank_readmes_staging")
-  for (ds_name in dataset_names) {
-    tryCatch({
-      suppressMessages(download_osf_files(paste0(ds_name, "/README.md"),
-                         local_base_dir = staging_dir, skip_existing = FALSE))
-      src <- file.path(staging_dir, ds_name, "README.md")
-      dst <- file.path(local_base_dir, paste0(ds_name, ".md"))
-      if (file.exists(src)) file.copy(src, dst, overwrite = TRUE)
-    }, error = function(e) {})
+  local <- pb_download_files(readmes, staging_dir, skip_existing = FALSE)
+  for (i in seq_len(nrow(readmes))) {
+    if (is.na(local[i])) next
+    ds_name <- sub("/README\\.md$", "", readmes$file_name[i])
+    file.copy(local[i], file.path(local_base_dir, paste0(ds_name, ".md")),
+              overwrite = TRUE)
   }
   unlink(staging_dir, recursive = TRUE)
 

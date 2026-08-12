@@ -2,7 +2,7 @@
 % Please edit documentation in R/peekds_generate_aoi.R
 \name{ds.compute_aois}
 \alias{ds.compute_aois}
-\title{Classify gaze samples into AOIs}
+\title{Classify gaze samples into AOIs based x/y coordinates and provided region sets}
 \usage{
 ds.compute_aois(data)
 }
@@ -15,19 +15,5 @@ monitor_size_x / monitor_size_y}
 \code{data} with the \code{aoi} column set, overwriting any existing value
 }
 \description{
-The single definition of what counts as a look. Used by import scripts and by
-\code{\link{ds.validate_for_db_import}}, which recomputes AOIs from the shipped
-xy_timepoints and aoi_region_sets and rejects a dataset whose aoi_timepoints
-disagree.
-}
-\details{
-monitor_size_x/y are required, not optional: they are what separates "other" (on
-screen, outside every AOI) from "missing" (off screen or tracker error). Without
-them the two cannot be told apart, and if you have AOI rectangles in pixels you
-necessarily know the screen they were defined against.
-
-Note that x/y must already be NA wherever the tracker failed. Some trackers write a
-sentinel coordinate such as (0, 0) instead, and that will be scored as a real look,
-possibly at a stimulus if an AOI touches that corner. Convert sentinels to NA before
-calling this.
+Classify gaze samples into AOIs based x/y coordinates and provided region sets
 }
