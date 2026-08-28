@@ -12,9 +12,10 @@ vignette: >
 
 ```{r, include=FALSE}
 options(rmarkdown.html_vignette.check_title = FALSE)
-# the vignette needs internet access (data live in the peekbank dataset on
-# Redivis), so chunks only evaluate outside CRAN
-knitr::opts_chunk$set(eval = identical(Sys.getenv("NOT_CRAN"), "true"))
+# the vignette needs internet access and Redivis credentials (data live in
+# the peekbank dataset on Redivis), so chunks only evaluate when network
+# access is explicitly requested
+knitr::opts_chunk$set(eval = identical(Sys.getenv("PEEKBANK_NETWORK_TESTS"), "true"))
 ```
 
 ## Overview
