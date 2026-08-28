@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing the Peekbank Database and working with Peekbank data
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
@@ -32,13 +32,13 @@ Imports:
     readr (>= 1.4.0),
     rlang (>= 0.4.10),
     tidyr (>= 1.1.2),
-    stringr (>= 1.5.1)
+    stringr (>= 1.5.1),
+    redivis (>= 0.6.0)
 Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    tibble,
-    redivis (>= 0.6.0)
+    tibble
 Additional_repositories: https://langcog.r-universe.dev
 RoxygenNote: 7.3.3
 VignetteBuilder: knitr

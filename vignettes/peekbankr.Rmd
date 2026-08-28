@@ -32,7 +32,7 @@ There are several different `get_` functions that you can use to extract differe
   * `get_aoi_timepoints()`
   * `get_xy_timepoints()`
   
-**Technical note 1**: `peekbankr` needs the `redivis` client package, which is not on CRAN; install it with `install.packages("redivis", repos = "https://langcog.r-universe.dev", type = "source")`. The first request will open a browser window to authorize Redivis access (or set a `REDIVIS_API_TOKEN`).
+**Technical note 1**: The first request will open a browser window to authorize Redivis access (or set a `REDIVIS_API_TOKEN`).
 
 **Technical note 2**: Start by creating a version handle with `connect_to_peekbank()` and pass it to each `get_` function. The handle pins a database version for your whole analysis ("current" resolves to the latest release); calling `get_` functions without one works but re-resolves the version each time and warns.
 

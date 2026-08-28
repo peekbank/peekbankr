@@ -14,10 +14,7 @@ what the resulting data look like.
 
 ### Installation
 
-`peekbankr` uses the `redivis` client (not on CRAN) to access the data:
-
 ```r
-install.packages("redivis", repos = "https://langcog.r-universe.dev", type = "source")
 # install.packages("remotes")
 remotes::install_github("peekbank/peekbankr")
 ```
