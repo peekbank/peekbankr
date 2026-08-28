@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">peekbankr</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.1</span>
       </span>
     </div>
 
@@ -47,7 +47,7 @@
   <div class="col-md-9 contents">
     <div class="page-header">
       <h1 data-toc-skip>Changelog <small></small></h1>
-      <small>Source: <a href="http://github.com/peekbank/peekbankr/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="http://github.com/peekbank/peekbankr/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
@@ -58,7 +58,7 @@
 <ul><li>
 <code><a href="../reference/connect_to_peekbank.html">connect_to_peekbank()</a></code> returns a lightweight version handle instead of a DBI connection; <code>db_args</code>/<code>host</code>/<code>port</code>/<code>ssl</code>/<code>compress</code> are deprecated and ignored. Version resolution is discovered from the Redivis dataset itself (“current” = latest release; each version’s <code>release_info</code> table names its Peekbank release), so nothing is hardcoded.</li>
 <li>
-<code>get_*</code> functions return local tibbles in all cases (previously they returned lazy remote tbls when a connection was supplied); existing <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect()</a></code> calls are harmless no-ops.</li>
+<code>get_*</code> functions return local tibbles in all cases (previously they returned lazy remote tbls when a connection was supplied); existing <code>collect()</code> calls are harmless no-ops.</li>
 <li>
 <code><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints()</a></code> still transfers the run-length-encoded table and decodes locally.</li>
 <li>
@@ -92,7 +92,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>
