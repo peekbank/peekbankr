@@ -1,6 +1,7 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
 #' @importFrom rlang .data
+#' @importFrom rlang ":="
 NULL
 
 options(warn = -1)
@@ -71,11 +72,13 @@ get_db_info <- function() {
 connect_to_peekbank <- function(db_version = "current", db_args = NULL,
                                 compress = TRUE, host = NULL, port = NULL,
                                 ssl = "auto") {
-  if (!is.null(db_args) || !is.null(host) || !is.null(port)) {
-    warning("peekbankr now reads from the peekbank dataset on Redivis; ",
-            "`db_args`, `host`, and `port` are deprecated and ignored. ",
-            "To read a local copy of the database, see the peekbank ",
-            "documentation.", call. = FALSE)
+  supplied <- c("db_args", "compress", "host", "port", "ssl")[
+    c(!missing(db_args), !missing(compress), !missing(host), !missing(port),
+      !missing(ssl))]
+  if (length(supplied) > 0) {
+    warning("peekbankr now reads from the peekbank dataset on Redivis. ",
+            "These arguments are deprecated and ignored: ",
+            paste(supplied, collapse = ", "), ".", call. = FALSE)
   }
   ver <- resolve_version(db_version)
   structure(
@@ -127,8 +130,7 @@ list_peekbank_tables <- function(connection) {
 #'
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Datasets data. If `connection` is supplied, the result
-#'   remains a remote query, otherwise it is retrieved into a local tibble.
+#' @return A tibble of Datasets data.
 #' @export
 #'
 #' @examples
@@ -155,9 +157,8 @@ count_datasets <- function(datasets) {
 #' @param dataset_name A character vector of one or more dataset names
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Administrations data, filtered down by supplied arguments.
-#'   If `connection` is supplied, the result remains a remote query, otherwise
-#'   it is retrieved into a local tibble.
+#' @return A tibble of Administrations data, filtered down by supplied
+#'   arguments.
 #' @export
 #'
 #' @examples
@@ -213,10 +214,9 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
 #'
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Subjects data. Note that Subjects is a table used to link
-#'   longitudinal Administrations, which is the primary table you probably want.
-#'   If `connection` is supplied, the result remains a remote query, otherwise
-#'   it is retrieved into a local tibble.
+#' @return A tibble of Subjects data. Note that Subjects is a table used to
+#'   link longitudinal Administrations, which is the primary table you probably
+#'   want.
 #' @export
 #'
 #' @examples
@@ -234,9 +234,7 @@ get_subjects <- function(connection = NULL) {
 #' @param dataset_name A character vector of one or more dataset names
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Trials data, filtered down by supplied arguments. If
-#'   `connection` is supplied, the result remains a remote query, otherwise it
-#'   is retrieved into a local tibble.
+#' @return A tibble of Trials data, filtered down by supplied arguments.
 #' @export
 #'
 #' @examples
@@ -281,9 +279,7 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
 #' @param dataset_name A character vector of one or more dataset names
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Trial Types data, filtered down by supplied arguments. If
-#'   `connection` is supplied, the result remains a remote query, otherwise it
-#'   is retrieved into a local tibble.
+#' @return A tibble of Trial Types data, filtered down by supplied arguments.
 #' @export
 #'
 #' @examples
@@ -325,9 +321,7 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
 #' @param dataset_name A character vector of one or more dataset names
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of Stimuli data, filtered down by supplied arguments. If
-#'   `connection` is supplied, the result remains a remote query, otherwise it
-#'   is retrieved into a local tibble.
+#' @return A tibble of Stimuli data, filtered down by supplied arguments.
 #' @export
 #'
 #' @examples
@@ -366,9 +360,8 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
 #'
 #' @inheritParams list_peekbank_tables
 #'
-#' @return A `tbl` of AOI Region Sets data, filtered down by supplied arguments.
-#'   If `connection` is supplied, the result remains a remote query, otherwise
-#'   it is retrieved into a local tibble.
+#' @return A tibble of AOI Region Sets data, filtered down by supplied
+#'   arguments.
 #' @export
 #'
 #' @examples
@@ -386,9 +379,8 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' @inheritParams get_administrations
 #' @param rle Logical indicating whether to use RLE data representation or not
 #'
-#' @return A `tbl` of AOI Timepoints data, filtered down by supplied arguments.
-#'   If `connection` is supplied, the result remains a remote query, otherwise
-#'   it is retrieved into a local tibble.
+#' @return A tibble of AOI Timepoints data, filtered down by supplied
+#'   arguments.
 #' @export
 #'
 #' @examples
@@ -458,9 +450,8 @@ decode_rle_timepoints <- function(aoi_timepoints) {
 #' @inheritParams get_trials
 #' @inheritParams get_administrations
 #'
-#' @return A `tbl` of XY timepoints data, filtered down by supplied arguments.
-#'   If `connection` is supplied, the result remains a remote query, otherwise
-#'   it is retrieved into a local tibble.
+#' @return A tibble of XY timepoints data, filtered down by supplied
+#'   arguments.
 #' @export
 #'
 #' @examples
@@ -546,7 +537,7 @@ unpack_aux_data <- function(df) {
   }) |>
     `names<-`(value = col_names) |>
     dplyr::as_tibble() |>
-    dplyr::mutate(across(everything(), \(aux) {
+    dplyr::mutate(dplyr::across(dplyr::everything(), \(aux) {
       if (any(sapply(aux, \(aux_val) {
         typeof(aux_val) == "list"
       }))) {
@@ -568,296 +559,25 @@ unpack_aux_data <- function(df) {
     tidyr::nest("{aux_name}" := dplyr::all_of(colnames(aux_cols)))
 }
 
-#' Run a SQL Query script on the Peekbank database
+#' Run a SQL query against peekbank
 #'
-#' @param sql_query_string A valid sql query string character
-#' @param connection A connection to the Peekbank database
+#' Queries are BigQuery Standard SQL, run against the peekbank dataset on
+#' Redivis. Note that string comparison is case-sensitive.
 #'
-#' @return The database after calling the supplied SQL query
+#' @param sql_query_string A valid SQL query string
+#' @param connection A connection to the peekbank database
+#'
+#' @return A tibble of the query results
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' get_sql_query("SELECT * FROM datasets")
+#' con <- connect_to_peekbank()
+#' get_sql_query("SELECT * FROM datasets", connection = con)
 #' }
 get_sql_query <- function(sql_query_string, connection = NULL) {
   con <- resolve_connection(connection)
   pb_query(con, sql_query_string)
-}
-
-
-#' Download a list of files from OSF and recreate folder structure locally
-#'
-#' @param file_paths A character vector of file paths on OSF to download
-#' @param osf_node_id The OSF node ID where the files are stored (default: "pr6wu")
-#' @param local_base_dir Base directory to save files locally (default: here::here("data"))
-#' @param debug Logical, whether to print debugging information (default: TRUE)
-#' @param skip_existing Logical, skip downloading a file if a file with that name already exists in that path locally
-#' @param max_retries Maximum number of retry attempts for server errors (default: 3)
-#' @param retry_delay Delay in seconds between retry attempts (default: 5)
-#'
-#' @return returns paths to downloaded files
-#'
-#' @examples
-#' \dontrun{
-#' # Download multiple files from OSF
-#' download_osf_files(
-#'   file_paths = c(
-#'     "lab1/raw_data/file1.csv",
-#'     "lab2/processed_data/file2.csv"
-#'   ),
-#'   osf_node_id = "pr6wu"
-#' )
-#' }
-download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir = "data",
-                               debug = F, skip_existing = TRUE, max_retries = 3, retry_delay = 5) {
-  if (!fs::dir_exists(local_base_dir)) {
-    fs::dir_create(local_base_dir, recurse = TRUE)
-  }
-
-  downloaded_files <- character(length(file_paths))
-  skipped_files <- character(0)
-
-  # Cache for directory listings to avoid repeated API calls
-  # Using an environment instead of a list for better indexing
-  directory_cache <- new.env(hash = TRUE)
-
-  get_all_items <- function(start_url, max_api_retries = max_retries, api_retry_delay = retry_delay) {
-    if (exists(start_url, envir = directory_cache, inherits = FALSE)) {
-      if (debug) message(glue::glue("Using cached data for: {start_url}"))
-      return(get(start_url, envir = directory_cache))
-    }
-
-    all_names <- character(0)
-    all_kinds <- character(0)
-    all_related_hrefs <- character(0)
-    all_downloads <- character(0)
-    next_url <- start_url
-
-    while (!is.null(next_url)) {
-      if (debug) message(glue::glue("Fetching: {next_url}"))
-
-      # Add retry logic for the GET request
-      response <- NULL
-      attempt <- 1
-      success <- FALSE
-
-      while (!success && attempt <= max_api_retries) {
-        if (attempt > 1) {
-          message(glue::glue("API retry attempt {attempt-1}/{max_api_retries} after waiting {api_retry_delay} seconds..."))
-          Sys.sleep(api_retry_delay)
-        }
-
-        tryCatch({
-          response <- httr::GET(next_url)
-          status_code <- httr::status_code(response)
-
-          if (status_code == 200) {
-            success <- TRUE
-          } else if (status_code >= 500 && status_code < 600 && attempt < max_api_retries) {
-            message(glue::glue("Server error (HTTP {status_code}) when accessing OSF API. Will retry."))
-          } else {
-            # Other errors or final attempt
-            if (attempt >= max_api_retries) {
-              stop(glue::glue("Error accessing OSF API after {max_api_retries} attempts: {httr::content(response, 'text')}"))
-            } else {
-              message(glue::glue("HTTP error {status_code}. Will retry."))
-            }
-          }
-        }, error = function(e) {
-          if (attempt < max_api_retries) {
-            message(glue::glue("Error when accessing OSF API: {e$message}. Will retry."))
-          } else {
-            stop(glue::glue("Failed to access OSF API after {max_api_retries} attempts: {e$message}"))
-          }
-        })
-
-        attempt <- attempt + 1
-      }
-
-      # If we've reached here and success is TRUE, we have a valid response
-      content <- jsonlite::fromJSON(httr::content(response, "text"))
-      if (length(content$data) > 0) {
-        all_names <- c(all_names, content$data$attributes$name)
-        if ("kind" %in% names(content$data$attributes)) {
-          all_kinds <- c(all_kinds, content$data$attributes$kind)
-        } else {
-          all_kinds <- c(all_kinds, rep(NA, length(content$data$attributes$name)))
-        }
-
-        if ("files" %in% names(content$data$relationships)) {
-          all_related_hrefs <- c(all_related_hrefs, content$data$relationships$files$links$related$href)
-        } else {
-          all_related_hrefs <- c(all_related_hrefs, rep(NA, length(content$data$attributes$name)))
-        }
-
-        if ("download" %in% names(content$data$links)) {
-          all_downloads <- c(all_downloads, content$data$links$download)
-        } else {
-          all_downloads <- c(all_downloads, rep(NA, length(content$data$attributes$name)))
-        }
-      }
-
-      next_url <- NULL
-      if ("next" %in% names(content$links) && !is.null(content$links[["next"]])) {
-        next_url <- content$links[["next"]]
-      }
-    }
-
-    result <- data.frame(
-      name = all_names,
-      kind = all_kinds,
-      related_href = all_related_hrefs,
-      download = all_downloads,
-      stringsAsFactors = FALSE
-    )
-
-    assign(start_url, result, envir = directory_cache)
-    return(result)
-  }
-
-  # Retry function for handling download errors
-  download_with_retry <- function(url, destfile, max_attempts, delay_seconds) {
-    attempt <- 1
-    success <- FALSE
-
-    while (!success && attempt <= max_attempts) {
-      if (attempt > 1) {
-        message(glue::glue("Retry attempt {attempt-1}/{max_attempts} after waiting {delay_seconds} seconds..."))
-        Sys.sleep(delay_seconds)
-      }
-
-      tryCatch({
-        curl::curl_download(url, destfile = destfile, quiet = FALSE)
-        success <- TRUE
-      }, error = function(e) {
-        if (attempt < max_attempts) {
-          if (grepl("HTTP error 5", e$message)) {
-            message(glue::glue("Server error: {e$message}. Will retry."))
-          } else {
-            message(glue::glue("Error: {e$message}. Will retry."))
-          }
-        } else {
-          message(glue::glue("Final attempt failed: {e$message}"))
-          stop(e)
-        }
-      })
-
-      attempt <- attempt + 1
-    }
-
-    return(success)
-  }
-
-  path_cache <- new.env(hash = TRUE)
-  assign("ROOT", glue::glue("https://api.osf.io/v2/nodes/{osf_node_id}/files/osfstorage"), envir = path_cache)
-
-  for (i in seq_along(file_paths)) {
-    file_path <- file_paths[i]
-    path_components <- fs::path_split(file_path)[[1]]
-    file_name <- path_components[length(path_components)]
-    dir_structure <- path_components[-length(path_components)]
-    local_dir <- do.call(fs::path, c(list(local_base_dir), as.list(dir_structure)))
-    local_file_path <- fs::path(local_dir, file_name)
-
-    if (skip_existing && fs::file_exists(local_file_path)) {
-      message(glue::glue("Skipping {file_path} - file already exists at {local_file_path}"))
-      skipped_files <- c(skipped_files, local_file_path)
-      downloaded_files[i] <- local_file_path
-      next
-    }
-
-    if (!fs::dir_exists(local_dir)) {
-      fs::dir_create(local_dir, recurse = TRUE)
-    }
-
-    current_path <- "ROOT"
-    current_url <- get(current_path, envir = path_cache)
-    # the sorting fixes the OSF bug that misses files otherwise
-    current_url <- httr::modify_url(current_url, query = list(sort = "name"))
-
-    for (component in dir_structure) {
-      next_path <- if (current_path == "") component else fs::path(current_path, component)
-      next_path_str <- as.character(next_path)
-
-      if (exists(next_path_str, envir = path_cache, inherits = FALSE)) {
-        if (debug) message(glue::glue("Using cached path for: {next_path_str}"))
-        current_path <- next_path_str
-        current_url <- get(current_path, envir = path_cache)
-        next
-      }
-
-      items <- get_all_items(current_url)
-
-      if (debug) {
-        message("Available items at this level:")
-        if (nrow(items) > 0) {
-          for (j in seq_len(nrow(items))) {
-            message(glue::glue("  - {items$name[j]} (type: {items$kind[j]})"))
-          }
-        } else {
-          message("  No items found at this level")
-        }
-        message(glue::glue("Looking for: '{component}'"))
-      }
-
-      folder_idx <- which(items$name == component)
-      if (length(folder_idx) == 0) {
-        message(glue::glue("Error at: {file_path}"))
-        stop(glue::glue("Could not find folder '{component}' in OSF path. Please check the path and try again."))
-      }
-
-      current_url <- items$related_href[folder_idx]
-      current_path <- next_path_str
-      assign(current_path, current_url, envir = path_cache)
-    }
-
-    # the sorting fixes the OSF bug that misses files otherwise
-    current_url <- httr::modify_url(current_url, query = list(sort = "name"))
-    items <- get_all_items(current_url)
-
-    if (debug) {
-      message("Available files in final directory:")
-      if (nrow(items) > 0) {
-        for (j in seq_len(nrow(items))) {
-          message(glue::glue("  - {items$name[j]}"))
-        }
-      } else {
-        message("No files found")
-      }
-      message(glue::glue("Looking for file: '{file_name}'"))
-    }
-
-    file_idx <- which(items$name == file_name)
-    if (length(file_idx) == 0) {
-      stop(glue::glue("Could not find file '{file_name}' in OSF path when processing {file_path}"))
-    }
-
-    download_url <- items$download[file_idx]
-    message(glue::glue("Downloading {file_path} to {local_file_path}"))
-
-    # Use our retry function instead of direct curl_download
-    download_success <- download_with_retry(
-      download_url,
-      destfile = local_file_path,
-      max_attempts = max_retries,
-      delay_seconds = retry_delay
-    )
-
-    if (!download_success) {
-      warning(glue::glue("Failed to download {file_path} after {max_retries} attempts"))
-    } else {
-      downloaded_files[i] <- local_file_path
-    }
-  }
-
-  n_downloaded <- length(downloaded_files) - length(skipped_files)
-  message(glue::glue("Downloaded {n_downloaded} files from OSF"))
-  #if (length(skipped_files) > 0) {
-  #  message(glue::glue("Skipped {length(skipped_files)} existing files"))
-  #}
-
-  return(downloaded_files)
 }
 
 
@@ -873,9 +593,6 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 #' @param datasets Character vector of dataset names to download stimuli for.
 #'                 If empty (default), downloads stimuli for all datasets.
 #' @param skip_existing skip downloading a file if a file with that name already exists in that path locally
-#' @param debug show debug prints
-#' @param max_retries Maximum number of retry attempts for server errors (default: 3)
-#' @param retry_delay Delay in seconds between retry attempts (default: 5)
 #'
 #' @return Returns the stimulus df with an additional column for the paths of the downloaded stimuli
 #'
@@ -888,12 +605,13 @@ download_osf_files <- function(file_paths, osf_node_id = "pr6wu", local_base_dir
 #' download_stimuli(con, local_base_dir = "stimulus_data")
 #'
 #' # Download stimuli for specific datasets
-#' download_stimuli(con, local_base_dir = "stimulus_data", datasets = c("reflook_v4", "reflook_socword"))
+#' download_stimuli(con, local_base_dir = "stimulus_data",
+#'                  datasets = c("reflook_v4", "reflook_socword"))
 #' }
 #'
 #' @export
 download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c(),
-                             skip_existing=T, debug = F, max_retries = 3, retry_delay = 5) {
+                             skip_existing = TRUE) {
   stimuli_df <- get_stimuli(connection = con) %>%
     dplyr::collect() %>%
     dplyr::filter(!is.na(stimulus_image_path))

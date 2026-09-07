@@ -100,7 +100,7 @@ populate_cdi_percentiles <- function(subjects_table) {
   cdi_norms_long <- norms_tables %>%
     purrr::imap(\(table, name){
       table %>%
-        as_tibble() %>%
+        dplyr::as_tibble() %>%
         tidyr::pivot_longer(cols = c(-age), names_to = "head", values_to = "score") %>%
         dplyr::rename(norm_percentile = age, reference_age = head) %>%
         dplyr::mutate(name = gsub(".csv", "", name, fixed = T)) %>%
@@ -130,7 +130,7 @@ populate_cdi_percentiles <- function(subjects_table) {
       relationship = "many-to-many"
     ) %>%
     dplyr::mutate(age_diff = abs(age - reference_age)) %>%
-    dplyr::group_by(across(!c(age_diff, reference_age))) %>%
+    dplyr::group_by(dplyr::across(!c(age_diff, reference_age))) %>%
     dplyr::slice_min(abs(age_diff), n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     dplyr::select(-age_diff)
@@ -142,19 +142,19 @@ populate_cdi_percentiles <- function(subjects_table) {
       relationship = "many-to-many"
     ) %>%
     dplyr::filter(score <= rawscore) %>%
-    dplyr::group_by(across(!c(score, norm_percentile))) %>%
+    dplyr::group_by(dplyr::across(!c(score, norm_percentile))) %>%
     dplyr::slice_max(score, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     tidyr::pivot_wider(names_from = "norm_sex", values_from = c("norm_percentile", "score")) %>%
     dplyr::mutate(
       percentile_all = norm_percentile_both,
-      percentile_sex = case_when(
+      percentile_sex = dplyr::case_when(
         sex == "male" ~ norm_percentile_m,
         sex == "female" ~ norm_percentile_f,
         T ~ NA
       ),
       norm_score_all = score_both,
-      norm_score_sex = case_when(
+      norm_score_sex = dplyr::case_when(
         sex == "male" ~ score_m,
         sex == "female" ~ score_f,
         T ~ NA
@@ -211,7 +211,7 @@ append_relative_cdi_scores <- function(subjects_table) {
   # TODO: find instrument_length values for all languages
   subjects_table %>%
     dplyr::mutate(
-      instrument_length = case_when(instrument_type == "ws" ~ 680,
+      instrument_length = dplyr::case_when(instrument_type == "ws" ~ 680,
         instrument_type == "wg" & language == "English (American)" ~ 396,
         instrument_type == "wsshort" ~ 100,
         instrument_type == "wg" & language == "Spanish (Mexican)" ~ 428, # TODO: double-check Spanish WG length..

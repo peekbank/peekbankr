@@ -1,4 +1,4 @@
-#' parse json file from peekbank github into a dataframe
+#' parse the bundled peekbank schema json into a dataframe
 #'
 #' @return the organized dataframe from schema json file
 #'

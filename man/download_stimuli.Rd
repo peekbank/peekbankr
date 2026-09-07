@@ -2,16 +2,13 @@
 % Please edit documentation in R/peekbankr.R
 \name{download_stimuli}
 \alias{download_stimuli}
-\title{Download stimulus images from OSF for Peekbank repository}
+\title{Download stimulus images for the Peekbank repository}
 \usage{
 download_stimuli(
   con,
   local_base_dir = "stimulus_data",
   datasets = c(),
-  skip_existing = T,
-  debug = F,
-  max_retries = 3,
-  retry_delay = 5
+  skip_existing = TRUE
 )
 }
 \arguments{
@@ -23,20 +20,15 @@ download_stimuli(
 If empty (default), downloads stimuli for all datasets.}
 
 \item{skip_existing}{skip downloading a file if a file with that name already exists in that path locally}
-
-\item{debug}{show debug prints}
-
-\item{max_retries}{Maximum number of retry attempts for server errors (default: 3)}
-
-\item{retry_delay}{Delay in seconds between retry attempts (default: 5)}
 }
 \value{
 Returns the stimulus df with an additional column for the paths of the downloaded stimuli
 }
 \description{
-This function downloads stimulus images for selected Peekbank datasets from OSF.
-It retrieves stimulus metadata from a Peekbank database connection, constructs
-the full paths to the stimulus images on OSF, and downloads them to a local directory.
+This function downloads stimulus images for selected Peekbank datasets from
+the peekbank_files dataset on Redivis. It retrieves stimulus metadata from a
+Peekbank database connection, constructs the full stimulus file paths, and
+downloads them to a local directory.
 }
 \examples{
 \dontrun{
@@ -46,7 +38,8 @@ con <- connect_to_peekbank("2025.1")
 download_stimuli(con, local_base_dir = "stimulus_data")
 
 # Download stimuli for specific datasets
-download_stimuli(con, local_base_dir = "stimulus_data", datasets = c("reflook_v4", "reflook_socword"))
+download_stimuli(con, local_base_dir = "stimulus_data",
+                 datasets = c("reflook_v4", "reflook_socword"))
 }
 
 }

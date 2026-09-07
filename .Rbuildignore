@@ -1,9 +1,9 @@
 ^.*\.Rproj$
-^\.Rproj\.user$
-build_docs.R
-build_docs.sh
-docs
+\.Rproj\.user
+\.DS_Store$
+^\.claude$
+^\.Renviron
 ^[^/]*\.Rmd$
+^docs$
 _pkgdown.yml
-.travis.yml
 ^\.github$

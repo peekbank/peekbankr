@@ -2,7 +2,7 @@ name: R-CMD-check
 
 on:
   push:
-    branches: [master, main, redivis]
+    branches: [master, main]
   pull_request:
   workflow_dispatch:
 
@@ -32,3 +32,4 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           args: 'c("--no-manual", "--as-cran")'
+          error-on: '"error"'

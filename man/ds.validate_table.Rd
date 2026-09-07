@@ -44,7 +44,9 @@ import
 }
 \examples{
 \dontrun{
-result <- ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
+result <- ds.validate_table(df_table = df_table, table_type = "xy_data",
+                            cdi_expected = FALSE,
+                            dir_csv = "../processed_data")
 result$errors    # blocking issues
 result$warnings  # warnings that can be opted out of on a case by case basis
 }

@@ -61,9 +61,10 @@ stimuli <- download_stimuli(con, datasets = "reflook_v4")  # stimulus images
 ### Development
 
 After making changes, run `roxygen2::roxygenise()` to update exports and
-documentation, and `testthat::test_local()` for the offline test suite. Two
-gated suites need environment variables: `PEEKBANK_NETWORK_TESTS=true`
-(live Redivis reads) and `PEEKBANK_FIXTURES_DIR=<path>` (characterization
-against the MySQL-era fixtures; see
-[peekbank-datapage](https://github.com/peekbank/peekbank-datapage)
-`migration/capture_fixtures.R`).
+documentation, and `testthat::test_local()` for the offline test suite.
+
+Running the full test suite requires Redivis credentials: Without them
+the network tests skip. Copy
+`.Renviron.template` to `.Renviron`, fill in a personal API token from your
+[Redivis workspace](https://redivis.com/workspace) settings, and set
+`PEEKBANK_NETWORK_TESTS=true`.

@@ -2,23 +2,25 @@
 % Please edit documentation in R/peekbankr.R
 \name{get_sql_query}
 \alias{get_sql_query}
-\title{Run a SQL Query script on the Peekbank database}
+\title{Run a SQL query against peekbank}
 \usage{
 get_sql_query(sql_query_string, connection = NULL)
 }
 \arguments{
-\item{sql_query_string}{A valid sql query string character}
+\item{sql_query_string}{A valid SQL query string}
 
-\item{connection}{A connection to the Peekbank database}
+\item{connection}{A connection to the peekbank database}
 }
 \value{
-The database after calling the supplied SQL query
+A tibble of the query results
 }
 \description{
-Run a SQL Query script on the Peekbank database
+Queries are BigQuery Standard SQL, run against the peekbank dataset on
+Redivis. Note that string comparison is case-sensitive.
 }
 \examples{
 \dontrun{
-get_sql_query("SELECT * FROM datasets")
+con <- connect_to_peekbank()
+get_sql_query("SELECT * FROM datasets", connection = con)
 }
 }

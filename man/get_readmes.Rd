@@ -2,7 +2,7 @@
 % Please edit documentation in R/peekbankr.R
 \name{get_readmes}
 \alias{get_readmes}
-\title{Download dataset README files from OSF to a temporary folder}
+\title{Download dataset README files}
 \usage{
 get_readmes(datasets = c(), local_base_dir = "dataset_readmes")
 }
@@ -17,8 +17,9 @@ No return value, called for side effects. README files are saved to
   the specified directory and the path is printed via message.
 }
 \description{
-Downloads README files for Peekbank datasets from OSF. Note that READMEs
-always reflect the latest version of the dataset on OSF.
+Downloads README files for Peekbank datasets from the peekbank_files
+dataset on Redivis. Note that READMEs reflect the latest released version
+of the files dataset.
 }
 \examples{
 \dontrun{

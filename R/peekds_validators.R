@@ -61,7 +61,9 @@ file.exists.case.sensitive <- function(...) {
 #'
 #' @examples
 #' \dontrun{
-#' result <- ds.validate_table(df_table = df_table, table_type = "xy_data", cdi_expected = F, dir_csv = "../processed_data")
+#' result <- ds.validate_table(df_table = df_table, table_type = "xy_data",
+#'                             cdi_expected = FALSE,
+#'                             dir_csv = "../processed_data")
 #' result$errors    # blocking issues
 #' result$warnings  # warnings that can be opted out of on a case by case basis
 #' }
@@ -86,7 +88,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   for (col in char_cols) {
     non_utf8 <- which(!validUTF8(df_table[[col]]))
     if (length(non_utf8) > 0) {
-      msg_error <- c(msg_error, .msg("- Column {col} in {table_type} contains non-UTF-8 characters in {length(non_utf8)} row(s) (first rows: {paste(head(non_utf8), collapse = ', ')}). Please ensure all text is UTF-8 encoded."))
+      msg_error <- c(msg_error, .msg("- Column {col} in {table_type} contains non-UTF-8 characters in {length(non_utf8)} row(s) (first rows: {paste(utils::head(non_utf8), collapse = ', ')}). Please ensure all text is UTF-8 encoded."))
     }
   }
 
@@ -129,7 +131,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
           msg_error <- c(msg_error, msg_new)
         }
         # check if ids are incremented correctly
-        if(length(content_tb) > 1 && any(na.omit(sort(content_tb) - dplyr::lag(sort(content_tb)) != 1))){
+        if(length(content_tb) > 1 && any(stats::na.omit(sort(content_tb) - dplyr::lag(sort(content_tb)) != 1))){
           msg_new <- .msg("- Primary key field {fieldname} is missing ids in its sequence. IDs must start at 0 and increment by 1 each")
           msg_error <- c(msg_error, msg_new)
         }
@@ -248,7 +250,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     # unpack subject aux data from JSON
     sad <- df_table %>%
       dplyr::select(lab_subject_id, subject_aux_data) %>%
-      peekbankr:::unpack_aux_data() %>%
+      unpack_aux_data() %>%
       tidyr::unnest(subject_aux_data)
 
     if(cdi_expected && !("cdi_responses" %in% colnames(sad))){
@@ -354,7 +356,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   if (table_type == "trial_types"){
 
     # check if there are any entries that are duplicate and only differ by id
-    if((df_table %>% select(-trial_type_id) %>% distinct() %>% nrow()) != (df_table %>% nrow())){
+    if((df_table %>% dplyr::select(-trial_type_id) %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
       msg_new <- .msg("- trial types are not unique.")
       msg_error <- c(msg_error, msg_new)
     }
@@ -363,7 +365,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   # STEP 6:
   # if stimuli table, check if there are any entries that are duplicate and only differ by id
   if (table_type == "stimuli"){
-    if((df_table %>% select(-stimulus_id) %>% distinct() %>% nrow()) != (df_table %>% nrow())){
+    if((df_table %>% dplyr::select(-stimulus_id) %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
       msg_new <- .msg("- stimulus entries are not unique.")
       msg_error <- c(msg_error, msg_new)
     }
@@ -417,7 +419,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
                              )
 
     converted_ages <- df_table %>%
-      filter(!is.na(lab_age)) %>%
+      dplyr::filter(!is.na(lab_age)) %>%
       dplyr::mutate(converted_age = dplyr::case_when(
         lab_age_units == "months" ~ lab_age,
         lab_age_units == "years" ~ lab_age * 12 + ifelse(years_given_full, 6, 0),
@@ -426,7 +428,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         )) %>%
       dplyr::pull(converted_age)
 
-    if(!isTRUE(all.equal(df_table %>% filter(!is.na(lab_age)) %>% pull(age),converted_ages))){
+    if(!isTRUE(all.equal(df_table %>% dplyr::filter(!is.na(lab_age)) %>% dplyr::pull(age),converted_ages))){
 
       msg_new <- .msg("- some ages do not match the conversion according to lab_age_unit and lab_age.")
       msg_error <- c(msg_error, msg_new)
@@ -442,7 +444,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     }
 
     # check if there are cases where there is an exclusion reason but excluded is false
-    if(any(df_table %>% mutate(incorrectly_included = !excluded & (!is.na(exclusion_reason) & exclusion_reason != "")) %>% pull(incorrectly_included))){
+    if(any(df_table %>% dplyr::mutate(incorrectly_included = !excluded & (!is.na(exclusion_reason) & exclusion_reason != "")) %>% dplyr::pull(incorrectly_included))){
       msg_new <- .msg("- some trials have exclusion reasons even though they are marked as included.")
       msg_error <- c(msg_error, msg_new)
     }
@@ -468,7 +470,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
   msg_error <- c()
 
-  num_admins_per_trial_id = aggregate(administration_id  ~ trial_id , df_aoi_timepoints, function(x){length(unique(x))})
+  num_admins_per_trial_id = stats::aggregate(administration_id  ~ trial_id , df_aoi_timepoints, function(x){length(unique(x))})
 
   if (any(num_admins_per_trial_id$administration_id != 1)){
     msg_error <- .msg('Multiple administrations detected for the same trial ID. Make sure that trials are split out by subject to allow subject-specific trial exclusion')
@@ -581,12 +583,12 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   # check if there are any duplicate trial order values within each administration
 
   if(nrow(dict_tables[['administrations']] %>%
-          left_join(dict_tables[['aoi_timepoints']], by = join_by(administration_id)) %>%
-          left_join(dict_tables[['trials']], by = join_by(trial_id)) %>%
-          distinct(administration_id, trial_id, trial_order) %>%
-          group_by(administration_id) %>%
-          filter(duplicated(trial_order) | duplicated(trial_order, fromLast = TRUE)) %>%
-          ungroup()) != 0){
+          dplyr::left_join(dict_tables[['aoi_timepoints']], by = dplyr::join_by(administration_id)) %>%
+          dplyr::left_join(dict_tables[['trials']], by = dplyr::join_by(trial_id)) %>%
+          dplyr::distinct(administration_id, trial_id, trial_order) %>%
+          dplyr::group_by(administration_id) %>%
+          dplyr::filter(duplicated(trial_order) | duplicated(trial_order, fromLast = TRUE)) %>%
+          dplyr::ungroup()) != 0){
     msg_error_all <- c(msg_error_all, .msg("Global issue: - trials order values are not unique within administrations"))
   }
 
@@ -619,7 +621,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
       direction <- if (length(vec) >= 4) vec[4] else "both"
 
       if(vec[1] == "stimuli" && vec[2] == "trial_types"){
-        table_2 <- table_2 %>% pivot_longer(
+        table_2 <- table_2 %>% tidyr::pivot_longer(
           cols = c(distractor_id, target_id),
           names_to = "stimulus_type",
           values_to = "stimulus_id"

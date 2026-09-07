@@ -193,6 +193,29 @@ pb_files_query <- function(prefix) {
 
 # download rows of a pb_files_query() result, recreating the relative paths
 # under local_base_dir; returns the local paths (NA for failures)
+# Fetch one file from the peekbank_files dataset, given a row of a
+# pb_files_query() result.
+#
+# Workaround for a redivis bug, observed in 0.12.12: The public helpers
+# ($file(), list_files(), to_directory()) all build a directory tree through
+# add_directory_file(), which pastes a directory name straight into a regex:
+#
+#   sub(paste0("^", self_path, "/?"), "", file_path, fixed = FALSE)
+#
+# A name holding a regex metacharacter therefore fails to strip its own
+# prefix and the function recurses on an
+# ever-longer path until the pattern will not compile. We instead reconstruct from file id
+#
+# When that is fixed upstream, this whole function becomes:
+#   pb_files_dataset()$table("files")$file(file_name)$download(
+#     path = dest, overwrite = TRUE, progress = FALSE)
+pb_fetch_file <- function(file_id, file_name, size, dest) {
+  redivis_file <- utils::getFromNamespace("File", "redivis")
+  redivis_file$new(id = file_id, name = file_name,
+                   properties = list(size = size))$download(
+                     path = dest, overwrite = TRUE, progress = FALSE)
+}
+
 pb_download_files <- function(files, local_base_dir, skip_existing = TRUE) {
   paths <- rep(NA_character_, nrow(files))
   for (i in seq_len(nrow(files))) {
@@ -203,22 +226,12 @@ pb_download_files <- function(files, local_base_dir, skip_existing = TRUE) {
       next
     }
     dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
-    scratch <- file.path(tempdir(), paste0("peekbankr_dl_", i))
-    dir.create(scratch, recursive = TRUE, showWarnings = FALSE)
-    ok <- pb_try({
-      f <- redivis::redivis$file(files$file_id[i])
-      f$get()
-      f$download(path = scratch, overwrite = TRUE)
-      TRUE
-    })
-    got <- list.files(scratch, full.names = TRUE)
-    if (isTRUE(ok) && length(got) == 1) {
-      file.rename(got[1], dest)
-    } else {
+    ok <- pb_try(quiet_redivis(
+      pb_fetch_file(files$file_id[i], files$file_name[i], files$size[i], dest)))
+    if (is.null(ok)) {
       paths[i] <- NA_character_
       message("Failed to download ", files$file_name[i])
     }
-    unlink(scratch, recursive = TRUE)
   }
   paths
 }

@@ -1,0 +1,6 @@
+# Copy to .Renviron and fill in.
+REDIVIS_API_TOKEN=
+
+# Set to true to run the network tests and evaluate the vignette against live
+# data. This needs the token above to be set.
+PEEKBANK_NETWORK_TESTS=false

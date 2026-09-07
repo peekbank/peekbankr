@@ -2,7 +2,7 @@
 % Please edit documentation in R/peekds_readers.R
 \name{ds.get_peekjson}
 \alias{ds.get_peekjson}
-\title{parse json file from peekbank github into a dataframe}
+\title{parse the bundled peekbank schema json into a dataframe}
 \usage{
 ds.get_peekjson()
 }
@@ -10,7 +10,7 @@ ds.get_peekjson()
 the organized dataframe from schema json file
 }
 \description{
-parse json file from peekbank github into a dataframe
+parse the bundled peekbank schema json into a dataframe
 }
 \examples{
 \dontrun{

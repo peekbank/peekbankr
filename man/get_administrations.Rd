@@ -22,9 +22,8 @@ get_administrations(
 \item{connection}{A connection to the peekbank database}
 }
 \value{
-A `tbl` of Administrations data, filtered down by supplied arguments.
-  If `connection` is supplied, the result remains a remote query, otherwise
-  it is retrieved into a local tibble.
+A tibble of Administrations data, filtered down by supplied
+  arguments.
 }
 \description{
 Get administrations

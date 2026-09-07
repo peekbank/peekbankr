@@ -1,5 +1,5 @@
 ---
-title: "Accessing `peekbank-db`"
+title: "Accessing Peekbank Data"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
@@ -12,9 +12,10 @@ vignette: >
 
 ```{r, include=FALSE}
 options(rmarkdown.html_vignette.check_title = FALSE)
-# the vignette needs internet access and Redivis credentials (data live in
-# the peekbank dataset on Redivis), so chunks only evaluate when network
-# access is explicitly requested
+# The vignette reads live data from the peekbank dataset on Redivis, so it
+# needs internet access and credentials. Chunks evaluate only when that is
+# explicitly requested. They also carry purl = FALSE individually, because
+# R CMD check tangles the vignette and runs the result, which ignores eval.
 knitr::opts_chunk$set(eval = identical(Sys.getenv("PEEKBANK_NETWORK_TESTS"), "true"))
 ```
 
@@ -22,7 +23,7 @@ knitr::opts_chunk$set(eval = identical(Sys.getenv("PEEKBANK_NETWORK_TESTS"), "tr
   
 The `peekbankr` package allows you to access data in the peekbank database from R. Data are hosted in the versioned [peekbank dataset on Redivis](https://redivis.com/datapages/datasets/peekbank); the `get_` functions retrieve tidy tables from it without you having to write queries. This vignette shows some examples of how to use the data loading functions and what the resulting data look like.
   
-There are several different `get_` functions that you can use to extract different types of data from the peekbank-db: 
+There are several different `get_` functions that you can use to extract different types of data from peekbank: 
   
   * `get_datasets()`
   * `get_subjects()`
@@ -39,7 +40,7 @@ There are several different `get_` functions that you can use to extract differe
 
 **Technical note 3**: We have tried to optimize the time it takes to get data from the database (the AOI timepoints transfer run-length-encoded and are expanded locally). But if you query entire timepoint tables, it will still take a while, as you are transferring 100s of MB of data.
   
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, purl=FALSE}
 # load the library
 library(peekbankr)
 
@@ -53,7 +54,7 @@ The `get_datasets` function returns a table related to the sources of the datase
 
 For example, you can run `get_datasets` without any arguments to return all of the datasets in the database.
 
-```{r}
+```{r, purl=FALSE}
 d_datasets <- get_datasets(connection = con)
 head(d_datasets)
 ```
@@ -62,7 +63,7 @@ head(d_datasets)
 
 The `get_subjects` function returns information about persistent subject identifiers for noting when subjects have participated in multiple experiments. This includes demographic information (currently only sex and lab-specific subject id). 
 
-```{r}
+```{r, purl=FALSE}
 d_subjects <- get_subjects(connection = con)
 head(d_subjects)
 ```
@@ -78,7 +79,7 @@ The `get_administrations` function returns information about the specific experi
 
 Again, if you run the function with no arguments, then you get all the information for all administrations in the database, but you can now also filter on a dataset name or dataset id.
 
-```{r}
+```{r, purl=FALSE}
 d_administrations <- get_administrations(dataset_name = "pomper_saffran_2016", connection = con)
 head(d_administrations)
 ```
@@ -91,7 +92,7 @@ The age argument takes a number indicating the age(s) of children (in months) th
 
 For example, you can get the participant information for all of the children who were tested between the ages of 24 and 36 months. 
 
-```{r}
+```{r, purl=FALSE}
 d_age_range <- get_administrations(age = c(24, 36), connection = con)
 head(d_age_range)
 ```
@@ -105,7 +106,7 @@ The `get_trials` function returns a table with information of the trials in the 
   * Point of disambiguation
   * IDs to link to other tables. 
 
-```{r}
+```{r, purl=FALSE}
 d_trials <- get_trials(connection = con)
 head(d_trials)
 ```  
@@ -120,7 +121,7 @@ The `get_stimuli` function returns a table with information of the stimuli in th
   * Image
   * Novelty status
 
-```{r}
+```{r, purl=FALSE}
 d_stimuli <- get_stimuli(connection = con)
 head(d_stimuli)
 ```  
@@ -131,7 +132,7 @@ This function also takes dataset name and id filters.
 
 The `get_aoi_region_sets()` returning a table with the information of the region of area of interest (AOI) for experiments using eye-trackers. It includes information of the dimensions of the x and y, such as the minimum and maximum dimension of the xy spaces. 
 
-```{r}
+```{r, purl=FALSE}
 d_aoi_region_sets <- get_aoi_region_sets(connection = con)
 head(d_aoi_region_sets)
 ```
@@ -144,7 +145,7 @@ The `get_aoi_timepoints()` function returns a table with information of the subj
 
 The `t_norm` field provides a trial-normalized time variable (milliseconds) whose 0 point is the point of disambiguation on that trial (first timestep of the onset of the first time the target label is said). 
 
-```{r}
+```{r, purl=FALSE}
 d_aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016", connection = con)
 head(d_aoi_timepoints)
 ```
@@ -153,6 +154,6 @@ head(d_aoi_timepoints)
 
 For experiments using eye-trackers (as opposed to hand coding from video), the `get_xy_timepoints` function returns a table including the x and y position across time. 
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, purl=FALSE}
 d_xy_timepoints <- get_xy_timepoints()
 ```
