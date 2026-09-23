@@ -496,7 +496,7 @@ unpack_aux_data <- function(df) {
     dplyr::ungroup() |>
     dplyr::pull(dplyr::all_of(aux_name)) |>
     lapply(\(aux) {
-      if (is.na(aux) | is.null(aux)) {
+      if (is.null(aux) || is.na(aux)) {
         return(aux)
       }
       jsonlite::fromJSON(aux)

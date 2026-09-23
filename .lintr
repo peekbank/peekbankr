@@ -1,25 +1,22 @@
 linters: linters_with_defaults(
-    # Linters that catch mistakes gate CI (LINTR_ERROR_ON_LINT in lint.yaml).
-    # The pure-formatting ones are off: switching them on would mean reflowing
-    # most of the package without changing what it does.
-    line_length_linter = NULL,
-    indentation_linter = NULL,
-    brace_linter = NULL,
-    paren_body_linter = NULL,
-    spaces_left_parentheses_linter = NULL,
-    infix_spaces_linter = NULL,
-    commas_linter = NULL,
-    quotes_linter = NULL,
-    pipe_continuation_linter = NULL,
-    return_linter = NULL,
-    commented_code_linter = NULL,
-    # ds.* names and the wide validator locals are deliberate
-    object_name_linter = NULL,
-    object_length_linter = NULL,
-    # R CMD check covers this ground and now passes clean; lintr's version
-    # misfires on the testthat helpers and inside case_when()
-    object_usage_linter = NULL,
-    # %<>% is the house style in the get_ functions
-    assignment_linter = assignment_linter(operator = c("<-", "<<-", "%<>%"))
+    # Named one by one, starting from nothing, because CI installs the newest
+    # lintr: with linters_with_defaults() every new default linter would switch
+    # itself on and break the build (pipe_consistency_linter did exactly that).
+    # Adding a linter here is a deliberate act.
+    defaults = list(),
+    # mistakes
+    equals_na_linter = equals_na_linter(),
+    seq_linter = seq_linter(),
+    vector_logic_linter = vector_logic_linter(),
+    T_and_F_symbol_linter = T_and_F_symbol_linter(),
+    semicolon_linter = semicolon_linter(),
+    # %<>% is the house style in the get_ functions, plain `=` assignment is not
+    assignment_linter = assignment_linter(operator = c("<-", "<<-", "%<>%")),
+    # cheap hygiene
+    trailing_whitespace_linter = trailing_whitespace_linter(),
+    trailing_blank_lines_linter = trailing_blank_lines_linter(),
+    whitespace_linter = whitespace_linter(),
+    spaces_inside_linter = spaces_inside_linter(),
+    function_left_parentheses_linter = function_left_parentheses_linter()
   )
 encoding: "UTF-8"
