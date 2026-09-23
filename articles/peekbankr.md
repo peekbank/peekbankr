@@ -1,0 +1,197 @@
+# Accessing Peekbank Data
+
+## Overview
+
+The `peekbankr` package allows you to access data in the peekbank
+database from R. Data are hosted in the versioned [peekbank dataset on
+Redivis](https://redivis.com/datapages/datasets/peekbank); the `get_`
+functions retrieve tidy tables from it without you having to write
+queries. This vignette shows some examples of how to use the data
+loading functions and what the resulting data look like.
+
+There are several different `get_` functions that you can use to extract
+different types of data from peekbank:
+
+- [`get_datasets()`](https://peekbank.github.io/peekbankr/reference/get_datasets.md)
+- [`get_subjects()`](https://peekbank.github.io/peekbankr/reference/get_subjects.md)
+- [`get_administrations()`](https://peekbank.github.io/peekbankr/reference/get_administrations.md)
+- [`get_trials()`](https://peekbank.github.io/peekbankr/reference/get_trials.md)
+- [`get_stimuli()`](https://peekbank.github.io/peekbankr/reference/get_stimuli.md)
+- [`get_aoi_region_sets()`](https://peekbank.github.io/peekbankr/reference/get_aoi_region_sets.md)
+- [`get_aoi_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_aoi_timepoints.md)
+- [`get_xy_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_xy_timepoints.md)
+
+**Technical note 1**: The first request will open a browser window to
+authorize Redivis access (or set a `REDIVIS_API_TOKEN`).
+
+**Technical note 2**: Start by creating a version handle with
+[`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
+and pass it to each `get_` function. The handle pins a database version
+for your whole analysis (“current” resolves to the latest release);
+calling `get_` functions without one works but re-resolves the version
+each time and warns.
+
+**Technical note 3**: We have tried to optimize the time it takes to get
+data from the database (the AOI timepoints transfer run-length-encoded
+and are expanded locally). But if you query entire timepoint tables, it
+will still take a while, as you are transferring 100s of MB of data.
+
+``` r
+
+# load the library
+library(peekbankr)
+
+# pin a database version for all the calls below
+con <- connect_to_peekbank()
+```
+
+## Get datasets
+
+The `get_datasets` function returns a table related to the sources of
+the dataset, information of the tracker, information of the method
+(e.g., monitor size and sample rate).
+
+For example, you can run `get_datasets` without any arguments to return
+all of the datasets in the database.
+
+``` r
+
+d_datasets <- get_datasets(connection = con)
+head(d_datasets)
+```
+
+## Get Subjects
+
+The `get_subjects` function returns information about persistent subject
+identifiers for noting when subjects have participated in multiple
+experiments. This includes demographic information (currently only sex
+and lab-specific subject id).
+
+``` r
+
+d_subjects <- get_subjects(connection = con)
+head(d_subjects)
+```
+
+## Get Administrations
+
+The `get_administrations` function returns information about the
+specific experimental administrations to subjects in the database. This
+includes information about:
+
+- age
+- monitor size
+- tracker
+
+Again, if you run the function with no arguments, then you get all the
+information for all administrations in the database, but you can now
+also filter on a dataset name or dataset id.
+
+``` r
+
+d_administrations <- get_administrations(dataset_name = "pomper_saffran_2016", connection = con)
+head(d_administrations)
+```
+
+The age argument takes a number indicating the age(s) of children (in
+months) that you want to analyze. you can use this argument in two ways
+
+1.  Pass a single number to get information about all participants who
+    were tested at that particular age.
+2.  Pass a range of ages to get information about all participants who
+    were tested within a certain age range.
+
+For example, you can get the participant information for all of the
+children who were tested between the ages of 24 and 36 months.
+
+``` r
+
+d_age_range <- get_administrations(age = c(24, 36), connection = con)
+head(d_age_range)
+```
+
+## Get trials
+
+The `get_trials` function returns a table with information of the trials
+in the experiments in the database. This includes the following
+information:
+
+- Phrase
+- Language
+- Point of disambiguation
+- IDs to link to other tables.
+
+``` r
+
+d_trials <- get_trials(connection = con)
+head(d_trials)
+```
+
+This function also takes dataset name and id filters.
+
+## Get stimuli
+
+The `get_stimuli` function returns a table with information of the
+stimuli in the experiments in the database. This includes the following
+information:
+
+- Label
+- Image
+- Novelty status
+
+``` r
+
+d_stimuli <- get_stimuli(connection = con)
+head(d_stimuli)
+```
+
+This function also takes dataset name and id filters.
+
+## Get AOI region sets
+
+The
+[`get_aoi_region_sets()`](https://peekbank.github.io/peekbankr/reference/get_aoi_region_sets.md)
+returning a table with the information of the region of area of interest
+(AOI) for experiments using eye-trackers. It includes information of the
+dimensions of the x and y, such as the minimum and maximum dimension of
+the xy spaces.
+
+``` r
+
+d_aoi_region_sets <- get_aoi_region_sets(connection = con)
+head(d_aoi_region_sets)
+```
+
+This function is not expected to be used commonly - this information is
+retained as part of the process of calculating AOIs from XY points.
+
+## Get AOI timepoints
+
+The
+[`get_aoi_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_aoi_timepoints.md)
+function returns a table with information of the subject’s looking
+behavior in each trial. For example, you can get information about which
+area that the subject was looking at in a particular trial (e.g.,
+looking away or target or distractor).
+
+The `t_norm` field provides a trial-normalized time variable
+(milliseconds) whose 0 point is the point of disambiguation on that
+trial (first timestep of the onset of the first time the target label is
+said).
+
+``` r
+
+d_aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016", connection = con)
+head(d_aoi_timepoints)
+```
+
+## Get XY timepoints
+
+For experiments using eye-trackers (as opposed to hand coding from
+video), the `get_xy_timepoints` function returns a table including the x
+and y position across time.
+
+``` r
+
+d_xy_timepoints <- get_xy_timepoints(connection = con)
+```
