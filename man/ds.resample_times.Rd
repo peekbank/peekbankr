@@ -42,7 +42,7 @@ dir_csv <- file.path(dir_datasets, lab_dataset_id, "processed_data")
 table_type <- "aoi_timepoints"
 file_csv <- file.path(dir_csv, paste0(table_type, '.csv'))
 df_table <- utils::read.csv(file_csv)
-df_resampled <-ds.resample_times(df_table, table_type = "aoi_timepoints")
+df_resampled <- ds.resample_times(df_table, table_type = "aoi_timepoints")
 }
 
 }

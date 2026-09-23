@@ -17,7 +17,7 @@ ds.validate_table(
 \item{df_table}{the dataframe to be saved}
 
 \item{table_type}{the type of dataframe, for the most updated table types
-specified by schema, please use functionds.list_ds_tables()}
+specified by schema, please use ds.list_ds_tables()}
 
 \item{cdi_expected}{specifies whether cdi_data is to be expected to be
 present in the imported data; only relevant for subjects table}

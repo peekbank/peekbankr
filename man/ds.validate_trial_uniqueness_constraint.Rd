@@ -20,7 +20,7 @@ Check if within aoi_timepoints table, there is no duplication in all the adminis
 }
 \examples{
 \dontrun{
-is_valid <-ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
+is_valid <- ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
 }
 
 }

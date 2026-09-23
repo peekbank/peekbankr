@@ -9,7 +9,7 @@ ds.get_json_fields(table_type)
 }
 \arguments{
 \item{table_type}{the type of dataframe, for the most updated table types
-specified by schema, please use functionds.list_ds_tables()}
+specified by schema, please use ds.list_ds_tables()}
 }
 \value{
 the list of field names
@@ -20,7 +20,7 @@ the schema json file
 }
 \examples{
 \dontrun{
-fields_json <-ds.get_json_fields(table_type = "aoi_timepoints")
+fields_json <- ds.get_json_fields(table_type = "aoi_timepoints")
 }
 
 }

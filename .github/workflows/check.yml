@@ -13,11 +13,10 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    name: check (NOT_CRAN, offline tests)
+    name: check (offline tests)
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       LIBARROW_BINARY: "true"
-      NOT_CRAN: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: r-lib/actions/setup-r@v2

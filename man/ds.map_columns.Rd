@@ -21,9 +21,9 @@ Function for mapping raw data columns to processed table columns
 }
 \examples{
 \dontrun{
-df_xy_data <-ds.map_columns(raw_data = raw_data, raw_format = "tobii",
+df_xy_data <- ds.map_columns(raw_data = raw_data, raw_format = "tobii",
                           table_type = "xy_data")
-df_aoi_data <-ds.map_columns(raw_data = raw_data, raw_format = "tobii",
+df_aoi_data <- ds.map_columns(raw_data = raw_data, raw_format = "tobii",
                            table_type = "aoi_data")
 }
 

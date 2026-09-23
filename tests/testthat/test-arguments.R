@@ -24,8 +24,7 @@ test_that("peekbank_connection prints its release and tag", {
 test_that("sql_id_filter builds IN clauses and drops NAs", {
   expect_equal(peekbankr:::sql_id_filter("administration_id", c(1, 2, 3)),
                "administration_id IN (1, 2, 3)")
-  # NA ids are dropped: in the retired MySQL backend, `IN (..., NULL)`
-  # never matched, so dropping preserves behavior
+  # NA ids are dropped, so they match nothing
   expect_equal(peekbankr:::sql_id_filter("x", c(1, NA, 3)),
                "x IN (1, 3)")
   # no ids at all -> a condition that matches nothing

@@ -1,5 +1,5 @@
 url: https://peekbank.github.io/peekbankr/
 
 template:
-  params:
-    bootswatch: spacelab
+  bootstrap: 5
+  bootswatch: spacelab

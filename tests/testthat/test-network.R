@@ -1,12 +1,5 @@
-# network tests against the peekbank dataset on Redivis; skipped on CRAN and
-# unless PEEKBANK_NETWORK_TESTS=true (they need internet + redivis auth)
-
-skip_network <- function() {
-  skip_on_cran()
-  skip_if_not_installed("redivis")
-  skip_if(!identical(Sys.getenv("PEEKBANK_NETWORK_TESTS"), "true"),
-          "PEEKBANK_NETWORK_TESTS not set")
-}
+# network tests against the peekbank dataset on Redivis; skip_network() is
+# defined in helper-network.R
 
 test_that("connect_to_peekbank resolves the current version", {
   skip_network()

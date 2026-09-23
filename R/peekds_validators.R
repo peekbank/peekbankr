@@ -42,7 +42,7 @@ file.exists.case.sensitive <- function(...) {
 #'
 #' @param df_table the dataframe to be saved
 #' @param table_type the type of dataframe, for the most updated table types
-#'   specified by schema, please use functionds.list_ds_tables()
+#'   specified by schema, please use ds.list_ds_tables()
 #' @param cdi_expected specifies whether cdi_data is to be expected to be
 #'   present in the imported data; only relevant for subjects table
 #' @param dir_csv the folder directory containing all the csv files, used for
@@ -75,7 +75,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   msg_warning <- list()
   colnames_table <- colnames(df_table)
 
-  fields_json <-ds.get_json_fields(table_type = table_type)
+  fields_json <- ds.get_json_fields(table_type = table_type)
   fieldnames_json <- fields_json$field_name
 
   unwanted_columns <- setdiff(colnames_table, fieldnames_json)
@@ -93,7 +93,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   }
 
   # start checking field/column one by one
-  for (idx in 1:length(fieldnames_json)) {
+  for (idx in seq_along(fieldnames_json)) {
     fieldname <- fieldnames_json[idx]
     fieldclass <- fields_json$field_class[idx]
     fieldoptions <- fields_json$options[idx, ]
@@ -105,8 +105,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 
     # when user specifically sets this to FALSE, then the fields that are
     # allowed null values are not required.
-    if (!is_null_field_required & is_null_allowed & is_field_missing) {
-      #warning("Field {fieldname} is not present, but it is not a required field.")
+    if (!is_null_field_required && is_null_allowed && is_field_missing) {
       next
     }
 
@@ -120,9 +119,9 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     }
 
     # step 1: check if values in primary_key and unique-option fields are unique
-    content_tb <- df_table %>% dplyr::pull(fieldname)
+    content_tb <- df_table %>% dplyr::pull(dplyr::all_of(fieldname))
 
-    if (is_primary | isTRUE(fieldoptions$unique)) {
+    if (is_primary || isTRUE(fieldoptions$unique)) {
       # first check if primary key is in integer forms, start from zero and are sequential
       if (is_primary) {
         content_tb <- as.integer(content_tb)
@@ -159,13 +158,13 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     }
 
     # step 2: check if values are in the required type/format
-    if (!is_null_allowed & (fieldclass == "IntegerField" | fieldclass == "ForeignKey")) {
+    if (!is_null_allowed && (fieldclass == "IntegerField" || fieldclass == "ForeignKey")) {
       is_type_valid <- is.integer(content_tb)
       if (!is_type_valid) {
         msg_new <- .msg("- {fieldclass} column {fieldname} should contain integers only.")
         msg_error <- c(msg_error, msg_new)
       }
-    } else if (!is_null_allowed & fieldclass == "CharField") {
+    } else if (!is_null_allowed && fieldclass == "CharField") {
       # numbers are allowed here as well since numbers can be converted into
       # chars
       is_type_valid <- is.character(content_tb) |
@@ -183,7 +182,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     if ("choices" %in% colnames(fieldoptions)) {
       choices_json <- unique(unlist(fieldoptions$choices))
 
-      if (is_type_valid & (length(choices_json) > 0)) {
+      if (is_type_valid && (length(choices_json) > 0)) {
         is_value_valid <- all(unique(content_tb) %in% choices_json)
         if (!is_value_valid) {
           msg_new <- .msg("- Column {fieldname} should contain the following
@@ -217,13 +216,13 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     # if subjects table, then check if native_language field was entered
     # correctly
     if (table_type == "subjects" && fieldname == "native_language") {
-      language_list <-ds.list_language_choices()
+      language_list <- ds.list_language_choices()
 
       # go through every native language in the subjects table, check if all the
       # language codes are in the allowed list from json file
       invalid_languages <- df_table %>%
         dplyr::mutate(
-          row_number = 1:dplyr::n(),
+          row_number = seq_len(dplyr::n()),
           valid_language = .data$native_language %>%
             purrr::map_lgl(function(lang) {
               all(stringr::str_trim(stringr::str_split(lang, ",")[[1]]) %in%
@@ -249,9 +248,9 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   if (table_type == "subjects") {
     # unpack subject aux data from JSON
     sad <- df_table %>%
-      dplyr::select(lab_subject_id, subject_aux_data) %>%
+      dplyr::select(dplyr::all_of(c("lab_subject_id", "subject_aux_data"))) %>%
       unpack_aux_data() %>%
-      tidyr::unnest(subject_aux_data)
+      tidyr::unnest("subject_aux_data")
 
     if(cdi_expected && !("cdi_responses" %in% colnames(sad))){
       msg_error <- c(msg_error, "No CDI data found, check subjects.csv and the column specification")
@@ -299,7 +298,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 
       # check for correct format of CDI response columns
       cdi <- sad_cdi %>%
-        tidyr::unnest(cdi_responses)
+        tidyr::unnest("cdi_responses")
 
       if (any(!(cdi$instrument_type %in% c("wg", "ws", "wsshort", "wgshort")))) {
         msg_new <- .msg("- Some subject(s) have CDI responses that have an
@@ -343,7 +342,8 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 
       # check for duplicate CDI scores per subject
       cdi_dupes <- cdi %>%
-        dplyr::group_by(lab_subject_id, instrument_type, measure, age, language) %>%
+        dplyr::group_by(.data$lab_subject_id, .data$instrument_type,
+                        .data$measure, .data$age, .data$language) %>%
         dplyr::filter(dplyr::n() > 1)
       if (nrow(cdi_dupes) > 0) {
         dupe_ids <- unique(cdi_dupes$lab_subject_id)
@@ -356,7 +356,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   if (table_type == "trial_types"){
 
     # check if there are any entries that are duplicate and only differ by id
-    if((df_table %>% dplyr::select(-trial_type_id) %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
+    if((df_table %>% dplyr::select(-"trial_type_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
       msg_new <- .msg("- trial types are not unique.")
       msg_error <- c(msg_error, msg_new)
     }
@@ -365,7 +365,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   # STEP 6:
   # if stimuli table, check if there are any entries that are duplicate and only differ by id
   if (table_type == "stimuli"){
-    if((df_table %>% dplyr::select(-stimulus_id) %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
+    if((df_table %>% dplyr::select(-"stimulus_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
       msg_new <- .msg("- stimulus entries are not unique.")
       msg_error <- c(msg_error, msg_new)
     }
@@ -375,7 +375,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
   # if stimuli table, check if there are any invalid image file paths (dont exist or wrong filetype)
   if (table_type == "stimuli"){
 
-    to_check <- df_table %>% dplyr::filter(!is.na(stimulus_image_path))
+    to_check <- df_table %>% dplyr::filter(!is.na(.data$stimulus_image_path))
 
     raw_data_dir <- file.path(dir_csv, '..', "raw_data")
     if (!dir.exists(raw_data_dir)) {
@@ -387,7 +387,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
       ))
     }
     not_found <- to_check %>% dplyr::filter(
-      !file.exists.case.sensitive(file.path(raw_data_dir, stimulus_image_path))
+      !file.exists.case.sensitive(file.path(raw_data_dir, .data$stimulus_image_path))
     )
 
     if(nrow(not_found)){
@@ -397,7 +397,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     }
 
     wrong_filetype <- to_check %>% dplyr::filter(
-      !grepl("\\.(jpe?g|png)$", stimulus_image_path)
+      !grepl("\\.(jpe?g|png)$", .data$stimulus_image_path)
     )
 
     if(nrow(wrong_filetype)){
@@ -413,22 +413,23 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     # in the case of years, we need to differentiate when converting:
     # if all years are given in full numbers, the conversion is not *12, but rather *12 + 6
     years_given_full <- !any(df_table %>%
-                               dplyr::filter(lab_age_units == "years", !is.na(lab_age)) %>%
-                               dplyr::mutate(year_is_decimal = lab_age-floor(lab_age) != 0) %>%
-                               dplyr::pull(year_is_decimal)
+                               dplyr::filter(.data$lab_age_units == "years",
+                                             !is.na(.data$lab_age)) %>%
+                               dplyr::mutate(year_is_decimal = .data$lab_age - floor(.data$lab_age) != 0) %>%
+                               dplyr::pull("year_is_decimal")
                              )
 
     converted_ages <- df_table %>%
-      dplyr::filter(!is.na(lab_age)) %>%
+      dplyr::filter(!is.na(.data$lab_age)) %>%
       dplyr::mutate(converted_age = dplyr::case_when(
-        lab_age_units == "months" ~ lab_age,
-        lab_age_units == "years" ~ lab_age * 12 + ifelse(years_given_full, 6, 0),
-        lab_age_units == "days" ~ lab_age/(365.25/12),
+        .data$lab_age_units == "months" ~ .data$lab_age,
+        .data$lab_age_units == "years" ~ .data$lab_age * 12 + ifelse(years_given_full, 6, 0),
+        .data$lab_age_units == "days" ~ .data$lab_age / (365.25 / 12),
         TRUE ~ NA,
         )) %>%
-      dplyr::pull(converted_age)
+      dplyr::pull("converted_age")
 
-    if(!isTRUE(all.equal(df_table %>% dplyr::filter(!is.na(lab_age)) %>% dplyr::pull(age),converted_ages))){
+    if(!isTRUE(all.equal(df_table %>% dplyr::filter(!is.na(.data$lab_age)) %>% dplyr::pull("age"), converted_ages))){
 
       msg_new <- .msg("- some ages do not match the conversion according to lab_age_unit and lab_age.")
       msg_error <- c(msg_error, msg_new)
@@ -444,7 +445,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     }
 
     # check if there are cases where there is an exclusion reason but excluded is false
-    if(any(df_table %>% dplyr::mutate(incorrectly_included = !excluded & (!is.na(exclusion_reason) & exclusion_reason != "")) %>% dplyr::pull(incorrectly_included))){
+    if(any(df_table %>% dplyr::mutate(incorrectly_included = !.data$excluded & (!is.na(.data$exclusion_reason) & .data$exclusion_reason != "")) %>% dplyr::pull("incorrectly_included"))){
       msg_new <- .msg("- some trials have exclusion reasons even though they are marked as included.")
       msg_error <- c(msg_error, msg_new)
     }
@@ -463,14 +464,14 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 #'
 #' @examples
 #' \dontrun{
-#' is_valid <-ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
+#' is_valid <- ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
 #' }
 #'
 #' @export
 ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
   msg_error <- c()
 
-  num_admins_per_trial_id = stats::aggregate(administration_id  ~ trial_id , df_aoi_timepoints, function(x){length(unique(x))})
+  num_admins_per_trial_id <- stats::aggregate(administration_id  ~ trial_id , df_aoi_timepoints, function(x){length(unique(x))})
 
   if (any(num_admins_per_trial_id$administration_id != 1)){
     msg_error <- .msg('Multiple administrations detected for the same trial ID. Make sure that trials are split out by subject to allow subject-specific trial exclusion')
@@ -529,28 +530,25 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   }
 
   # fetch the table list based on coding method
-  table_list <-ds.list_ds_tables(coding_methods)
-  # admin table is not required
-  # table_list <- table_list[table_list != "admin"];
+  table_list <- ds.list_ds_tables(coding_methods)
   msg_error_all <- c()
   msg_warning_all <- list()
 
   #######################################################
   # start checking each table format against json
-  dict_tables = list()
+  dict_tables <- list()
 
   for (table_type in table_list) {
     file_csv <- file.path(dir_csv, paste0(table_type, file_ext))
     if (file.exists(file_csv)) {
       # read in csv file and check if the data is valid
       dict_tables[[table_type]] <- utils::read.csv(file_csv)
-      result <-ds.validate_table(dict_tables[[table_type]], table_type, cdi_expected, dir_csv, is_null_field_required)
+      result <- ds.validate_table(dict_tables[[table_type]], table_type, cdi_expected, dir_csv, is_null_field_required)
       msg_warning_all <- c(msg_warning_all, result$warnings)
       if (!is.null(result$errors)) {
         msg_error <- .msg("The processed data file {table_type} failed to pass
                           the validator for database import with these error
-                          messsages:\n {paste(result$errors, collapse = '\n')}")
-        # cat(crayon::bgMagenta(msg_error), "\n")
+                          messages:\n {paste(result$errors, collapse = '\n')}")
         message(msg_error)
         msg_error_all <- c(msg_error_all, msg_error)
       } else {
@@ -572,7 +570,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 
   #######################################################
   # start cross-table validation
-  msg_error <-ds.validate_trial_uniqueness_constraint(dict_tables[['aoi_timepoints']])
+  msg_error <- ds.validate_trial_uniqueness_constraint(dict_tables[['aoi_timepoints']])
   message(msg_error)
   msg_error_all <- c(msg_error_all, msg_error)
 
@@ -583,11 +581,12 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   # check if there are any duplicate trial order values within each administration
 
   if(nrow(dict_tables[['administrations']] %>%
-          dplyr::left_join(dict_tables[['aoi_timepoints']], by = dplyr::join_by(administration_id)) %>%
-          dplyr::left_join(dict_tables[['trials']], by = dplyr::join_by(trial_id)) %>%
-          dplyr::distinct(administration_id, trial_id, trial_order) %>%
-          dplyr::group_by(administration_id) %>%
-          dplyr::filter(duplicated(trial_order) | duplicated(trial_order, fromLast = TRUE)) %>%
+          dplyr::left_join(dict_tables[['aoi_timepoints']], by = "administration_id") %>%
+          dplyr::left_join(dict_tables[['trials']], by = "trial_id") %>%
+          dplyr::distinct(.data$administration_id, .data$trial_id, .data$trial_order) %>%
+          dplyr::group_by(.data$administration_id) %>%
+          dplyr::filter(duplicated(.data$trial_order) |
+                          duplicated(.data$trial_order, fromLast = TRUE)) %>%
           dplyr::ungroup()) != 0){
     msg_error_all <- c(msg_error_all, .msg("Global issue: - trials order values are not unique within administrations"))
   }
@@ -622,7 +621,7 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 
       if(vec[1] == "stimuli" && vec[2] == "trial_types"){
         table_2 <- table_2 %>% tidyr::pivot_longer(
-          cols = c(distractor_id, target_id),
+          cols = dplyr::all_of(c("distractor_id", "target_id")),
           names_to = "stimulus_type",
           values_to = "stimulus_id"
         )
@@ -683,16 +682,21 @@ check_aoi_consistency <- function(dict_tables, dir_csv, file_ext = ".csv") {
 
   joined <- tb$xy_timepoints %>%
     dplyr::inner_join(
-      tb$aoi_timepoints %>% dplyr::select(trial_id, administration_id, t_norm, shipped_aoi = aoi),
+      tb$aoi_timepoints %>% dplyr::select(dplyr::all_of(c("trial_id", "administration_id", "t_norm")),
+                                          shipped_aoi = "aoi"),
       by = c("trial_id", "administration_id", "t_norm")) %>%
-    dplyr::inner_join(tb$trials %>% dplyr::select(trial_id, trial_type_id), by = "trial_id") %>%
+    dplyr::inner_join(tb$trials %>%
+                        dplyr::select(dplyr::all_of(c("trial_id", "trial_type_id"))),
+                      by = "trial_id") %>%
     dplyr::inner_join(
-      tb$trial_types %>% dplyr::select(trial_type_id, target_side, aoi_region_set_id),
+      tb$trial_types %>%
+        dplyr::select(dplyr::all_of(c("trial_type_id", "target_side", "aoi_region_set_id"))),
       by = "trial_type_id") %>%
-    dplyr::filter(!is.na(aoi_region_set_id)) %>%
+    dplyr::filter(!is.na(.data$aoi_region_set_id)) %>%
     dplyr::inner_join(tb$aoi_region_sets, by = "aoi_region_set_id") %>%
     dplyr::inner_join(
-      tb$administrations %>% dplyr::select(administration_id, monitor_size_x, monitor_size_y),
+      tb$administrations %>%
+        dplyr::select(dplyr::all_of(c("administration_id", "monitor_size_x", "monitor_size_y"))),
       by = "administration_id")
   if (nrow(joined) == 0) return(NULL)
 
@@ -703,11 +707,11 @@ check_aoi_consistency <- function(dict_tables, dir_csv, file_ext = ".csv") {
   # can sometimes flip category. Skip samples sitting on an edge for these checks (in case of true mismatches
   # there should always be other violating points).
   EPS <- 1e-6
-  on_edge <- with(joined,
-    abs(x - l_x_min) < EPS | abs(x - l_x_max) < EPS |
-    abs(y - l_y_min) < EPS | abs(y - l_y_max) < EPS |
-    abs(x - r_x_min) < EPS | abs(x - r_x_max) < EPS |
-    abs(y - r_y_min) < EPS | abs(y - r_y_max) < EPS)
+  on_edge <-
+    abs(joined$x - joined$l_x_min) < EPS | abs(joined$x - joined$l_x_max) < EPS |
+    abs(joined$y - joined$l_y_min) < EPS | abs(joined$y - joined$l_y_max) < EPS |
+    abs(joined$x - joined$r_x_min) < EPS | abs(joined$x - joined$r_x_max) < EPS |
+    abs(joined$y - joined$r_y_min) < EPS | abs(joined$y - joined$r_y_max) < EPS
 
   on_edge[is.na(on_edge)] <- FALSE
   cmp <- joined[!on_edge, ]

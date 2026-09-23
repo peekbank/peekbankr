@@ -1,0 +1,25 @@
+linters: linters_with_defaults(
+    # Linters that catch mistakes gate CI (LINTR_ERROR_ON_LINT in lint.yaml).
+    # The pure-formatting ones are off: switching them on would mean reflowing
+    # most of the package without changing what it does.
+    line_length_linter = NULL,
+    indentation_linter = NULL,
+    brace_linter = NULL,
+    paren_body_linter = NULL,
+    spaces_left_parentheses_linter = NULL,
+    infix_spaces_linter = NULL,
+    commas_linter = NULL,
+    quotes_linter = NULL,
+    pipe_continuation_linter = NULL,
+    return_linter = NULL,
+    commented_code_linter = NULL,
+    # ds.* names and the wide validator locals are deliberate
+    object_name_linter = NULL,
+    object_length_linter = NULL,
+    # R CMD check covers this ground and now passes clean; lintr's version
+    # misfires on the testthat helpers and inside case_when()
+    object_usage_linter = NULL,
+    # %<>% is the house style in the get_ functions
+    assignment_linter = assignment_linter(operator = c("<-", "<<-", "%<>%"))
+  )
+encoding: "UTF-8"

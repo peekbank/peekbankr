@@ -14,6 +14,6 @@ Get the coding method list from json schema file
 }
 \examples{
 \dontrun{
-coding_methods <-ds.list_coding_methods()
+coding_methods <- ds.list_coding_methods()
 }
 }

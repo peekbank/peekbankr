@@ -14,7 +14,7 @@ parse the bundled peekbank schema json into a dataframe
 }
 \examples{
 \dontrun{
-peekjson <-ds.get_peekjson()
+peekjson <- ds.get_peekjson()
 }
 
 }

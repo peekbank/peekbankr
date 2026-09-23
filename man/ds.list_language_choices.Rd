@@ -15,7 +15,7 @@ List current allowed language choices for db import
 }
 \examples{
 \dontrun{
-language_list <-ds.list_language_choices()
+language_list <- ds.list_language_choices()
 }
 
 }

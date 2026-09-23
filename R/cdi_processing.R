@@ -33,17 +33,20 @@ cleanup_cdi_data <- function(cdi_data) {
 
   # Check if there are multiple scores for the same cdi administration within a single participant
   duplicate_removed_rows <- cdi_data %>%
-    dplyr::group_by(subject_id, instrument_type, measure, age, language) %>%
-    dplyr::filter(rawscore != max(rawscore, na.rm = TRUE))
+    dplyr::group_by(.data$subject_id, .data$instrument_type, .data$measure,
+                    .data$age, .data$language) %>%
+    dplyr::filter(.data$rawscore != max(.data$rawscore, na.rm = TRUE))
 
   if (nrow(duplicate_removed_rows) > 0) {
-    print("Warning: there are some duplicate cdi values in your data. These were removed, but you should check the input data.")
+    warning("there are some duplicate cdi values in your data. These were ",
+            "removed, but you should check the input data.", call. = FALSE)
     print(duplicate_removed_rows)
 
     # fix the duplicates for analysis until the input data is fixed
     cdi_data <- cdi_data %>%
-      dplyr::group_by(subject_id, instrument_type, measure, age, language) %>%
-      dplyr::filter(rawscore == max(rawscore, na.rm = TRUE))
+      dplyr::group_by(.data$subject_id, .data$instrument_type, .data$measure,
+                      .data$age, .data$language) %>%
+      dplyr::filter(.data$rawscore == max(.data$rawscore, na.rm = TRUE))
   }
 
   return(cdi_data)
@@ -101,39 +104,43 @@ populate_cdi_percentiles <- function(subjects_table) {
     purrr::imap(\(table, name){
       table %>%
         dplyr::as_tibble() %>%
-        tidyr::pivot_longer(cols = c(-age), names_to = "head", values_to = "score") %>%
-        dplyr::rename(norm_percentile = age, reference_age = head) %>%
-        dplyr::mutate(name = gsub(".csv", "", name, fixed = T)) %>%
-        tidyr::separate(name,
+        tidyr::pivot_longer(cols = -"age", names_to = "reference_age",
+                            values_to = "score") %>%
+        dplyr::rename(norm_percentile = "age") %>%
+        dplyr::mutate(name = gsub(".csv", "", .env$name, fixed = TRUE)) %>%
+        tidyr::separate("name",
           into = c("language", "instrument_type", "measure", "norm_sex"),
           sep = "_"
         ) %>%
         # Add zero rows in one step
-        dplyr::bind_rows(., dplyr::distinct(., reference_age, language, instrument_type, measure, norm_sex) %>%
+        dplyr::bind_rows(., dplyr::distinct(., .data$reference_age, .data$language,
+                                            .data$instrument_type, .data$measure,
+                                            .data$norm_sex) %>%
           dplyr::mutate(norm_percentile = 1, score = 0))
     }) %>%
     dplyr::bind_rows() %>%
     # TODO: create a wordbank/iso lookup for all languages
     dplyr::mutate(
-      language = ifelse(language == "eng", "English (American)", NA),
-      reference_age = as.numeric(reference_age)
+      language = ifelse(.data$language == "eng", "English (American)", NA),
+      reference_age = as.numeric(.data$reference_age)
     )
 
   # find reference age for each participants entry
   subject_table_with_ref_age <- subjects_table %>%
     dplyr::inner_join(
-      cdi_norms_long %>% dplyr::distinct(reference_age, instrument_type, measure, language),
+      cdi_norms_long %>% dplyr::distinct(.data$reference_age, .data$instrument_type,
+                                         .data$measure, .data$language),
       by = c(
         "instrument_type",
         "measure", "language"
       ),
       relationship = "many-to-many"
     ) %>%
-    dplyr::mutate(age_diff = abs(age - reference_age)) %>%
-    dplyr::group_by(dplyr::across(!c(age_diff, reference_age))) %>%
-    dplyr::slice_min(abs(age_diff), n = 1, with_ties = FALSE) %>%
+    dplyr::mutate(age_diff = abs(.data$age - .data$reference_age)) %>%
+    dplyr::group_by(dplyr::across(!dplyr::all_of(c("age_diff", "reference_age")))) %>%
+    dplyr::slice_min(abs(.data$age_diff), n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
-    dplyr::select(-age_diff)
+    dplyr::select(-"age_diff")
 
   subject_table_with_cdi_percentiles <- subject_table_with_ref_age %>%
     dplyr::inner_join(
@@ -141,26 +148,28 @@ populate_cdi_percentiles <- function(subjects_table) {
       by = c("instrument_type", "measure", "reference_age", "language"),
       relationship = "many-to-many"
     ) %>%
-    dplyr::filter(score <= rawscore) %>%
-    dplyr::group_by(dplyr::across(!c(score, norm_percentile))) %>%
-    dplyr::slice_max(score, n = 1, with_ties = FALSE) %>%
+    dplyr::filter(.data$score <= .data$rawscore) %>%
+    dplyr::group_by(dplyr::across(!dplyr::all_of(c("score", "norm_percentile")))) %>%
+    dplyr::slice_max(.data$score, n = 1, with_ties = FALSE) %>%
     dplyr::ungroup() %>%
     tidyr::pivot_wider(names_from = "norm_sex", values_from = c("norm_percentile", "score")) %>%
     dplyr::mutate(
-      percentile_all = norm_percentile_both,
+      percentile_all = .data$norm_percentile_both,
       percentile_sex = dplyr::case_when(
-        sex == "male" ~ norm_percentile_m,
-        sex == "female" ~ norm_percentile_f,
-        T ~ NA
+        .data$sex == "male" ~ .data$norm_percentile_m,
+        .data$sex == "female" ~ .data$norm_percentile_f,
+        TRUE ~ NA
       ),
-      norm_score_all = score_both,
+      norm_score_all = .data$score_both,
       norm_score_sex = dplyr::case_when(
-        sex == "male" ~ score_m,
-        sex == "female" ~ score_f,
-        T ~ NA
+        .data$sex == "male" ~ .data$score_m,
+        .data$sex == "female" ~ .data$score_f,
+        TRUE ~ NA
       )
     ) %>%
-    dplyr::select(subject_id, instrument_type, measure, age, language, reference_age, percentile_all, percentile_sex, norm_score_all, norm_score_sex) %>%
+    dplyr::select(dplyr::all_of(c("subject_id", "instrument_type", "measure", "age",
+                                  "language", "reference_age", "percentile_all",
+                                  "percentile_sex", "norm_score_all", "norm_score_sex"))) %>%
     dplyr::mutate(reference_year = "2022")
 
   return(subjects_table %>% dplyr::left_join(
@@ -211,13 +220,13 @@ append_relative_cdi_scores <- function(subjects_table) {
   # TODO: find instrument_length values for all languages
   subjects_table %>%
     dplyr::mutate(
-      instrument_length = dplyr::case_when(instrument_type == "ws" ~ 680,
-        instrument_type == "wg" & language == "English (American)" ~ 396,
-        instrument_type == "wsshort" ~ 100,
-        instrument_type == "wg" & language == "Spanish (Mexican)" ~ 428, # TODO: double-check Spanish WG length..
+      instrument_length = dplyr::case_when(.data$instrument_type == "ws" ~ 680,
+        .data$instrument_type == "wg" & .data$language == "English (American)" ~ 396,
+        .data$instrument_type == "wsshort" ~ 100,
+        .data$instrument_type == "wg" & .data$language == "Spanish (Mexican)" ~ 428, # TODO: double-check Spanish WG length..
         .default = NA
       ),
-      CDI_percent = rawscore / instrument_length
+      cdi_relative = .data$rawscore / .data$instrument_length
     ) %>%
-    dplyr::select(-instrument_length)
+    dplyr::select(-"instrument_length")
 }

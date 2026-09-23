@@ -1,10 +1,9 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom magrittr "%<>%"
 #' @importFrom rlang .data
+#' @importFrom rlang .env
 #' @importFrom rlang ":="
 NULL
-
-options(warn = -1)
 
 validate_dataset_args <- function(dataset_id, dataset_name) {
   if (!is.null(dataset_id) && !is.numeric(dataset_id)) {
@@ -14,9 +13,6 @@ validate_dataset_args <- function(dataset_id, dataset_name) {
     stop("dataset_name must be a character string.")
   }
 }
-
-pkg_globals <- new.env()
-pkg_globals$SAMPLE_RATE <- 40 # Hz
 
 #' Get information on database connection options
 #'
@@ -144,7 +140,6 @@ get_datasets <- function(connection = NULL) {
 
 count_datasets <- function(datasets) {
   datasets %>%
-    dplyr::collect() %>%
     dplyr::tally() %>%
     dplyr::pull(.data$n)
 }
@@ -428,7 +423,7 @@ decode_rle_timepoints <- function(aoi_timepoints) {
   timestep <- 1000 / pkg_globals$SAMPLE_RATE
 
   aoi_timepoints %>%
-    tidyr::nest(trial_data = -c(.data$administration_id, .data$trial_id)) %>%
+    tidyr::nest(trial_data = -dplyr::all_of(c("administration_id", "trial_id"))) %>%
     dplyr::mutate(
       rle_vector = purrr::map(.data$trial_data, function(td) {
         `class<-`(list(lengths = as.integer(td$length), values = td$aoi), "rle")
@@ -441,8 +436,8 @@ decode_rle_timepoints <- function(aoi_timepoints) {
         ))
       })
     ) %>%
-    dplyr::select(-.data$trial_data, -.data$rle_vector) %>%
-    tidyr::unnest(cols = c(.data$aoi, .data$t_norm))
+    dplyr::select(-dplyr::all_of(c("trial_data", "rle_vector"))) %>%
+    tidyr::unnest(cols = dplyr::all_of(c("aoi", "t_norm")))
 }
 
 #' Get XY timepoints
@@ -588,7 +583,7 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 #' Peekbank database connection, constructs the full stimulus file paths, and
 #' downloads them to a local directory.
 #'
-#' @param con A database connection object created by connect_to_peekbank()
+#' @param con A version handle created by connect_to_peekbank()
 #' @param local_base_dir Local directory path where stimulus images will be saved (default: "stimulus_data")
 #' @param datasets Character vector of dataset names to download stimuli for.
 #'                 If empty (default), downloads stimuli for all datasets.
@@ -613,16 +608,16 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c(),
                              skip_existing = TRUE) {
   stimuli_df <- get_stimuli(connection = con) %>%
-    dplyr::collect() %>%
-    dplyr::filter(!is.na(stimulus_image_path))
+    dplyr::filter(!is.na(.data$stimulus_image_path))
 
-  if (length(datasets > 0)) {
-    stimuli_df <- stimuli_df %>% dplyr::filter(dataset_name %in% datasets)
+  if (length(datasets) > 0) {
+    stimuli_df <- stimuli_df %>%
+      dplyr::filter(.data$dataset_name %in% .env$datasets)
   }
 
   wanted <- stimuli_df %>%
-    dplyr::mutate(full_stimulus_path = paste0(dataset_name, "/raw_data/",
-                                              stimulus_image_path))
+    dplyr::mutate(full_stimulus_path = paste0(.data$dataset_name, "/raw_data/",
+                                              .data$stimulus_image_path))
 
   # files live in the peekbank_files dataset on Redivis; one query per
   # dataset keeps the file listing small
@@ -631,9 +626,9 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
   })
   index <- dplyr::bind_rows(listings)
   files <- dplyr::inner_join(
-    wanted %>% dplyr::distinct(full_stimulus_path),
+    wanted %>% dplyr::distinct(.data$full_stimulus_path),
     index, by = c("full_stimulus_path" = "file_name")) %>%
-    dplyr::rename(file_name = full_stimulus_path)
+    dplyr::rename(file_name = "full_stimulus_path")
 
   missing <- setdiff(wanted$full_stimulus_path, files$file_name)
   if (length(missing) > 0) {
@@ -648,8 +643,8 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data", datasets = c
 
   return(wanted %>%
     dplyr::mutate(local_stimulus_path =
-                    unname(path_map[full_stimulus_path])) %>%
-    dplyr::select(-full_stimulus_path))
+                    unname(path_map[.data$full_stimulus_path])) %>%
+    dplyr::select(-"full_stimulus_path"))
 }
 
 

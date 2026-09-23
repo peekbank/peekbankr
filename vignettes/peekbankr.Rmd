@@ -155,5 +155,5 @@ head(d_aoi_timepoints)
 For experiments using eye-trackers (as opposed to hand coding from video), the `get_xy_timepoints` function returns a table including the x and y position across time. 
 
 ```{r, eval=FALSE, purl=FALSE}
-d_xy_timepoints <- get_xy_timepoints()
+d_xy_timepoints <- get_xy_timepoints(connection = con)
 ```
