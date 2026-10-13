@@ -91,8 +91,14 @@ release_map <- function() {
   props <- pb_try(quiet_redivis(pb_dataset()$get()$properties))
   if (is.null(props)) return(NULL)
   current_tag <- props$version$tag
-  current_num <- as.integer(sub("^v1\\.", "", current_tag))
-  tags <- paste0("v1.", seq(current_num, 0))
+  versions <- pb_try(quiet_redivis(pb_dataset()$list_versions()))
+  if (is.null(versions)) return(NULL)
+  # an editor's credentials also see the dataset's unreleased "next" version
+  released <- Filter(function(v) isTRUE(v$properties$isReleased), versions)
+  if (length(released) == 0) return(NULL)
+  index <- vapply(released, function(v) v$properties$index, numeric(1))
+  tags <- vapply(released, function(v) v$properties$tag, character(1))
+  tags <- unname(tags[order(index, decreasing = TRUE)])
   names <- vapply(tags, function(tag) {
     nm <- release_name_at(tag)
     if (is.null(nm)) NA_character_ else nm
