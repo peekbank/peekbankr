@@ -11,7 +11,7 @@ ds.is_table_required(table_type, coding_methods)
 specified by schema, please use ds.list_ds_tables()}
 
 \item{coding_methods}{methods used in the experiment for coding gaze data, to
- get the list of current coding methods, please use function
+get the list of current coding methods, please use function
 ds.list_coding_methods()}
 }
 \value{

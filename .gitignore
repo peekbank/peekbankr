@@ -7,3 +7,4 @@ tests/testthat/_problems/
 .Renviron
 .claude/
 claude.md
+dev/

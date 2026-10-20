@@ -32,11 +32,11 @@ required.}
 }
 \value{
 A list with two elements:
-  \describe{
-    \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
-    \item{warnings}{Named list of validation warnings (suppressable). Names are warning IDs
-      (e.g. \code{"cdi_collision"}).}
-  }
+\describe{
+\item{errors}{Character vector of validation errors (blocking), or NULL if none.}
+\item{warnings}{Named list of validation warnings (suppressable). Names are warning IDs
+(e.g. \code{"cdi_collision"}).}
+}
 }
 \description{
 Check if a dataframe/table is compliant to peekbank json before database

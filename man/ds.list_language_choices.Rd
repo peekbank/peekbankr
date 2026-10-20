@@ -8,7 +8,7 @@ ds.list_language_choices()
 }
 \value{
 a list of strings containing all the allowed language codes based on
-  json schema file
+json schema file
 }
 \description{
 List current allowed language choices for db import

@@ -14,6 +14,7 @@ collapse_warnings <- function(warnings) {
 #' exists <- file.exists.case.sensitive("path/to/image.jpg")
 #' }
 #'
+#' @keywords internal
 file.exists.case.sensitive <- function(...) {
   paths <- file.path(...)
 

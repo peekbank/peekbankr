@@ -31,11 +31,11 @@ subject/instrument/measure/age/language) and \code{"stimulus_image_filetype"}
 }
 \value{
 A list with two elements:
-  \describe{
-    \item{errors}{Character vector of validation errors (blocking), or NULL if none.}
-    \item{warnings}{Character vector of validation warnings (suppressible), or NULL if none.
-      Warnings matching \code{suppress_warnings} are excluded.}
-  }
+\describe{
+\item{errors}{Character vector of validation errors (blocking), or NULL if none.}
+\item{warnings}{Character vector of validation warnings (suppressible), or NULL if none.
+Warnings matching \code{suppress_warnings} are excluded.}
+}
 }
 \description{
 check all csv files against database schema for database import

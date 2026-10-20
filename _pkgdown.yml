@@ -3,3 +3,49 @@ url: https://peekbank.github.io/peekbankr/
 template:
   bootstrap: 5
   bootswatch: spacelab
+
+reference:
+  - title: Reading Peekbank data
+    desc: >
+      Create a client pinned to one release, then read tables from it.
+    contents:
+      - peekbank
+      - PeekbankClient
+      - peekbank_releases
+
+  - title: Working with the data
+    desc: >
+      Helpers for the shapes Peekbank data arrives in.
+    contents:
+      - unpack_aux_data
+      - cleanup_cdi_data
+      - populate_cdi_percentiles
+      - append_relative_cdi_scores
+
+  - title: Preparing a dataset for import
+    desc: >
+      Used by the import scripts in peekbank-data-import, not by analyses.
+    contents:
+      - starts_with("ds.")
+
+  - title: Superseded
+    desc: >
+      The interface before the client. These still work and are not going
+      away, but a client pins one release for a whole analysis, which these
+      cannot.
+    contents:
+      - connect_to_peekbank
+      - get_db_info
+      - list_peekbank_tables
+      - get_datasets
+      - get_subjects
+      - get_administrations
+      - get_trials
+      - get_trial_types
+      - get_stimuli
+      - get_aoi_region_sets
+      - get_aoi_timepoints
+      - get_xy_timepoints
+      - get_sql_query
+      - download_stimuli
+      - get_readmes

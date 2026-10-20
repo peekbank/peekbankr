@@ -1,9 +1,12 @@
-# CDI-processing smoke test against the current Redivis release.
+# The CDI pipeline end to end over a real release. Pinned, so a failure here
+# means the code broke or that release changed, not that a different release
+# happened to be published most recently. test-cdi-processing.R covers the
+# same functions on fixtures, without a network.
 
-test_that("CDI pipeline runs on current-release subject aux data", {
+test_that("CDI pipeline runs on real subject aux data", {
   skip_network()
 
-  con <- suppressMessages(connect_to_peekbank(db_version = "current"))
+  con <- suppressMessages(connect_to_peekbank(db_version = "2026.1"))
   all_subjects <- unpack_aux_data(get_subjects(connection = con))
 
   cdi_data <- all_subjects %>%

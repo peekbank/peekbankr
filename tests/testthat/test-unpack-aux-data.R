@@ -38,3 +38,29 @@ test_that("unpack_aux_data passes through all-NA aux columns", {
   df <- tibble(subject_id = 1:2, subject_aux_data = c(NA_character_, NA))
   expect_identical(unpack_aux_data(df), df)
 })
+
+test_that("unpack_aux_data handles a frame with several aux columns", {
+  # joining two tables gives you two aux columns at once
+  df <- tibble(
+    id = 1:3,
+    subject_aux_data = c('{"a": 1}', '{"a": 2}', NA),
+    trial_aux_data = c('{"b": "x"}', NA, '{"b": "z"}'))
+  out <- unpack_aux_data(df)
+
+  expect_identical(names(out), names(df))
+  expect_identical(out$id, 1:3)
+  expect_type(out$subject_aux_data, "list")
+  expect_type(out$trial_aux_data, "list")
+  expect_equal(out$subject_aux_data[[1]]$a, 1)
+  expect_equal(out$trial_aux_data[[3]]$b, "z")
+})
+
+test_that("unpack_aux_data leaves an empty aux column beside a full one", {
+  df <- tibble(
+    id = 1:2,
+    administration_aux_data = c(NA_character_, NA_character_),
+    subject_aux_data = c('{"a": 1}', '{"a": 2}'))
+  out <- unpack_aux_data(df)
+  expect_type(out$administration_aux_data, "character")
+  expect_type(out$subject_aux_data, "list")
+})

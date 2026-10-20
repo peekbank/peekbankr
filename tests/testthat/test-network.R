@@ -6,15 +6,18 @@ test_that("connect_to_peekbank resolves the current version", {
   con <- suppressMessages(connect_to_peekbank())
   expect_s3_class(con, "peekbank_connection")
   expect_match(con$release, "^\\d{4}\\.\\d+$")
-  expect_match(con$tag, "^v\\d+\\.\\d+$")
+  expect_match(con$redivis_tag, "^v\\d+\\.\\d+$")
 })
 
-test_that("connect_to_peekbank resolves release names and raw tags", {
+test_that("connect_to_peekbank resolves a release name to its version", {
   skip_network()
   con <- suppressMessages(connect_to_peekbank(db_version = "2021.1"))
   expect_equal(con$release, "2021.1")
-  con2 <- suppressMessages(connect_to_peekbank(db_version = con$tag))
-  expect_equal(con2$release, "2021.1")
+  expect_match(con$redivis_tag, "^v[0-9]+\\.[0-9]+$")
+  # the tag is reported, not accepted: a version is named by its release
+  expect_error(
+    suppressMessages(connect_to_peekbank(db_version = con$redivis_tag)),
+    "not found")
 })
 
 test_that("connect_to_peekbank rejects unknown versions", {

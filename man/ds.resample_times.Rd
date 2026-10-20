@@ -19,19 +19,18 @@ df_out with resampled time, xy or aoi value rows
 Resampling is done by the following steps:
 }
 \details{
-1. iterate through every trial for every administration
-
-2. create desired timepoint sequence with equal spacing according to
+\enumerate{
+\item iterate through every trial for every administration
+\item create desired timepoint sequence with equal spacing according to
 pre-specified SAMPLE_RATE parameter
-
-3. use approxfun to interpolate given data points to align with desired
+\item use approxfun to interpolate given data points to align with desired
 timepoint sequence "constant" interpolation method is used for AOI
 timepoints; "linear" interpolation method is used for xy timepoints; for more
 details on approxfun, please see:
 https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html
-
-4. after resampling, bind resampled dataframes back together and re-assign
+\item after resampling, bind resampled dataframes back together and re-assign
 aoi_timepoint_id
+}
 }
 \examples{
 

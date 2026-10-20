@@ -3,7 +3,7 @@
 \name{ds.validate_trial_uniqueness_constraint}
 \alias{ds.validate_trial_uniqueness_constraint}
 \title{Check if within aoi_timepoints table, there is no duplication in all the administration_ids
-  associated with each individual trial_id}
+associated with each individual trial_id}
 \usage{
 ds.validate_trial_uniqueness_constraint(df_aoi_timepoints)
 }
@@ -12,11 +12,11 @@ ds.validate_trial_uniqueness_constraint(df_aoi_timepoints)
 }
 \value{
 an empty string when all the administration_ids are unique within each trial_id;
-  Otherwise, the error message will be returned.
+Otherwise, the error message will be returned.
 }
 \description{
 Check if within aoi_timepoints table, there is no duplication in all the administration_ids
-  associated with each individual trial_id
+associated with each individual trial_id
 }
 \examples{
 \dontrun{

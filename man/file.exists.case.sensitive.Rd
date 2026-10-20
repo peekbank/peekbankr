@@ -11,7 +11,7 @@ file.exists.case.sensitive(...)
 }
 \value{
 logical value: TRUE if the file exists with the exact same case,
-  FALSE otherwise
+FALSE otherwise
 }
 \description{
 Check if a file exists with exact case sensitivity
@@ -22,3 +22,4 @@ exists <- file.exists.case.sensitive("path/to/image.jpg")
 }
 
 }
+\keyword{internal}
