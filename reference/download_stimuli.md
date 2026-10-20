@@ -1,9 +1,13 @@
 # Download stimulus images for the Peekbank repository
 
+Superseded. Use `pb$download_stimuli()` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
+
 This function downloads stimulus images for selected Peekbank datasets
-from the peekbank_files dataset on Redivis. It retrieves stimulus
-metadata from a Peekbank database connection, constructs the full
-stimulus file paths, and downloads them to a local directory.
+from Redivis. It retrieves stimulus metadata from a Peekbank database
+connection, constructs the full stimulus file paths, and downloads them
+to a local directory.
 
 ## Usage
 

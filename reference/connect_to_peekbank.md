@@ -1,11 +1,8 @@
 # Connect to Peekbank
 
-As of peekbankr 0.4, data are retrieved from the versioned peekbank
-dataset on Redivis rather than a MySQL server. \`connect_to_peekbank()\`
-now returns a lightweight handle that pins a database version (Redivis
-dataset version); it no longer opens a DBI connection. Existing code
-that passes the result via the \`connection\` argument of the \`get\_\`
-functions continues to work.
+Superseded. Use
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md),
+which returns a client that pins a release for a whole analysis.
 
 ## Usage
 
@@ -24,9 +21,9 @@ connect_to_peekbank(
 
 - db_version:
 
-  String of the name of database version to use: "current" (the default;
-  resolves to the latest Redivis version), a Peekbank release name (e.g.
-  "2025.1"), or a Redivis version tag (e.g. "v1.2")
+  String naming the database version to use: a Peekbank release name
+  (e.g. "2025.1"), or "current" (the default) for whichever version was
+  published most recently
 
 - db_args:
 
@@ -50,7 +47,12 @@ connect_to_peekbank(
 
 ## Value
 
-A \`peekbank_connection\` handle pinning the resolved version
+A `peekbank_connection` handle pinning the resolved version
+
+## Details
+
+`connect_to_peekbank()` returns a handle that pins a database version
+(Redivis dataset version)
 
 ## Examples
 

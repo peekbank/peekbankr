@@ -1,8 +1,10 @@
 # Download dataset README files
 
-Downloads README files for Peekbank datasets from the peekbank_files
-dataset on Redivis. Note that READMEs reflect the latest released
-version of the files dataset.
+Superseded. Use `pb$readmes()` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
+
+Downloads README files for Peekbank datasets from Redivis.
 
 ## Usage
 

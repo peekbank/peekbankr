@@ -23,32 +23,128 @@ access (free account). For non-interactive use, set a
 
 ### Usage
 
-Here’s a simple workflow for using `peekbankr` to get data from a single
-study.
-
 ``` r
 
 library(tidyverse)
 library(peekbankr)
 
-con <- connect_to_peekbank()   # pins the current database version
+pb <- peekbank("2026.1")   # create a peekbank client with a database version
 
-aoi_timepoints <- get_aoi_timepoints(connection = con, dataset_name = "pomper_saffran_2016")
-administrations <- get_administrations(connection = con, dataset_name = "pomper_saffran_2016")
+data <- pb$aoi_timepoints %>%
+  left_join(pb$administrations)
+```
+
+This downloads the datasets automatically for the first access and
+caches them for subsequent use.
+
+If you only want to download a subset of the release,
+`pb$subset$<table>()` takes `dplyr` expressions and returns only the
+matching rows:
+
+``` r
+
+aoi_timepoints <- pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016")
+administrations <- pb$subset$administrations(dataset_name == "pomper_saffran_2016")
 
 ps_data <- aoi_timepoints %>%
   left_join(administrations)
 ```
 
+Predicates are `dplyr` expressions. A predicate can name any column of
+the table, or columns of any table that a row of the queried table is
+connected to:
+
+``` r
+
+pb$subset$aoi_timepoints(age >= 24, age <= 36, sex == "female")
+pb$subset$aoi_timepoints(vanilla_trial, !excluded)
+pb$subset$aoi_timepoints(target_stimulus_novelty == "familiar")
+pb$subset$administrations(sex == "female")
+pb$subset$trials(vanilla_trial)
+```
+
+These also work across tables:
+
+``` r
+
+pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016",
+                         age < 24 & vanilla_trial)
+```
+
+The exception is **`t_norm`** on `pb$subset$aoi_timepoints()`, as by
+default we transfers the table run-length encoded (one row per run of a
+constant AOI) and t_norm filters would result in unintuitive behavior.
+If you need to filter t_norm, either do it on the fetched result OR pass
+`rle = FALSE` to read the expanded table directly (which will make the
+fetch take a lot longer):
+
+``` r
+
+pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016", t_norm > 0) # Error
+
+pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016", t_norm > 0,
+                         rle = FALSE)
+```
+
+Every other column filters normally, including `aoi`, which is constant
+within a run. `pb$subset$xy_timepoints()` is not encoded, so it has no
+such restriction.
+
+For the timepoint tables, the predicates are translated to remote SQL
+queries, so only a subset of predicates is available. If you use a
+predicate that cannot be translated to a query, an error message will
+let you know. The smaller tables are filtered in R, so they take
+arbitrary `dplyr` expression.
+
+### Server-side queries
+
+`pb$db` holds a [dbplyr](https://dbplyr.tidyverse.org/) handle on each
+table. `dplyr` verbs on it compile to SQL and run on the server; data
+transfer happens when you `collect()`. Here is an example that
+summarises a timepoint table without pulling it:
+
+``` r
+
+pb$db$aoi_timepoints %>%
+  group_by(aoi) %>%
+  count() %>%
+  collect()
+```
+
+`pb$db` also holds `aoi_timepoints_rle`, one row per run of a constant
+AOI, for anyone who wants the stored shape rather than the samples it
+expands to.
+
+Print the client to see the release it is pinned to and what is on it:
+
+``` r
+
+pb
+#> <peekbank> release 2026.1 (Redivis version v1.4)
+#>   tables:  datasets subjects administrations trials trial_types stimuli
+#>            aoi_region_sets aoi_timepoints xy_timepoints
+#>   methods: clear_cache() download_stimuli() query() readmes()
+#>   subset:  $subset$<table>(<dplyr predicates>)
+#>   db:      $db$<table> for a dbplyr handle, read on collect()
+```
+
 ### Database versions
 
-Peekbank is released in named versions (e.g. `2026.1`). By default
-[`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
-uses the latest release and prints which one that is; pass
-`db_version = "2025.1"` (or a Redivis version tag like `"v1.2"`) to pin
-an earlier release for reproducibility.
+Peekbank is released in named versions (e.g. `2026.1`), and
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+requires one.
 [`get_db_info()`](https://peekbank.github.io/peekbankr/reference/get_db_info.md)
-lists the available versions.
+lists what is available.
+
+Pass `"current"` to take whichever version was published most recently
+for testing, but this is strongly discouraged as future version releases
+will make the same code produce different results.
+
+``` r
+
+pb <- peekbank("2026.1")
+pb$release   # "2026.1"
+```
 
 ### Data files
 
@@ -58,8 +154,8 @@ dataset](https://redivis.com/datapages/datasets/peekbank_files):
 
 ``` r
 
-get_readmes(datasets = "pomper_saffran_2016")          # dataset documentation
-stimuli <- download_stimuli(con, datasets = "reflook_v4")  # stimulus images
+pb$readmes(datasets = "pomper_saffran_2016")       # dataset documentation
+stimuli <- pb$download_stimuli(datasets = "reflook_v4")  # stimulus images
 ```
 
 ### Development
@@ -77,18 +173,41 @@ workspace](https://redivis.com/workspace) settings, and set
 
 # Package index
 
-## All functions
+## Reading Peekbank data
 
-- [`append_relative_cdi_scores()`](https://peekbank.github.io/peekbankr/reference/append_relative_cdi_scores.md)
-  : Adds a relative cdi score indicating the percentage of total
-  achievable points the subject got on each given measure
+Create a client pinned to one release, then read tables from it.
+
+- [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+  : Connect to Peekbank
+- [`PeekbankClient`](https://peekbank.github.io/peekbankr/reference/PeekbankClient.md)
+  : Peekbank client
+- [`peekbank_releases()`](https://peekbank.github.io/peekbankr/reference/peekbank_releases.md)
+  : Peekbank releases
+
+## Working with the data
+
+Helpers for the shapes Peekbank data arrives in.
+
+- [`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
+  : Unpack the json sting in the \*\_aux_data column and turns it into a
+  nested R list
 - [`cleanup_cdi_data()`](https://peekbank.github.io/peekbankr/reference/cleanup_cdi_data.md)
   : Checks cdi data for inconsistencies, warns about them, and fixes
   them
-- [`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
-  : Connect to Peekbank
-- [`download_stimuli()`](https://peekbank.github.io/peekbankr/reference/download_stimuli.md)
-  : Download stimulus images for the Peekbank repository
+- [`populate_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/populate_cdi_percentiles.md)
+  : Populate the provided cdi data with percentile values for that
+  specific age, instrument_type, measure and language. Loosely based on
+  the work from this repo
+  https://github.com/kachergis/cdi-percentiles/tree/main by George
+  Kachergis and Jess Mankewitz with advice from Virginia Marchman.
+- [`append_relative_cdi_scores()`](https://peekbank.github.io/peekbankr/reference/append_relative_cdi_scores.md)
+  : Adds a relative cdi score indicating the percentage of total
+  achievable points the subject got on each given measure
+
+## Preparing a dataset for import
+
+Used by the import scripts in peekbank-data-import, not by analyses.
+
 - [`ds.compute_aois()`](https://peekbank.github.io/peekbankr/reference/ds.compute_aois.md)
   : Classify gaze samples into AOIs based x/y coordinates and provided
   region sets
@@ -121,43 +240,43 @@ workspace](https://redivis.com/workspace) settings, and set
 - [`ds.validate_trial_uniqueness_constraint()`](https://peekbank.github.io/peekbankr/reference/ds.validate_trial_uniqueness_constraint.md)
   : Check if within aoi_timepoints table, there is no duplication in all
   the administration_ids associated with each individual trial_id
-- [`file.exists.case.sensitive()`](https://peekbank.github.io/peekbankr/reference/file.exists.case.sensitive.md)
-  : Check if a file exists with exact case sensitivity
+
+## Superseded
+
+The interface before the client. These still work and are not going
+away, but a client pins one release for a whole analysis, which these
+cannot.
+
+- [`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
+  : Connect to Peekbank
+- [`get_db_info()`](https://peekbank.github.io/peekbankr/reference/get_db_info.md)
+  : Get information on database connection options
+- [`list_peekbank_tables()`](https://peekbank.github.io/peekbankr/reference/list_peekbank_tables.md)
+  : List of peekbank tables
+- [`get_datasets()`](https://peekbank.github.io/peekbankr/reference/get_datasets.md)
+  : Get datasets
+- [`get_subjects()`](https://peekbank.github.io/peekbankr/reference/get_subjects.md)
+  : Get subjects
 - [`get_administrations()`](https://peekbank.github.io/peekbankr/reference/get_administrations.md)
   : Get administrations
+- [`get_trials()`](https://peekbank.github.io/peekbankr/reference/get_trials.md)
+  : Get trials
+- [`get_trial_types()`](https://peekbank.github.io/peekbankr/reference/get_trial_types.md)
+  : Get trial types
+- [`get_stimuli()`](https://peekbank.github.io/peekbankr/reference/get_stimuli.md)
+  : Get stimuli
 - [`get_aoi_region_sets()`](https://peekbank.github.io/peekbankr/reference/get_aoi_region_sets.md)
   : Get AOI region sets
 - [`get_aoi_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_aoi_timepoints.md)
   : Get AOI timepoints
-- [`get_datasets()`](https://peekbank.github.io/peekbankr/reference/get_datasets.md)
-  : Get datasets
-- [`get_db_info()`](https://peekbank.github.io/peekbankr/reference/get_db_info.md)
-  : Get information on database connection options
-- [`get_readmes()`](https://peekbank.github.io/peekbankr/reference/get_readmes.md)
-  : Download dataset README files
-- [`get_sql_query()`](https://peekbank.github.io/peekbankr/reference/get_sql_query.md)
-  : Run a SQL query against peekbank
-- [`get_stimuli()`](https://peekbank.github.io/peekbankr/reference/get_stimuli.md)
-  : Get stimuli
-- [`get_subjects()`](https://peekbank.github.io/peekbankr/reference/get_subjects.md)
-  : Get subjects
-- [`get_trial_types()`](https://peekbank.github.io/peekbankr/reference/get_trial_types.md)
-  : Get trial types
-- [`get_trials()`](https://peekbank.github.io/peekbankr/reference/get_trials.md)
-  : Get trials
 - [`get_xy_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_xy_timepoints.md)
   : Get XY timepoints
-- [`list_peekbank_tables()`](https://peekbank.github.io/peekbankr/reference/list_peekbank_tables.md)
-  : List of peekbank tables
-- [`populate_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/populate_cdi_percentiles.md)
-  : Populate the provided cdi data with percentile values for that
-  specific age, instrument_type, measure and language. Loosely based on
-  the work from this repo
-  https://github.com/kachergis/cdi-percentiles/tree/main by George
-  Kachergis and Jess Mankewitz with advice from Virginia Marchman.
-- [`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
-  : Unpack the json sting in the \*\_aux_data column and turns it into a
-  nested R list
+- [`get_sql_query()`](https://peekbank.github.io/peekbankr/reference/get_sql_query.md)
+  : Run a SQL query against peekbank
+- [`download_stimuli()`](https://peekbank.github.io/peekbankr/reference/download_stimuli.md)
+  : Download stimulus images for the Peekbank repository
+- [`get_readmes()`](https://peekbank.github.io/peekbankr/reference/get_readmes.md)
+  : Download dataset README files
 
 # Articles
 

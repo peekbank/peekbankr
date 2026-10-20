@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,17 +61,18 @@ administration_id</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>1. iterate through every trial for every administration</p>
-<p>2. create desired timepoint sequence with equal spacing according to
-pre-specified SAMPLE_RATE parameter</p>
-<p>3. use approxfun to interpolate given data points to align with desired
+
+<ol><li><p>iterate through every trial for every administration</p></li>
+<li><p>create desired timepoint sequence with equal spacing according to
+pre-specified SAMPLE_RATE parameter</p></li>
+<li><p>use approxfun to interpolate given data points to align with desired
 timepoint sequence "constant" interpolation method is used for AOI
 timepoints; "linear" interpolation method is used for xy timepoints; for more
 details on approxfun, please see:
-https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html</p>
-<p>4. after resampling, bind resampled dataframes back together and re-assign
-aoi_timepoint_id</p>
-    </div>
+https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html</p></li>
+<li><p>after resampling, bind resampled dataframes back together and re-assign
+aoi_timepoint_id</p></li>
+</ol></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

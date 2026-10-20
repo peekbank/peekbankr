@@ -1,6 +1,8 @@
 # Get trials
 
-Get trials
+Superseded. Use `pb$trials` or `pb$subset$trials()` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
 
 ## Usage
 

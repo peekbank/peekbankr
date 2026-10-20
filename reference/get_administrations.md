@@ -1,6 +1,9 @@
 # Get administrations
 
-Get administrations
+Superseded. Use `pb$administrations`, or `pb$subset$administrations()`
+to narrow it, on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
 
 ## Usage
 

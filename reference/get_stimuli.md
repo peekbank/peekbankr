@@ -1,6 +1,8 @@
 # Get stimuli
 
-Get stimuli
+Superseded. Use `pb$stimuli` or `pb$subset$stimuli()` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
 
 ## Usage
 

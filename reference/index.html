@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,9 +32,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="reading-peekbank-data">Reading Peekbank data<a class="anchor" aria-label="anchor" href="#reading-peekbank-data"></a></h2>
 
-
+      <div class="section-desc"><p>Create a client pinned to one release, then read tables from it.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -43,10 +43,40 @@
 
       <dl><dt>
 
-          <code><a href="append_relative_cdi_scores.html">append_relative_cdi_scores()</a></code>
+          <code><a href="peekbank.html">peekbank()</a></code>
 
         </dt>
-        <dd>Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure</dd>
+        <dd>Connect to Peekbank</dd>
+
+        <dt>
+
+          <code><a href="PeekbankClient.html">PeekbankClient</a></code>
+
+        </dt>
+        <dd>Peekbank client</dd>
+
+        <dt>
+
+          <code><a href="peekbank_releases.html">peekbank_releases()</a></code>
+
+        </dt>
+        <dd>Peekbank releases</dd>
+      </dl></div><div class="section level2">
+      <h2 id="working-with-the-data">Working with the data<a class="anchor" aria-label="anchor" href="#working-with-the-data"></a></h2>
+
+      <div class="section-desc"><p>Helpers for the shapes Peekbank data arrives in.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="unpack_aux_data.html">unpack_aux_data()</a></code>
+
+        </dt>
+        <dd>Unpack the json sting in the *_aux_data column and turns it into a nested R list</dd>
 
         <dt>
 
@@ -57,19 +87,28 @@
 
         <dt>
 
-          <code><a href="connect_to_peekbank.html">connect_to_peekbank()</a></code>
+          <code><a href="populate_cdi_percentiles.html">populate_cdi_percentiles()</a></code>
 
         </dt>
-        <dd>Connect to Peekbank</dd>
+        <dd>Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.</dd>
 
         <dt>
 
-          <code><a href="download_stimuli.html">download_stimuli()</a></code>
+          <code><a href="append_relative_cdi_scores.html">append_relative_cdi_scores()</a></code>
 
         </dt>
-        <dd>Download stimulus images for the Peekbank repository</dd>
+        <dd>Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure</dd>
+      </dl></div><div class="section level2">
+      <h2 id="preparing-a-dataset-for-import">Preparing a dataset for import<a class="anchor" aria-label="anchor" href="#preparing-a-dataset-for-import"></a></h2>
 
-        <dt>
+      <div class="section-desc"><p>Used by the import scripts in peekbank-data-import, not by analyses.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="ds.compute_aois.html">ds.compute_aois()</a></code>
 
@@ -166,13 +205,50 @@
 
         </dt>
         <dd>Check if within aoi_timepoints table, there is no duplication in all the administration_ids associated with each individual trial_id</dd>
+      </dl></div><div class="section level2">
+      <h2 id="superseded">Superseded<a class="anchor" aria-label="anchor" href="#superseded"></a></h2>
+
+      <div class="section-desc"><p>The interface before the client. These still work and are not going away, but a client pins one release for a whole analysis, which these cannot.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="connect_to_peekbank.html">connect_to_peekbank()</a></code>
+
+        </dt>
+        <dd>Connect to Peekbank</dd>
 
         <dt>
 
-          <code><a href="file.exists.case.sensitive.html">file.exists.case.sensitive()</a></code>
+          <code><a href="get_db_info.html">get_db_info()</a></code>
 
         </dt>
-        <dd>Check if a file exists with exact case sensitivity</dd>
+        <dd>Get information on database connection options</dd>
+
+        <dt>
+
+          <code><a href="list_peekbank_tables.html">list_peekbank_tables()</a></code>
+
+        </dt>
+        <dd>List of peekbank tables</dd>
+
+        <dt>
+
+          <code><a href="get_datasets.html">get_datasets()</a></code>
+
+        </dt>
+        <dd>Get datasets</dd>
+
+        <dt>
+
+          <code><a href="get_subjects.html">get_subjects()</a></code>
+
+        </dt>
+        <dd>Get subjects</dd>
 
         <dt>
 
@@ -180,6 +256,27 @@
 
         </dt>
         <dd>Get administrations</dd>
+
+        <dt>
+
+          <code><a href="get_trials.html">get_trials()</a></code>
+
+        </dt>
+        <dd>Get trials</dd>
+
+        <dt>
+
+          <code><a href="get_trial_types.html">get_trial_types()</a></code>
+
+        </dt>
+        <dd>Get trial types</dd>
+
+        <dt>
+
+          <code><a href="get_stimuli.html">get_stimuli()</a></code>
+
+        </dt>
+        <dd>Get stimuli</dd>
 
         <dt>
 
@@ -197,24 +294,10 @@
 
         <dt>
 
-          <code><a href="get_datasets.html">get_datasets()</a></code>
+          <code><a href="get_xy_timepoints.html">get_xy_timepoints()</a></code>
 
         </dt>
-        <dd>Get datasets</dd>
-
-        <dt>
-
-          <code><a href="get_db_info.html">get_db_info()</a></code>
-
-        </dt>
-        <dd>Get information on database connection options</dd>
-
-        <dt>
-
-          <code><a href="get_readmes.html">get_readmes()</a></code>
-
-        </dt>
-        <dd>Download dataset README files</dd>
+        <dd>Get XY timepoints</dd>
 
         <dt>
 
@@ -225,61 +308,20 @@
 
         <dt>
 
-          <code><a href="get_stimuli.html">get_stimuli()</a></code>
+          <code><a href="download_stimuli.html">download_stimuli()</a></code>
 
         </dt>
-        <dd>Get stimuli</dd>
+        <dd>Download stimulus images for the Peekbank repository</dd>
 
         <dt>
 
-          <code><a href="get_subjects.html">get_subjects()</a></code>
+          <code><a href="get_readmes.html">get_readmes()</a></code>
 
         </dt>
-        <dd>Get subjects</dd>
-
-        <dt>
-
-          <code><a href="get_trial_types.html">get_trial_types()</a></code>
-
-        </dt>
-        <dd>Get trial types</dd>
-
-        <dt>
-
-          <code><a href="get_trials.html">get_trials()</a></code>
-
-        </dt>
-        <dd>Get trials</dd>
-
-        <dt>
-
-          <code><a href="get_xy_timepoints.html">get_xy_timepoints()</a></code>
-
-        </dt>
-        <dd>Get XY timepoints</dd>
-
-        <dt>
-
-          <code><a href="list_peekbank_tables.html">list_peekbank_tables()</a></code>
-
-        </dt>
-        <dd>List of peekbank tables</dd>
-
-        <dt>
-
-          <code><a href="populate_cdi_percentiles.html">populate_cdi_percentiles()</a></code>
-
-        </dt>
-        <dd>Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.</dd>
-
-        <dt>
-
-          <code><a href="unpack_aux_data.html">unpack_aux_data()</a></code>
-
-        </dt>
-        <dd>Unpack the json sting in the *_aux_data column and turns it into a nested R list</dd>
+        <dd>Download dataset README files</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

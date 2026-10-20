@@ -4,32 +4,41 @@
 
 The `peekbankr` package allows you to access data in the peekbank
 database from R. Data are hosted in the versioned [peekbank dataset on
-Redivis](https://redivis.com/datapages/datasets/peekbank); the `get_`
-functions retrieve tidy tables from it without you having to write
-queries. This vignette shows some examples of how to use the data
-loading functions and what the resulting data look like.
+Redivis](https://redivis.com/datapages/datasets/peekbank); the client
+retrieves tidy tables from it without you having to write queries. This
+vignette shows some examples of how to use the data loading functions
+and what the resulting data look like.
 
-There are several different `get_` functions that you can use to extract
-different types of data from peekbank:
+Every table in the release is a field on the client, holding the whole
+table:
 
-- [`get_datasets()`](https://peekbank.github.io/peekbankr/reference/get_datasets.md)
-- [`get_subjects()`](https://peekbank.github.io/peekbankr/reference/get_subjects.md)
-- [`get_administrations()`](https://peekbank.github.io/peekbankr/reference/get_administrations.md)
-- [`get_trials()`](https://peekbank.github.io/peekbankr/reference/get_trials.md)
-- [`get_stimuli()`](https://peekbank.github.io/peekbankr/reference/get_stimuli.md)
-- [`get_aoi_region_sets()`](https://peekbank.github.io/peekbankr/reference/get_aoi_region_sets.md)
-- [`get_aoi_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_aoi_timepoints.md)
-- [`get_xy_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_xy_timepoints.md)
+- `pb$datasets`
+- `pb$subjects`
+- `pb$administrations`
+- `pb$trials`
+- `pb$trial_types`
+- `pb$stimuli`
+- `pb$aoi_region_sets`
+- `pb$aoi_timepoints`
+- `pb$xy_timepoints`
+
+To work with part of a release, `pb$subset$<table>()` takes `dplyr`
+expressions. For the timepoint tables, which are far too large to narrow
+locally, these run on the server.
 
 **Technical note 1**: The first request will open a browser window to
 authorize Redivis access (or set a `REDIVIS_API_TOKEN`).
 
-**Technical note 2**: Start by creating a version handle with
+**Technical note 2**: Start by creating a client with
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md).
+It pins a database version for your whole analysis, and every table you
+read from it comes from that same version. The version is required,
+because Peekbank is re-released over time and an unpinned script quietly
+reads different data as those releases land. Pass `"current"` if you do
+want whichever version is newest, which is not always the highest
+release number. The older
 [`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
-and pass it to each `get_` function. The handle pins a database version
-for your whole analysis (“current” resolves to the latest release);
-calling `get_` functions without one works but re-resolves the version
-each time and warns.
+/ `get_*(connection = con)` style still works.
 
 **Technical note 3**: We have tried to optimize the time it takes to get
 data from the database (the AOI timepoints transfer run-length-encoded
@@ -42,42 +51,79 @@ will still take a while, as you are transferring 100s of MB of data.
 library(peekbankr)
 
 # pin a database version for all the calls below
-con <- connect_to_peekbank()
+pb <- peekbank("2026.1")
 ```
 
 ## Get datasets
 
-The `get_datasets` function returns a table related to the sources of
-the dataset, information of the tracker, information of the method
-(e.g., monitor size and sample rate).
+The `datasets` field holds a table related to the sources of the
+dataset, information of the tracker, information of the method (e.g.,
+monitor size and sample rate).
 
-For example, you can run `get_datasets` without any arguments to return
-all of the datasets in the database.
+For example, reading `pb$datasets` gives you every dataset in the
+database.
 
 ``` r
 
-d_datasets <- get_datasets(connection = con)
+d_datasets <- pb$datasets
 head(d_datasets)
 ```
 
 ## Get Subjects
 
-The `get_subjects` function returns information about persistent subject
+The `subjects` field holds information about persistent subject
 identifiers for noting when subjects have participated in multiple
 experiments. This includes demographic information (currently only sex
 and lab-specific subject id).
 
 ``` r
 
-d_subjects <- get_subjects(connection = con)
+d_subjects <- pb$subjects
 head(d_subjects)
+```
+
+## Auxiliary data
+
+Several tables carry a `*_aux_data` column holding whatever a lab
+recorded that the schema has no place for. It arrives as a JSON string,
+so it is not much use until you unpack it.
+[`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
+turns every `*_aux_data` column in a table into a nested column of the
+fields it holds:
+
+``` r
+
+d_subjects_aux <- unpack_aux_data(pb$subjects)
+names(d_subjects_aux$subject_aux_data[[1]])
+#> "lang_exposures" "cdi_responses" "lang_measures" "native_language_non_iso"
+```
+
+From there
+[`tidyr::unnest()`](https://tidyr.tidyverse.org/reference/unnest.html)
+twice gets you to rows; once to lift the fields out of the nested
+column, once to expand whichever field you want:
+
+``` r
+
+cdi <- unpack_aux_data(pb$subjects) %>%
+  tidyr::unnest(subject_aux_data) %>%
+  filter(!is.na(cdi_responses)) %>%
+  tidyr::unnest(cdi_responses)
+```
+
+Predicates can reach the column before it is unpacked, but only as text,
+since the server sees a JSON string:
+
+``` r
+
+pb$subset$aoi_timepoints(grepl("cdi_responses", subject_aux_data))
 ```
 
 ## Get Administrations
 
-The `get_administrations` function returns information about the
-specific experimental administrations to subjects in the database. This
-includes information about:
+The `administrations` field holds information about the specific
+experimental administrations to subjects in the database. This includes
+information about:
 
 - age
 - monitor size
@@ -89,7 +135,7 @@ also filter on a dataset name or dataset id.
 
 ``` r
 
-d_administrations <- get_administrations(dataset_name = "pomper_saffran_2016", connection = con)
+d_administrations <- pb$subset$administrations(dataset_name == "pomper_saffran_2016")
 head(d_administrations)
 ```
 
@@ -106,15 +152,14 @@ children who were tested between the ages of 24 and 36 months.
 
 ``` r
 
-d_age_range <- get_administrations(age = c(24, 36), connection = con)
+d_age_range <- pb$subset$administrations(age >= 24, age <= 36)
 head(d_age_range)
 ```
 
 ## Get trials
 
-The `get_trials` function returns a table with information of the trials
-in the experiments in the database. This includes the following
-information:
+The `trials` field holds a table with information of the trials in the
+experiments in the database. This includes the following information:
 
 - Phrase
 - Language
@@ -123,7 +168,7 @@ information:
 
 ``` r
 
-d_trials <- get_trials(connection = con)
+d_trials <- pb$trials
 head(d_trials)
 ```
 
@@ -131,9 +176,8 @@ This function also takes dataset name and id filters.
 
 ## Get stimuli
 
-The `get_stimuli` function returns a table with information of the
-stimuli in the experiments in the database. This includes the following
-information:
+The `stimuli` field holds a table with information of the stimuli in the
+experiments in the database. This includes the following information:
 
 - Label
 - Image
@@ -141,7 +185,7 @@ information:
 
 ``` r
 
-d_stimuli <- get_stimuli(connection = con)
+d_stimuli <- pb$stimuli
 head(d_stimuli)
 ```
 
@@ -149,16 +193,14 @@ This function also takes dataset name and id filters.
 
 ## Get AOI region sets
 
-The
-[`get_aoi_region_sets()`](https://peekbank.github.io/peekbankr/reference/get_aoi_region_sets.md)
-returning a table with the information of the region of area of interest
-(AOI) for experiments using eye-trackers. It includes information of the
-dimensions of the x and y, such as the minimum and maximum dimension of
-the xy spaces.
+The `aoi_region_sets` field holds a table with the information of the
+region of area of interest (AOI) for experiments using eye-trackers. It
+includes information of the dimensions of the x and y, such as the
+minimum and maximum dimension of the xy spaces.
 
 ``` r
 
-d_aoi_region_sets <- get_aoi_region_sets(connection = con)
+d_aoi_region_sets <- pb$aoi_region_sets
 head(d_aoi_region_sets)
 ```
 
@@ -167,12 +209,20 @@ retained as part of the process of calculating AOIs from XY points.
 
 ## Get AOI timepoints
 
-The
-[`get_aoi_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_aoi_timepoints.md)
-function returns a table with information of the subject’s looking
-behavior in each trial. For example, you can get information about which
-area that the subject was looking at in a particular trial (e.g.,
-looking away or target or distractor).
+The `aoi_timepoints` field holds a table with information of the
+subject’s looking behavior in each trial. For example, you can get
+information about which area that the subject was looking at in a
+particular trial (e.g., looking away or target or distractor).
+
+Narrow it with `pb$subset$aoi_timepoints()`, which takes `dplyr`
+expressions that run on the server. As everywhere in `pb$subset`, an
+expression can name any column of the table or of anything a row of it
+belongs to. A timepoint belongs to an administration — with its dataset
+and subject (`dataset_name == "pomper_saffran_2016"`, `age < 24`,
+`sex == "female"`) — and to a trial, with its trial type and its two
+stimuli (`vanilla_trial`, `!excluded`,
+`target_stimulus_novelty == "familiar"`). These are expressions rather
+than named arguments, so `==` and not `=`.
 
 The `t_norm` field provides a trial-normalized time variable
 (milliseconds) whose 0 point is the point of disambiguation on that
@@ -181,17 +231,36 @@ said).
 
 ``` r
 
-d_aoi_timepoints <- get_aoi_timepoints(dataset_name = "pomper_saffran_2016", connection = con)
+d_aoi_timepoints <- pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016")
 head(d_aoi_timepoints)
 ```
 
 ## Get XY timepoints
 
 For experiments using eye-trackers (as opposed to hand coding from
-video), the `get_xy_timepoints` function returns a table including the x
-and y position across time.
+video), the `xy_timepoints` field holds a table including the x and y
+position across time.
 
 ``` r
 
-d_xy_timepoints <- get_xy_timepoints(connection = con)
+d_xy_timepoints <- pb$subset$xy_timepoints(dataset_name == "reflook_v4")
 ```
+
+## Query without downloading
+
+`pb$db` holds a [dbplyr](https://dbplyr.tidyverse.org/) handle on each
+table. `dplyr` verbs on these compile to SQL and run on the server, and
+nothing is transferred until you `collect()`. The handles carry the same
+columns as the fields above, so a summary over a timepoint table costs
+you four rows rather than 36 million.
+
+``` r
+
+pb$db$aoi_timepoints %>%
+  count(aoi) %>%
+  collect()
+```
+
+`pb$db` also holds `aoi_timepoints_rle`, the run-length encoded form the
+`aoi_timepoints` field expands locally: one row per run of a constant
+AOI, with `length` the number of 25 ms samples in the run.

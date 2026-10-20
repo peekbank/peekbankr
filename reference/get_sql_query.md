@@ -1,5 +1,9 @@
 # Run a SQL query against peekbank
 
+Superseded. Use `pb$query()` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client, or `pb$db$<table>` for a dbplyr handle.
+
 Queries are BigQuery Standard SQL, run against the peekbank dataset on
 Redivis. Note that string comparison is case-sensitive.
 

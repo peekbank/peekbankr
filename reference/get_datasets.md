@@ -1,6 +1,8 @@
 # Get datasets
 
-Get datasets
+Superseded. Use `pb$datasets` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
 
 ## Usage
 

@@ -4,6 +4,7 @@
 <url><loc>https://peekbank.github.io/peekbankr/articles/peekbankr.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/authors.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/index.html</loc></url>
+<url><loc>https://peekbank.github.io/peekbankr/reference/PeekbankClient.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/append_relative_cdi_scores.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/cleanup_cdi_data.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.html</loc></url>
@@ -37,6 +38,8 @@
 <url><loc>https://peekbank.github.io/peekbankr/reference/get_xy_timepoints.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/index.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/list_peekbank_tables.html</loc></url>
+<url><loc>https://peekbank.github.io/peekbankr/reference/peekbank.html</loc></url>
+<url><loc>https://peekbank.github.io/peekbankr/reference/peekbank_releases.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/populate_cdi_percentiles.html</loc></url>
 <url><loc>https://peekbank.github.io/peekbankr/reference/unpack_aux_data.html</loc></url>
 </urlset>

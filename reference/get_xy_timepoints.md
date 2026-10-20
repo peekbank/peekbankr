@@ -1,6 +1,8 @@
 # Get XY timepoints
 
-Get XY timepoints
+Superseded. Use `pb$xy_timepoints` or `pb$subset$xy_timepoints()` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
 
 ## Usage
 

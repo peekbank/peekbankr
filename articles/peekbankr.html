@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
 
       <h1>Accessing Peekbank Data</h1>
             
-            <h4 data-toc-skip class="date">2026-10-13</h4>
+            <h4 data-toc-skip class="date">2026-10-20</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/peekbank/peekbankr/blob/master/vignettes/peekbankr.Rmd" class="external-link"><code>vignettes/peekbankr.Rmd</code></a></small>
       <div class="d-none name"><code>peekbankr.Rmd</code></div>
@@ -65,31 +65,38 @@
 </h2>
 <p>The <code>peekbankr</code> package allows you to access data in the
 peekbank database from R. Data are hosted in the versioned <a href="https://redivis.com/datapages/datasets/peekbank" class="external-link">peekbank dataset
-on Redivis</a>; the <code>get_</code> functions retrieve tidy tables
-from it without you having to write queries. This vignette shows some
-examples of how to use the data loading functions and what the resulting
-data look like.</p>
-<p>There are several different <code>get_</code> functions that you can
-use to extract different types of data from peekbank:</p>
+on Redivis</a>; the client retrieves tidy tables from it without you
+having to write queries. This vignette shows some examples of how to use
+the data loading functions and what the resulting data look like.</p>
+<p>Every table in the release is a field on the client, holding the
+whole table:</p>
 <ul>
-<li><code><a href="../reference/get_datasets.html">get_datasets()</a></code></li>
-<li><code><a href="../reference/get_subjects.html">get_subjects()</a></code></li>
-<li><code><a href="../reference/get_administrations.html">get_administrations()</a></code></li>
-<li><code><a href="../reference/get_trials.html">get_trials()</a></code></li>
-<li><code><a href="../reference/get_stimuli.html">get_stimuli()</a></code></li>
-<li><code><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets()</a></code></li>
-<li><code><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints()</a></code></li>
-<li><code><a href="../reference/get_xy_timepoints.html">get_xy_timepoints()</a></code></li>
+<li><code>pb$datasets</code></li>
+<li><code>pb$subjects</code></li>
+<li><code>pb$administrations</code></li>
+<li><code>pb$trials</code></li>
+<li><code>pb$trial_types</code></li>
+<li><code>pb$stimuli</code></li>
+<li><code>pb$aoi_region_sets</code></li>
+<li><code>pb$aoi_timepoints</code></li>
+<li><code>pb$xy_timepoints</code></li>
 </ul>
+<p>To work with part of a release,
+<code>pb$subset$&lt;table&gt;()</code> takes <code>dplyr</code>
+expressions. For the timepoint tables, which are far too large to narrow
+locally, these run on the server.</p>
 <p><strong>Technical note 1</strong>: The first request will open a
 browser window to authorize Redivis access (or set a
 <code>REDIVIS_API_TOKEN</code>).</p>
-<p><strong>Technical note 2</strong>: Start by creating a version handle
-with <code><a href="../reference/connect_to_peekbank.html">connect_to_peekbank()</a></code> and pass it to each
-<code>get_</code> function. The handle pins a database version for your
-whole analysis (“current” resolves to the latest release); calling
-<code>get_</code> functions without one works but re-resolves the
-version each time and warns.</p>
+<p><strong>Technical note 2</strong>: Start by creating a client with
+<code><a href="../reference/peekbank.html">peekbank()</a></code>. It pins a database version for your whole
+analysis, and every table you read from it comes from that same version.
+The version is required, because Peekbank is re-released over time and
+an unpinned script quietly reads different data as those releases land.
+Pass <code>"current"</code> if you do want whichever version is newest,
+which is not always the highest release number. The older
+<code><a href="../reference/connect_to_peekbank.html">connect_to_peekbank()</a></code> /
+<code>get_*(connection = con)</code> style still works.</p>
 <p><strong>Technical note 3</strong>: We have tried to optimize the time
 it takes to get data from the database (the AOI timepoints transfer
 run-length-encoded and are expanded locally). But if you query entire
@@ -100,37 +107,62 @@ timepoint tables, it will still take a while, as you are transferring
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/peekbank/peekbankr" class="external-link">peekbankr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># pin a database version for all the calls below</span></span>
-<span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/connect_to_peekbank.html">connect_to_peekbank</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/peekbank.html">peekbank</a></span><span class="op">(</span><span class="st">"2026.1"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="get-datasets">Get datasets<a class="anchor" aria-label="anchor" href="#get-datasets"></a>
 </h2>
-<p>The <code>get_datasets</code> function returns a table related to the
-sources of the dataset, information of the tracker, information of the
-method (e.g., monitor size and sample rate).</p>
-<p>For example, you can run <code>get_datasets</code> without any
-arguments to return all of the datasets in the database.</p>
+<p>The <code>datasets</code> field holds a table related to the sources
+of the dataset, information of the tracker, information of the method
+(e.g., monitor size and sample rate).</p>
+<p>For example, reading <code>pb$datasets</code> gives you every dataset
+in the database.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_datasets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_datasets.html">get_datasets</a></span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">d_datasets</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">datasets</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_datasets</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="get-subjects">Get Subjects<a class="anchor" aria-label="anchor" href="#get-subjects"></a>
 </h2>
-<p>The <code>get_subjects</code> function returns information about
-persistent subject identifiers for noting when subjects have
-participated in multiple experiments. This includes demographic
-information (currently only sex and lab-specific subject id).</p>
+<p>The <code>subjects</code> field holds information about persistent
+subject identifiers for noting when subjects have participated in
+multiple experiments. This includes demographic information (currently
+only sex and lab-specific subject id).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_subjects</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_subjects.html">get_subjects</a></span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">d_subjects</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subjects</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_subjects</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="auxiliary-data">Auxiliary data<a class="anchor" aria-label="anchor" href="#auxiliary-data"></a>
+</h2>
+<p>Several tables carry a <code>*_aux_data</code> column holding
+whatever a lab recorded that the schema has no place for. It arrives as
+a JSON string, so it is not much use until you unpack it.
+<code><a href="../reference/unpack_aux_data.html">unpack_aux_data()</a></code> turns every <code>*_aux_data</code>
+column in a table into a nested column of the fields it holds:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_subjects_aux</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpack_aux_data.html">unpack_aux_data</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">d_subjects_aux</span><span class="op">$</span><span class="va">subject_aux_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; "lang_exposures" "cdi_responses" "lang_measures" "native_language_non_iso"</span></span></code></pre></div>
+<p>From there <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code> twice gets you to rows; once
+to lift the fields out of the nested column, once to expand whichever
+field you want:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpack_aux_data.html">unpack_aux_data</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">subject_aux_data</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span></span></code></pre></div>
+<p>Predicates can reach the column before it is unpacked, but only as
+text, since the server sees a JSON string:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"cdi_responses"</span>, <span class="va">subject_aux_data</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="get-administrations">Get Administrations<a class="anchor" aria-label="anchor" href="#get-administrations"></a>
 </h2>
-<p>The <code>get_administrations</code> function returns information
-about the specific experimental administrations to subjects in the
-database. This includes information about:</p>
+<p>The <code>administrations</code> field holds information about the
+specific experimental administrations to subjects in the database. This
+includes information about:</p>
 <ul>
 <li>age</li>
 <li>monitor size</li>
@@ -139,8 +171,8 @@ database. This includes information about:</p>
 <p>Again, if you run the function with no arguments, then you get all
 the information for all administrations in the database, but you can now
 also filter on a dataset name or dataset id.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_administrations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span>, connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_administrations</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">administrations</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_administrations</span><span class="op">)</span></span></code></pre></div>
 <p>The age argument takes a number indicating the age(s) of children (in
 months) that you want to analyze. you can use this argument in two
@@ -153,52 +185,52 @@ were tested within a certain age range.</li>
 </ol>
 <p>For example, you can get the participant information for all of the
 children who were tested between the ages of 24 and 36 months.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_age_range</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_administrations.html">get_administrations</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">36</span><span class="op">)</span>, connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_age_range</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">administrations</span><span class="op">(</span><span class="va">age</span> <span class="op">&gt;=</span> <span class="fl">24</span>, <span class="va">age</span> <span class="op">&lt;=</span> <span class="fl">36</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_age_range</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="get-trials">Get trials<a class="anchor" aria-label="anchor" href="#get-trials"></a>
 </h2>
-<p>The <code>get_trials</code> function returns a table with information
-of the trials in the experiments in the database. This includes the
-following information:</p>
+<p>The <code>trials</code> field holds a table with information of the
+trials in the experiments in the database. This includes the following
+information:</p>
 <ul>
 <li>Phrase</li>
 <li>Language</li>
 <li>Point of disambiguation</li>
 <li>IDs to link to other tables.</li>
 </ul>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_trials</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_trials.html">get_trials</a></span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_trials</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">trials</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_trials</span><span class="op">)</span></span></code></pre></div>
 <p>This function also takes dataset name and id filters.</p>
 </div>
 <div class="section level2">
 <h2 id="get-stimuli">Get stimuli<a class="anchor" aria-label="anchor" href="#get-stimuli"></a>
 </h2>
-<p>The <code>get_stimuli</code> function returns a table with
-information of the stimuli in the experiments in the database. This
-includes the following information:</p>
+<p>The <code>stimuli</code> field holds a table with information of the
+stimuli in the experiments in the database. This includes the following
+information:</p>
 <ul>
 <li>Label</li>
 <li>Image</li>
 <li>Novelty status</li>
 </ul>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_stimuli</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_stimuli.html">get_stimuli</a></span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_stimuli</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">stimuli</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_stimuli</span><span class="op">)</span></span></code></pre></div>
 <p>This function also takes dataset name and id filters.</p>
 </div>
 <div class="section level2">
 <h2 id="get-aoi-region-sets">Get AOI region sets<a class="anchor" aria-label="anchor" href="#get-aoi-region-sets"></a>
 </h2>
-<p>The <code><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets()</a></code> returning a table with the
+<p>The <code>aoi_region_sets</code> field holds a table with the
 information of the region of area of interest (AOI) for experiments
 using eye-trackers. It includes information of the dimensions of the x
 and y, such as the minimum and maximum dimension of the xy spaces.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_aoi_region_sets</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_region_sets.html">get_aoi_region_sets</a></span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_aoi_region_sets</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">aoi_region_sets</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_aoi_region_sets</span><span class="op">)</span></span></code></pre></div>
 <p>This function is not expected to be used commonly - this information
 is retained as part of the process of calculating AOIs from XY
@@ -207,27 +239,55 @@ points.</p>
 <div class="section level2">
 <h2 id="get-aoi-timepoints">Get AOI timepoints<a class="anchor" aria-label="anchor" href="#get-aoi-timepoints"></a>
 </h2>
-<p>The <code><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints()</a></code> function returns a table with
-information of the subject’s looking behavior in each trial. For
-example, you can get information about which area that the subject was
-looking at in a particular trial (e.g., looking away or target or
-distractor).</p>
+<p>The <code>aoi_timepoints</code> field holds a table with information
+of the subject’s looking behavior in each trial. For example, you can
+get information about which area that the subject was looking at in a
+particular trial (e.g., looking away or target or distractor).</p>
+<p>Narrow it with <code>pb$subset$aoi_timepoints()</code>, which takes
+<code>dplyr</code> expressions that run on the server. As everywhere in
+<code>pb$subset</code>, an expression can name any column of the table
+or of anything a row of it belongs to. A timepoint belongs to an
+administration — with its dataset and subject
+(<code>dataset_name == "pomper_saffran_2016"</code>,
+<code>age &lt; 24</code>, <code>sex == "female"</code>) — and to a
+trial, with its trial type and its two stimuli
+(<code>vanilla_trial</code>, <code>!excluded</code>,
+<code>target_stimulus_novelty == "familiar"</code>). These are
+expressions rather than named arguments, so <code>==</code> and not
+<code>=</code>.</p>
 <p>The <code>t_norm</code> field provides a trial-normalized time
 variable (milliseconds) whose 0 point is the point of disambiguation on
 that trial (first timestep of the onset of the first time the target
 label is said).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_aoi_timepoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_aoi_timepoints.html">get_aoi_timepoints</a></span><span class="op">(</span>dataset_name <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span>, connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_aoi_timepoints</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_aoi_timepoints</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="get-xy-timepoints">Get XY timepoints<a class="anchor" aria-label="anchor" href="#get-xy-timepoints"></a>
 </h2>
 <p>For experiments using eye-trackers (as opposed to hand coding from
-video), the <code>get_xy_timepoints</code> function returns a table
-including the x and y position across time.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_xy_timepoints</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/get_xy_timepoints.html">get_xy_timepoints</a></span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span></code></pre></div>
+video), the <code>xy_timepoints</code> field holds a table including the
+x and y position across time.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">d_xy_timepoints</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">xy_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"reflook_v4"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="query-without-downloading">Query without downloading<a class="anchor" aria-label="anchor" href="#query-without-downloading"></a>
+</h2>
+<p><code>pb$db</code> holds a <a href="https://dbplyr.tidyverse.org/" class="external-link">dbplyr</a> handle on each table.
+<code>dplyr</code> verbs on these compile to SQL and run on the server,
+and nothing is transferred until you <code>collect()</code>. The handles
+carry the same columns as the fields above, so a summary over a
+timepoint table costs you four rows rather than 36 million.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">db</span><span class="op">$</span><span class="va">aoi_timepoints</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">count</span><span class="op">(</span><span class="va">aoi</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<span>  <span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><code>pb$db</code> also holds <code>aoi_timepoints_rle</code>, the
+run-length encoded form the <code>aoi_timepoints</code> field expands
+locally: one row per run of a constant AOI, with <code>length</code> the
+number of 25 ms samples in the run.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

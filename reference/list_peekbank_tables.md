@@ -1,6 +1,8 @@
 # List of peekbank tables
 
-List of peekbank tables
+Superseded. Use `pb$tables` on a
+[`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
+client.
 
 ## Usage
 
