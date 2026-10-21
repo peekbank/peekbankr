@@ -111,7 +111,7 @@ PeekbankClient <- R6Class(
     #'   target and distractor stimuli (prefixed `target_` and `distractor_`)
     #'   and its AOI region set; a timepoint's administration and trial. The
     #'   result has the table's own columns either way. For the timepoint
-    #'   tables the predicates run on the server to reduce transfer size..
+    #'   tables the predicates run on the server to reduce transfer size.
     subset = function(value) {
       private$assert_readonly(missing(value), "subset")
       if (is.null(private$subset_env)) {
@@ -203,19 +203,22 @@ PeekbankClient <- R6Class(
       fetch_table(private$con, "stimuli")
     },
 
-    #' @field aoi_region_sets The AOI region sets table, with `dataset_name` joined on
+    #' @field aoi_region_sets The AOI region sets table
     aoi_region_sets = function(value) {
       private$assert_readonly(missing(value), "aoi_region_sets")
       fetch_table(private$con, "aoi_region_sets")
     },
 
-    #' @field aoi_timepoints Every AOI timepoint in the release, with `dataset_name` joined on
+    #' @field aoi_timepoints Every AOI timepoint in the release: 36 million
+    #'   rows, a little over half a gigabyte once expanded. It transfers
+    #'   run-length encoded and is expanded locally.
+    #'   `pb$subset$aoi_timepoints()` filters on the server instead.
     aoi_timepoints = function(value) {
       private$assert_readonly(missing(value), "aoi_timepoints")
       private$timepoints("aoi_timepoints_rle", list())
     },
 
-    #' @field xy_timepoints Every XY timepoint in the release, with `dataset_name` joined on
+    #' @field xy_timepoints Every XY timepoint in the release: 10 million rows
     xy_timepoints = function(value) {
       private$assert_readonly(missing(value), "xy_timepoints")
       private$timepoints("xy_timepoints", list())

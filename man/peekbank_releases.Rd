@@ -16,8 +16,7 @@ The releases \code{\link[=peekbank]{peekbank()}} can be pinned to, newest Redivi
 }
 \details{
 The \code{current} release is the one \code{peekbank("current")} resolves to: the
-most recently published Redivis version. That is not always the highest
-release number, because an older release is sometimes republished.
+most recently published Redivis version.
 }
 \examples{
 \dontrun{

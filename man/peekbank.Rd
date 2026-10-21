@@ -8,8 +8,7 @@ peekbank(version)
 }
 \arguments{
 \item{version}{A Peekbank release name such as "2025.1". Pass "current" to
-take whichever version was published most recently, which is not always
-the highest release number.}
+take whichever version was published most recently}
 }
 \value{
 A \link{PeekbankClient}
@@ -17,12 +16,6 @@ A \link{PeekbankClient}
 \description{
 Returns a client pinned to one Peekbank release. Every table read through it
 comes from that version, so an analysis cannot mix releases.
-}
-\details{
-The version has no default. Peekbank is re-released over time, and a script
-that does not name a release reads different data as those releases land,
-silently and without a diff. Naming one is the difference between an
-analysis that can be re-run and one that cannot.
 }
 \examples{
 \dontrun{

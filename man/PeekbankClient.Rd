@@ -12,11 +12,12 @@ Peekbank client
 A client pins one Peekbank release, so every table read through it comes
 from the same version of the data. Create one with \code{\link[=peekbank]{peekbank()}}.
 
-Every table is reachable three ways: \code{pb$administrations} for the whole
-table, fetched once per session and reused after that;
-\code{pb$subset$administrations()} to narrow it with \code{dplyr} predicates; and
-\code{pb$db$administrations} for a \code{dbplyr} handle that defers transfer
-until \code{dplyr::collect()}.
+Every table is reachable three ways:
+\itemize{
+\item \code{pb$administrations} for the whole table, fetched once per session and reused after that
+\item \code{pb$subset$administrations()} to narrow it with \code{dplyr} predicates
+\item \code{pb$db$administrations} for a \code{dbplyr} handle that defers transfer until \code{dplyr::collect()}.
+}
 }
 \examples{
 \dontrun{
@@ -44,14 +45,11 @@ administration's dataset and subject; a trial's trial type, with its
 target and distractor stimuli (prefixed \code{target_} and \code{distractor_})
 and its AOI region set; a timepoint's administration and trial. The
 result has the table's own columns either way. For the timepoint
-tables the predicates run on the server, so only the rows you asked
-for are transferred; the rest are narrowed from the cached table.}
+tables the predicates run on the server to reduce transfer size.}
 
 \item{\code{db}}{\code{dbplyr} handles on this release's tables, one field each.
-They carry the same columns as the fields above, but nothing is
-transferred until \code{dplyr::collect()}. \code{aoi_timepoints_rle} is here
-too, one row per run of a constant AOI, for anyone who wants the
-stored shape rather than the samples it expands to.}
+They carry the same columns as the fields above, but they are lazy queries,
+so nothing is transferred until \code{dplyr::collect()}.}
 
 \item{\code{datasets}}{The datasets table}
 
