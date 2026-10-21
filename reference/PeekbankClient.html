@@ -9,7 +9,7 @@ Peekbank client"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,12 +45,10 @@ Peekbank client"></head><body>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A client pins one Peekbank release, so every table read through it comes
 from the same version of the data. Create one with <code><a href="peekbank.html">peekbank()</a></code>.</p>
-<p>Every table is reachable three ways: <code>pb$administrations</code> for the whole
-table, fetched once per session and reused after that;
-<code>pb$subset$administrations()</code> to narrow it with <code>dplyr</code> predicates; and
-<code>pb$db$administrations</code> for a <code>dbplyr</code> handle that defers transfer
-until <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">dplyr::collect()</a></code>.</p>
-    </div>
+<p>Every table is reachable three ways:</p><ul><li><p><code>pb$administrations</code> for the whole table, fetched once per session and reused after that</p></li>
+<li><p><code>pb$subset$administrations()</code> to narrow it with <code>dplyr</code> predicates</p></li>
+<li><p><code>pb$db$administrations</code> for a <code>dbplyr</code> handle that defers transfer until <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">dplyr::collect()</a></code>.</p></li>
+</ul></div>
     <div class="section level2">
     <h2 id="active-bindings">Active bindings<a class="anchor" aria-label="anchor" href="#active-bindings"></a></h2>
     <p></p><div class="r6-active-bindings"><dl><dt><code>release</code></dt>
@@ -73,16 +71,13 @@ administration's dataset and subject; a trial's trial type, with its
 target and distractor stimuli (prefixed <code>target_</code> and <code>distractor_</code>)
 and its AOI region set; a timepoint's administration and trial. The
 result has the table's own columns either way. For the timepoint
-tables the predicates run on the server, so only the rows you asked
-for are transferred; the rest are narrowed from the cached table.</p></dd>
+tables the predicates run on the server to reduce transfer size.</p></dd>
 
 
 <dt><code>db</code></dt>
 <dd><p><code>dbplyr</code> handles on this release's tables, one field each.
-They carry the same columns as the fields above, but nothing is
-transferred until <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">dplyr::collect()</a></code>. <code>aoi_timepoints_rle</code> is here
-too, one row per run of a constant AOI, for anyone who wants the
-stored shape rather than the samples it expands to.</p></dd>
+They carry the same columns as the fields above, but they are lazy queries,
+so nothing is transferred until <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">dplyr::collect()</a></code>.</p></dd>
 
 
 <dt><code>datasets</code></dt>

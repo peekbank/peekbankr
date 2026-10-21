@@ -18,8 +18,7 @@ A tibble of one row per release, with the Peekbank `release` name, the
 ## Details
 
 The `current` release is the one `peekbank("current")` resolves to: the
-most recently published Redivis version. That is not always the highest
-release number, because an older release is sometimes republished.
+most recently published Redivis version.
 
 ## Examples
 

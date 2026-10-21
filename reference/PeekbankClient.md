@@ -10,11 +10,16 @@ A client pins one Peekbank release, so every table read through it comes
 from the same version of the data. Create one with
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md).
 
-Every table is reachable three ways: `pb$administrations` for the whole
-table, fetched once per session and reused after that;
-`pb$subset$administrations()` to narrow it with `dplyr` predicates; and
-`pb$db$administrations` for a `dbplyr` handle that defers transfer until
-[`dplyr::collect()`](https://dplyr.tidyverse.org/reference/compute.html).
+Every table is reachable three ways:
+
+- `pb$administrations` for the whole table, fetched once per session and
+  reused after that
+
+- `pb$subset$administrations()` to narrow it with `dplyr` predicates
+
+- `pb$db$administrations` for a `dbplyr` handle that defers transfer
+  until
+  [`dplyr::collect()`](https://dplyr.tidyverse.org/reference/compute.html).
 
 ## Active bindings
 
@@ -39,17 +44,14 @@ table, fetched once per session and reused after that;
   target and distractor stimuli (prefixed `target_` and `distractor_`)
   and its AOI region set; a timepoint's administration and trial. The
   result has the table's own columns either way. For the timepoint
-  tables the predicates run on the server, so only the rows you asked
-  for are transferred; the rest are narrowed from the cached table.
+  tables the predicates run on the server to reduce transfer size.
 
 - `db`:
 
   `dbplyr` handles on this release's tables, one field each. They carry
-  the same columns as the fields above, but nothing is transferred until
+  the same columns as the fields above, but they are lazy queries, so
+  nothing is transferred until
   [`dplyr::collect()`](https://dplyr.tidyverse.org/reference/compute.html).
-  `aoi_timepoints_rle` is here too, one row per run of a constant AOI,
-  for anyone who wants the stored shape rather than the samples it
-  expands to.
 
 - `datasets`:
 
