@@ -19,7 +19,8 @@ remotes::install_github("peekbank/peekbankr")
 
 The first data request will open a browser window to authorize Redivis
 access (free account). For non-interactive use, set a
-`REDIVIS_API_TOKEN` environment variable instead.
+`REDIVIS_API_TOKEN` environment variable instead. That token needs the
+`data.metadata` scope.
 
 ### Usage
 
