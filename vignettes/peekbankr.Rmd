@@ -46,8 +46,9 @@ locally, these run on the server.
 **Technical note 3**: We have tried to optimize the time it takes to get data from the database (the AOI timepoints transfer run-length-encoded and are expanded locally). But if you query entire timepoint tables, it will still take a while, as you are transferring 100s of MB of data.
   
 ```{r, warning=FALSE, message=FALSE, purl=FALSE}
-# load the library
+# load the libraries
 library(peekbankr)
+library(dplyr)
 
 # pin a database version for all the calls below
 pb <- peekbank("2026.1")
