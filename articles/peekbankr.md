@@ -47,8 +47,9 @@ will still take a while, as you are transferring 100s of MB of data.
 
 ``` r
 
-# load the library
+# load the libraries
 library(peekbankr)
+library(dplyr)
 
 # pin a database version for all the calls below
 pb <- peekbank("2026.1")
@@ -250,9 +251,10 @@ d_xy_timepoints <- pb$subset$xy_timepoints(dataset_name == "reflook_v4")
 
 `pb$db` holds a [dbplyr](https://dbplyr.tidyverse.org/) handle on each
 table. `dplyr` verbs on these compile to SQL and run on the server, and
-nothing is transferred until you `collect()`. The handles carry the same
-columns as the fields above, so a summary over a timepoint table costs
-you four rows rather than 36 million.
+nothing is transferred until you
+[`collect()`](https://dplyr.tidyverse.org/reference/compute.html). The
+handles carry the same columns as the fields above, so a summary over a
+timepoint table costs you four rows rather than 36 million.
 
 ``` r
 

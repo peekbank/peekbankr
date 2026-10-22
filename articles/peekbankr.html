@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -103,8 +103,9 @@ run-length-encoded and are expanded locally). But if you query entire
 timepoint tables, it will still take a while, as you are transferring
 100s of MB of data.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load the library</span></span>
+<code class="sourceCode R"><span><span class="co"># load the libraries</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/peekbank/peekbankr" class="external-link">peekbankr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># pin a database version for all the calls below</span></span>
 <span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/peekbank.html">peekbank</a></span><span class="op">(</span><span class="st">"2026.1"</span><span class="op">)</span></span></code></pre></div>
@@ -148,9 +149,9 @@ column in a table into a nested column of the fields it holds:</p>
 to lift the fields out of the nested column, once to expand whichever
 field you want:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpack_aux_data.html">unpack_aux_data</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">subject_aux_data</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
+<code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpack_aux_data.html">unpack_aux_data</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">subject_aux_data</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span></span></code></pre></div>
 <p>Predicates can reach the column before it is unpacked, but only as
 text, since the server sees a JSON string:</p>
@@ -277,13 +278,13 @@ x and y position across time.</p>
 </h2>
 <p><code>pb$db</code> holds a <a href="https://dbplyr.tidyverse.org/" class="external-link">dbplyr</a> handle on each table.
 <code>dplyr</code> verbs on these compile to SQL and run on the server,
-and nothing is transferred until you <code>collect()</code>. The handles
+and nothing is transferred until you <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect()</a></code>. The handles
 carry the same columns as the fields above, so a summary over a
 timepoint table costs you four rows rather than 36 million.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">db</span><span class="op">$</span><span class="va">aoi_timepoints</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu">count</span><span class="op">(</span><span class="va">aoi</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
-<span>  <span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">db</span><span class="op">$</span><span class="va">aoi_timepoints</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">aoi</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><code>pb$db</code> also holds <code>aoi_timepoints_rle</code>, the
 run-length encoded form the <code>aoi_timepoints</code> field expands
 locally: one row per run of a constant AOI, with <code>length</code> the
