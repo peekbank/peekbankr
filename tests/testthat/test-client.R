@@ -3,7 +3,7 @@ test_that("every table is a field, a subset function and a db handle", {
               "trial_types", "stimuli", "aoi_region_sets", "aoi_timepoints",
               "xy_timepoints")
   expect_true(all(tables %in% names(PeekbankClient$active)))
-  expect_true(all(c("query", "download_stimuli", "readmes", "clear_cache") %in%
+  expect_true(all(c("query", "images", "readmes", "clear_cache") %in%
                     names(PeekbankClient$public_methods)))
   # tables are fields, not methods, so neither spelling can shadow the other
   expect_false(any(tables %in% names(PeekbankClient$public_methods)))
@@ -422,14 +422,10 @@ test_that("a predicate that does not translate says how to fix it", {
   pb <- suppressMessages(peekbank("2026.1"))
   one <- pb$administrations$administration_id[[1]]
   msg <- tryCatch(
-    pb$subset$aoi_timepoints(administration_id == one, trial_order %% 2 == 0),
+    pb$subset$aoi_timepoints(administration_id == one, not_a_function(aoi)),
     error = conditionMessage)
-  # BigQuery's own complaint, then the R-side cause
-  expect_match(msg, "MOD", fixed = TRUE)
+  # BigQuery's own complaint, then the R-side cause and where to look
+  expect_match(msg, "not_a_function", fixed = TRUE)
   expect_match(msg, "translated to SQL", fixed = TRUE)
-  expect_match(msg, "2L", fixed = TRUE)
-  # the integer literal it points at works
-  expect_s3_class(
-    pb$subset$aoi_timepoints(administration_id == one, trial_order %% 2L == 0L),
-    "data.frame")
+  expect_match(msg, "docs.redivis.com", fixed = TRUE)
 })

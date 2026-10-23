@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing and Working with Peekbank Data
-Version: 0.5.2
+Version: 0.5.3
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
@@ -28,7 +28,7 @@ Imports:
     rlang (>= 0.4.10),
     tidyr (>= 1.1.2),
     stringr (>= 1.5.1),
-    redivis (>= 0.6.0)
+    redivis (>= 0.13.0)
 Suggests:
     testthat (>= 3.0.0),
     tibble,

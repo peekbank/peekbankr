@@ -25,7 +25,7 @@ If empty (default), downloads stimuli for all datasets.}
 Returns the stimulus df with an additional column for the paths of the downloaded stimuli
 }
 \description{
-Superseded. Use \code{pb$download_stimuli()} on a \code{\link[=peekbank]{peekbank()}} client.
+Superseded. Use \code{pb$images()} on a \code{\link[=peekbank]{peekbank()}} client.
 
 This function downloads stimulus images for selected Peekbank datasets from
 Redivis. It retrieves stimulus metadata from a

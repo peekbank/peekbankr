@@ -82,7 +82,7 @@ run-length encoded and is expanded locally.
 \itemize{
 \item \href{#method-PeekbankClient-new}{\code{PeekbankClient$new()}}
 \item \href{#method-PeekbankClient-query}{\code{PeekbankClient$query()}}
-\item \href{#method-PeekbankClient-download_stimuli}{\code{PeekbankClient$download_stimuli()}}
+\item \href{#method-PeekbankClient-images}{\code{PeekbankClient$images()}}
 \item \href{#method-PeekbankClient-readmes}{\code{PeekbankClient$readmes()}}
 \item \href{#method-PeekbankClient-clear_cache}{\code{PeekbankClient$clear_cache()}}
 \item \href{#method-PeekbankClient-print}{\code{PeekbankClient$print()}}
@@ -125,14 +125,14 @@ Run a BigQuery Standard SQL query against this release
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-PeekbankClient-download_stimuli"></a>}}
-\if{latex}{\out{\hypertarget{method-PeekbankClient-download_stimuli}{}}}
-\subsection{Method \code{download_stimuli()}}{
-Download stimulus images for this release's stimuli
+\if{html}{\out{<a id="method-PeekbankClient-images"></a>}}
+\if{latex}{\out{\hypertarget{method-PeekbankClient-images}{}}}
+\subsection{Method \code{images()}}{
+Download the stimulus images of this release's stimuli
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$download_stimuli(
-  local_base_dir = "stimulus_data",
+\if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$images(
   datasets = c(),
+  dir = "stimulus_data",
   skip_existing = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -140,22 +140,27 @@ Download stimulus images for this release's stimuli
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{local_base_dir}}{Directory to save the images to}
-
 \item{\code{datasets}}{Dataset names to download for; all datasets if empty}
 
-\item{\code{skip_existing}}{Skip a file that already exists locally at that path}
+\item{\code{dir}}{Directory to save the images to}
+
+\item{\code{skip_existing}}{Skip an image that already exists locally with the
+same size}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The stimuli that have an image, with \code{local_image_path} added
+(\code{NA} where a download failed)
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-PeekbankClient-readmes"></a>}}
 \if{latex}{\out{\hypertarget{method-PeekbankClient-readmes}{}}}
 \subsection{Method \code{readmes()}}{
-Download dataset README files.
+Download the README of each of this release's datasets
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$readmes(datasets = c(), local_base_dir = "dataset_readmes")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$readmes(datasets = c(), dir = "dataset_readmes")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -163,9 +168,14 @@ Download dataset README files.
 \describe{
 \item{\code{datasets}}{Dataset names to download for; all datasets if empty}
 
-\item{\code{local_base_dir}}{Directory to save the READMEs to}
+\item{\code{dir}}{Directory to save the READMEs to, as \verb{<dataset_name>.md}}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+The datasets table with the README's local path in
+\code{local_readme_path} and its text in \code{readme} (\code{NA} where a download
+failed)
 }
 }
 \if{html}{\out{<hr>}}

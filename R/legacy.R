@@ -421,7 +421,7 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 #' Download stimulus images for the Peekbank repository
 #'
 #' @description
-#' Superseded. Use `pb$download_stimuli()` on a [peekbank()] client.
+#' Superseded. Use `pb$images()` on a [peekbank()] client.
 #'
 #' This function downloads stimulus images for selected Peekbank datasets from
 #' Redivis. It retrieves stimulus metadata from a
@@ -452,8 +452,9 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 #' @export
 download_stimuli <- function(con, local_base_dir = "stimulus_data",
                              datasets = c(), skip_existing = TRUE) {
-  fetch_stimulus_images(con, local_base_dir = local_base_dir,
-                        datasets = datasets, skip_existing = skip_existing)
+  fetch_stimulus_images(con, datasets = datasets, dir = local_base_dir,
+                        skip_existing = skip_existing) %>%
+    dplyr::rename(local_stimulus_path = "local_image_path")
 }
 
 #' Download dataset README files
@@ -478,7 +479,8 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data",
 #' }
 get_readmes <- function(datasets = c(),
                         local_base_dir = "dataset_readmes") {
-  fetch_readmes(datasets = datasets, local_base_dir = local_base_dir)
+  download_readmes(if (length(datasets) > 0) datasets, local_base_dir)
+  invisible(NULL)
 }
 
 #' Get information on database connection options

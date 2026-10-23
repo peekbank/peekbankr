@@ -40,21 +40,27 @@ PeekbankClient <- R6Class(
     #' @param sql A valid SQL query string
     query = function(sql) pb_query(private$con, sql),
 
-    #' @description Download stimulus images for this release's stimuli
-    #' @param local_base_dir Directory to save the images to
+    #' @description Download the stimulus images of this release's stimuli
     #' @param datasets Dataset names to download for; all datasets if empty
-    #' @param skip_existing Skip a file that already exists locally at that path
-    download_stimuli = function(local_base_dir = "stimulus_data",
-                                datasets = c(), skip_existing = TRUE) {
-      fetch_stimulus_images(private$con, local_base_dir = local_base_dir,
-                            datasets = datasets, skip_existing = skip_existing)
+    #' @param dir Directory to save the images to
+    #' @param skip_existing Skip an image that already exists locally with the
+    #'   same size
+    #' @return The stimuli that have an image, with `local_image_path` added
+    #'   (`NA` where a download failed)
+    images = function(datasets = c(), dir = "stimulus_data",
+                      skip_existing = TRUE) {
+      fetch_stimulus_images(private$con, datasets = datasets, dir = dir,
+                            skip_existing = skip_existing)
     },
 
-    #' @description Download dataset README files.
+    #' @description Download the README of each of this release's datasets
     #' @param datasets Dataset names to download for; all datasets if empty
-    #' @param local_base_dir Directory to save the READMEs to
-    readmes = function(datasets = c(), local_base_dir = "dataset_readmes") {
-      fetch_readmes(datasets = datasets, local_base_dir = local_base_dir)
+    #' @param dir Directory to save the READMEs to, as `<dataset_name>.md`
+    #' @return The datasets table with the README's local path in
+    #'   `local_readme_path` and its text in `readme` (`NA` where a download
+    #'   failed)
+    readmes = function(datasets = c(), dir = "dataset_readmes") {
+      fetch_readmes(private$con, datasets = datasets, dir = dir)
     },
 
     #' @description Drop this version's (instance's) cached tables and query results, so the
@@ -303,9 +309,10 @@ PeekbankClient <- R6Class(
       rows <- if (length(dots) == 0) pb_query(private$con, sql) else
         tryCatch(pb_query(private$con, sql), error = function(e) {
           stop(conditionMessage(e), "\n  Predicates on ", public_name,
-               " are translated to SQL. Write whole numbers\n  as 2L, use !! ",
-               "for values computed in R, and grepl() rather than\n  ",
-               "startsWith().", call. = FALSE)
+               " are translated to SQL. Use !! for values computed by a\n  ",
+               "function in R. The functions that translate are listed at\n  ",
+               "https://docs.redivis.com/api/client-libraries/redivis-r/",
+               "reference/redivis/redivisusdconnect_dbi", call. = FALSE)
         })
 
       if (is.null(rows)) return(NULL)
