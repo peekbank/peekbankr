@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,7 +114,7 @@
 <span><span class="co">#&gt; &lt;peekbank&gt; release 2026.1 (Redivis version v1.4)</span></span>
 <span><span class="co">#&gt;   tables:  datasets subjects administrations trials trial_types stimuli</span></span>
 <span><span class="co">#&gt;            aoi_region_sets aoi_timepoints xy_timepoints</span></span>
-<span><span class="co">#&gt;   methods: clear_cache() download_stimuli() query() readmes()</span></span>
+<span><span class="co">#&gt;   methods: clear_cache() images() query() readmes()</span></span>
 <span><span class="co">#&gt;   subset:  $subset$&lt;table&gt;(&lt;dplyr predicates&gt;)</span></span>
 <span><span class="co">#&gt;   db:      $db$&lt;table&gt; for a dbplyr handle, read on collect()</span></span></code></pre></div>
 </div>
@@ -132,8 +132,8 @@
 </h3>
 <p>Raw data, processed intermediates, and per-dataset READMEs live in the companion <a href="https://redivis.com/datapages/datasets/peekbank_files" class="external-link">peekbank_files dataset</a>:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="fu">readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span>       <span class="co"># dataset documentation</span></span>
-<span><span class="va">stimuli</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">download_stimuli</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"reflook_v4"</span><span class="op">)</span>  <span class="co"># stimulus images</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">readmes</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span>  <span class="co"># dataset documentation</span></span>
+<span><span class="va">stimuli</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">images</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"reflook_v4"</span><span class="op">)</span>             <span class="co"># stimulus images</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>

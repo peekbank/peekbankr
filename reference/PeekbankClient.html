@@ -9,7 +9,7 @@ Peekbank client"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -132,7 +132,7 @@ run-length encoded and is expanded locally.
 
 <ul><li><p><a href="#method-PeekbankClient-new"><code>PeekbankClient$new()</code></a></p></li>
 <li><p><a href="#method-PeekbankClient-query"><code>PeekbankClient$query()</code></a></p></li>
-<li><p><a href="#method-PeekbankClient-download_stimuli"><code>PeekbankClient$download_stimuli()</code></a></p></li>
+<li><p><a href="#method-PeekbankClient-images"><code>PeekbankClient$images()</code></a></p></li>
 <li><p><a href="#method-PeekbankClient-readmes"><code>PeekbankClient$readmes()</code></a></p></li>
 <li><p><a href="#method-PeekbankClient-clear_cache"><code>PeekbankClient$clear_cache()</code></a></p></li>
 <li><p><a href="#method-PeekbankClient-print"><code>PeekbankClient$print()</code></a></p></li>
@@ -170,39 +170,45 @@ for whichever was published most recently. Required: see
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-PeekbankClient-download_stimuli"></a><div class="section">
-<h3 id="method-download-stimuli-">Method <code><a href="download_stimuli.html">download_stimuli()</a></code><a class="anchor" aria-label="anchor" href="#method-download-stimuli-"></a></h3>
-<p>Download stimulus images for this release's stimuli</p><div class="section">
+</div><p></p><hr><a id="method-PeekbankClient-images"></a><div class="section">
+<h3 id="method-images-">Method <code>images()</code><a class="anchor" aria-label="anchor" href="#method-images-"></a></h3>
+<p>Download the stimulus images of this release's stimuli</p><div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">PeekbankClient</span><span class="op">$</span><span class="fu">download_stimuli</span><span class="op">(</span></span>
-<span>  local_base_dir <span class="op">=</span> <span class="st">"stimulus_data"</span>,</span>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">PeekbankClient</span><span class="op">$</span><span class="fu">images</span><span class="op">(</span></span>
 <span>  datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  dir <span class="op">=</span> <span class="st">"stimulus_data"</span>,</span>
 <span>  skip_existing <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>local_base_dir</code></dt>
-<dd><p>Directory to save the images to</p></dd>
-
-
-<dt><code>datasets</code></dt>
+<p></p><div class="arguments"><dl><dt><code>datasets</code></dt>
 <dd><p>Dataset names to download for; all datasets if empty</p></dd>
 
 
+<dt><code>dir</code></dt>
+<dd><p>Directory to save the images to</p></dd>
+
+
 <dt><code>skip_existing</code></dt>
-<dd><p>Skip a file that already exists locally at that path</p></dd>
+<dd><p>Skip an image that already exists locally with the
+same size</p></dd>
 
 
 </dl><p></p></div>
 </div>
+<div class="section">
+<h4 id="returns">Returns<a class="anchor" aria-label="anchor" href="#returns"></a></h4>
+<p>The stimuli that have an image, with <code>local_image_path</code> added
+(<code>NA</code> where a download failed)</p>
+</div>
 
 </div><p></p><hr><a id="method-PeekbankClient-readmes"></a><div class="section">
 <h3 id="method-readmes-">Method <code>readmes()</code><a class="anchor" aria-label="anchor" href="#method-readmes-"></a></h3>
-<p>Download dataset README files.</p><div class="section">
+<p>Download the README of each of this release's datasets</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">PeekbankClient</span><span class="op">$</span><span class="fu">readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>, local_base_dir <span class="op">=</span> <span class="st">"dataset_readmes"</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">PeekbankClient</span><span class="op">$</span><span class="fu">readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>, dir <span class="op">=</span> <span class="st">"dataset_readmes"</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -211,11 +217,17 @@ for whichever was published most recently. Required: see
 <dd><p>Dataset names to download for; all datasets if empty</p></dd>
 
 
-<dt><code>local_base_dir</code></dt>
-<dd><p>Directory to save the READMEs to</p></dd>
+<dt><code>dir</code></dt>
+<dd><p>Directory to save the READMEs to, as <code>&lt;dataset_name&gt;.md</code></p></dd>
 
 
 </dl><p></p></div>
+</div>
+<div class="section">
+<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<p>The datasets table with the README's local path in
+<code>local_readme_path</code> and its text in <code>readme</code> (<code>NA</code> where a download
+failed)</p>
 </div>
 
 </div><p></p><hr><a id="method-PeekbankClient-clear_cache"></a><div class="section">

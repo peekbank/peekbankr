@@ -124,7 +124,7 @@ pb
 #> <peekbank> release 2026.1 (Redivis version v1.4)
 #>   tables:  datasets subjects administrations trials trial_types stimuli
 #>            aoi_region_sets aoi_timepoints xy_timepoints
-#>   methods: clear_cache() download_stimuli() query() readmes()
+#>   methods: clear_cache() images() query() readmes()
 #>   subset:  $subset$<table>(<dplyr predicates>)
 #>   db:      $db$<table> for a dbplyr handle, read on collect()
 ```
@@ -155,8 +155,8 @@ dataset](https://redivis.com/datapages/datasets/peekbank_files):
 
 ``` r
 
-pb$readmes(datasets = "pomper_saffran_2016")       # dataset documentation
-stimuli <- pb$download_stimuli(datasets = "reflook_v4")  # stimulus images
+readmes <- pb$readmes(datasets = "pomper_saffran_2016")  # dataset documentation
+stimuli <- pb$images(datasets = "reflook_v4")             # stimulus images
 ```
 
 ### Development

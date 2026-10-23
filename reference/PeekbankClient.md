@@ -101,7 +101,7 @@ Every table is reachable three ways:
 
 - [`PeekbankClient$query()`](#method-PeekbankClient-query)
 
-- [`PeekbankClient$download_stimuli()`](#method-PeekbankClient-download_stimuli)
+- [`PeekbankClient$images()`](#method-PeekbankClient-images)
 
 - [`PeekbankClient$readmes()`](#method-PeekbankClient-readmes)
 
@@ -145,41 +145,46 @@ Run a BigQuery Standard SQL query against this release
 
 ------------------------------------------------------------------------
 
-### Method [`download_stimuli()`](https://peekbank.github.io/peekbankr/reference/download_stimuli.md)
+### Method `images()`
 
-Download stimulus images for this release's stimuli
+Download the stimulus images of this release's stimuli
 
 #### Usage
 
-    PeekbankClient$download_stimuli(
-      local_base_dir = "stimulus_data",
+    PeekbankClient$images(
       datasets = c(),
+      dir = "stimulus_data",
       skip_existing = TRUE
     )
 
 #### Arguments
 
-- `local_base_dir`:
-
-  Directory to save the images to
-
 - `datasets`:
 
   Dataset names to download for; all datasets if empty
 
+- `dir`:
+
+  Directory to save the images to
+
 - `skip_existing`:
 
-  Skip a file that already exists locally at that path
+  Skip an image that already exists locally with the same size
+
+#### Returns
+
+The stimuli that have an image, with `local_image_path` added (`NA`
+where a download failed)
 
 ------------------------------------------------------------------------
 
 ### Method `readmes()`
 
-Download dataset README files.
+Download the README of each of this release's datasets
 
 #### Usage
 
-    PeekbankClient$readmes(datasets = c(), local_base_dir = "dataset_readmes")
+    PeekbankClient$readmes(datasets = c(), dir = "dataset_readmes")
 
 #### Arguments
 
@@ -187,9 +192,14 @@ Download dataset README files.
 
   Dataset names to download for; all datasets if empty
 
-- `local_base_dir`:
+- `dir`:
 
-  Directory to save the READMEs to
+  Directory to save the READMEs to, as `<dataset_name>.md`
+
+#### Returns
+
+The datasets table with the README's local path in `local_readme_path`
+and its text in `readme` (`NA` where a download failed)
 
 ------------------------------------------------------------------------
 
