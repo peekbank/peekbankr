@@ -150,7 +150,8 @@ test_that("predicates reach the trial a timepoint belongs to", {
   sql <- captured_sql(pb$subset$aoi_timepoints(
     !excluded, vanilla_trial, target_stimulus_novelty == "familiar",
     distractor_english_stimulus_label != "dog"))
-  expect_match(sql, "NOT(`excluded`)", fixed = TRUE)
+  # newer dbplyr qualifies the column with the subquery alias
+  expect_match(sql, "NOT\\((`[^`]+`\\.)?`excluded`\\)")
   expect_match(sql, "'familiar'", fixed = TRUE)
   expect_match(sql, "`distractor_english_stimulus_label`", fixed = TRUE)
   # a column none of those tables has is an error
