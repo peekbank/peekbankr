@@ -86,30 +86,28 @@ head(d_subjects)
 ## Auxiliary data
 
 Several tables carry a `*_aux_data` column holding whatever a lab
-recorded that the schema has no place for. It arrives as a JSON string,
-so it is not much use until you unpack it.
-[`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
-turns every `*_aux_data` column in a table into a nested column of the
-fields it holds:
+recorded that the schema has no place for, as a JSON string. In practice
+that is mostly `subjects`, with the keys `cdi_responses`,
+`lang_measures`, `lang_exposures` and `native_language_non_iso`.
+[`unnest_aux()`](https://peekbank.github.io/peekbankr/reference/unnest_aux.md)
+turns one key into rows, one per entry, keeping the subject’s other
+columns:
 
 ``` r
 
-d_subjects_aux <- unpack_aux_data(pb$subjects)
-names(d_subjects_aux$subject_aux_data[[1]])
-#> "lang_exposures" "cdi_responses" "lang_measures" "native_language_non_iso"
+cdi <- unnest_aux(pb$subjects, "cdi_responses")
 ```
 
-From there
-[`tidyr::unnest()`](https://tidyr.tidyverse.org/reference/unnest.html)
-twice gets you to rows; once to lift the fields out of the nested
-column, once to expand whichever field you want:
+[`add_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/add_cdi_percentiles.md)
+adds where each score falls in the vocabulary norms, and
+[`add_cdi_proportions()`](https://peekbank.github.io/peekbankr/reference/add_cdi_proportions.md)
+the share of the form’s words:
 
 ``` r
 
-cdi <- unpack_aux_data(pb$subjects) %>%
-  tidyr::unnest(subject_aux_data) %>%
-  filter(!is.na(cdi_responses)) %>%
-  tidyr::unnest(cdi_responses)
+cdi <- unnest_aux(pb$subjects, "cdi_responses") %>%
+  add_cdi_percentiles() %>%
+  add_cdi_proportions()
 ```
 
 Predicates can reach the column before it is unpacked, but only as text,

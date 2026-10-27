@@ -1,9 +1,7 @@
 # Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.
 
-Populate the provided cdi data with percentile values for that specific
-age, instrument_type, measure and language. Loosely based on the work
-from this repo https://github.com/kachergis/cdi-percentiles/tree/main by
-George Kachergis and Jess Mankewitz with advice from Virginia Marchman.
+Superseded. Use
+[`add_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/add_cdi_percentiles.md).
 
 ## Usage
 

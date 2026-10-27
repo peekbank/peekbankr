@@ -189,21 +189,12 @@ Create a client pinned to one release, then read tables from it.
 
 Helpers for the shapes Peekbank data arrives in.
 
-- [`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
-  : Unpack the json sting in the \*\_aux_data column and turns it into a
-  nested R list
-- [`cleanup_cdi_data()`](https://peekbank.github.io/peekbankr/reference/cleanup_cdi_data.md)
-  : Checks cdi data for inconsistencies, warns about them, and fixes
-  them
-- [`populate_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/populate_cdi_percentiles.md)
-  : Populate the provided cdi data with percentile values for that
-  specific age, instrument_type, measure and language. Loosely based on
-  the work from this repo
-  https://github.com/kachergis/cdi-percentiles/tree/main by George
-  Kachergis and Jess Mankewitz with advice from Virginia Marchman.
-- [`append_relative_cdi_scores()`](https://peekbank.github.io/peekbankr/reference/append_relative_cdi_scores.md)
-  : Adds a relative cdi score indicating the percentage of total
-  achievable points the subject got on each given measure
+- [`unnest_aux()`](https://peekbank.github.io/peekbankr/reference/unnest_aux.md)
+  : Expand one key of a table's aux data into rows
+- [`add_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/add_cdi_percentiles.md)
+  : Add vocabulary norm percentiles to CDI scores
+- [`add_cdi_proportions()`](https://peekbank.github.io/peekbankr/reference/add_cdi_proportions.md)
+  : Add the relative share of a CDI form's words to CDI scores
 
 ## Preparing a dataset for import
 
@@ -244,9 +235,8 @@ Used by the import scripts in peekbank-data-import, not by analyses.
 
 ## Superseded
 
-The interface before the client. These still work and are not going
-away, but a client pins one release for a whole analysis, which these
-cannot.
+Earlier interfaces. These still work and are not going away, but the
+functions above replace them.
 
 - [`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
   : Connect to Peekbank
@@ -278,6 +268,21 @@ cannot.
   : Download stimulus images for the Peekbank repository
 - [`get_readmes()`](https://peekbank.github.io/peekbankr/reference/get_readmes.md)
   : Download dataset README files
+- [`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
+  : Unpack the json sting in the \*\_aux_data column and turns it into a
+  nested R list
+- [`cleanup_cdi_data()`](https://peekbank.github.io/peekbankr/reference/cleanup_cdi_data.md)
+  : Checks cdi data for inconsistencies, warns about them, and fixes
+  them
+- [`populate_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/populate_cdi_percentiles.md)
+  : Populate the provided cdi data with percentile values for that
+  specific age, instrument_type, measure and language. Loosely based on
+  the work from this repo
+  https://github.com/kachergis/cdi-percentiles/tree/main by George
+  Kachergis and Jess Mankewitz with advice from Virginia Marchman.
+- [`append_relative_cdi_scores()`](https://peekbank.github.io/peekbankr/reference/append_relative_cdi_scores.md)
+  : Adds a relative cdi score indicating the percentage of total
+  achievable points the subject got on each given measure
 
 # Articles
 

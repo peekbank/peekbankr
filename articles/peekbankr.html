@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.4</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
 
       <h1>Accessing Peekbank Data</h1>
             
-            <h4 data-toc-skip class="date">2026-10-23</h4>
+            <h4 data-toc-skip class="date">2026-10-27</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/peekbank/peekbankr/blob/master/vignettes/peekbankr.Rmd" class="external-link"><code>vignettes/peekbankr.Rmd</code></a></small>
       <div class="d-none name"><code>peekbankr.Rmd</code></div>
@@ -137,22 +137,21 @@ only sex and lab-specific subject id).</p>
 <h2 id="auxiliary-data">Auxiliary data<a class="anchor" aria-label="anchor" href="#auxiliary-data"></a>
 </h2>
 <p>Several tables carry a <code>*_aux_data</code> column holding
-whatever a lab recorded that the schema has no place for. It arrives as
-a JSON string, so it is not much use until you unpack it.
-<code><a href="../reference/unpack_aux_data.html">unpack_aux_data()</a></code> turns every <code>*_aux_data</code>
-column in a table into a nested column of the fields it holds:</p>
+whatever a lab recorded that the schema has no place for, as a JSON
+string. In practice that is mostly <code>subjects</code>, with the keys
+<code>cdi_responses</code>, <code>lang_measures</code>,
+<code>lang_exposures</code> and <code>native_language_non_iso</code>.
+<code><a href="../reference/unnest_aux.html">unnest_aux()</a></code> turns one key into rows, one per entry,
+keeping the subject’s other columns:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">d_subjects_aux</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpack_aux_data.html">unpack_aux_data</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">d_subjects_aux</span><span class="op">$</span><span class="va">subject_aux_data</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; "lang_exposures" "cdi_responses" "lang_measures" "native_language_non_iso"</span></span></code></pre></div>
-<p>From there <code><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">tidyr::unnest()</a></code> twice gets you to rows; once
-to lift the fields out of the nested column, once to expand whichever
-field you want:</p>
+<code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unnest_aux.html">unnest_aux</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span>, <span class="st">"cdi_responses"</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/add_cdi_percentiles.html">add_cdi_percentiles()</a></code> adds where each score falls in the
+vocabulary norms, and <code><a href="../reference/add_cdi_proportions.html">add_cdi_proportions()</a></code> the share of
+the form’s words:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unpack_aux_data.html">unpack_aux_data</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">subject_aux_data</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/unnest.html" class="external-link">unnest</a></span><span class="op">(</span><span class="va">cdi_responses</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unnest_aux.html">unnest_aux</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span>, <span class="st">"cdi_responses"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/add_cdi_percentiles.html">add_cdi_percentiles</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="../reference/add_cdi_proportions.html">add_cdi_proportions</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p>Predicates can reach the column before it is unpacked, but only as
 text, since the server sees a JSON string:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
