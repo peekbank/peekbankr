@@ -24,88 +24,50 @@ decode_rle_timepoints <- function(aoi_timepoints) {
 }
 
 
-#' Unpack the json sting in the *_aux_data column and turns
-#' it into a nested R list
+#' Expand one key of a table's aux data into rows
 #'
+#' Reads one key from the JSON in a table's `*_aux_data` column. A key holding
+#' a list of records, like `cdi_responses`, gives one row per record; a key
+#' holding a single value gives one row with that value in a column named
+#' after the key. Rows without the key are dropped. The table's other columns
+#' are kept.
 #'
-#' @param df a dataframe in the peekbank format that has an aux data column
+#' @param df A Peekbank table with a `*_aux_data` column, e.g. `pb$subjects`
+#' @param key The aux key to expand, e.g. `"cdi_responses"`
 #'
-#' @return the input dataframe, with the *_aux_data column unpacked
-#'
+#' @return A tibble with the table's columns, without the aux column, followed
+#'   by the fields of `key`
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' subjects_table <- unpack_aux_data(df = subjects_table)
+#' pb <- peekbank("2026.1")
+#' cdi <- unnest_aux(pb$subjects, "cdi_responses")
+#' exposures <- unnest_aux(pb$subjects, "lang_exposures")
 #' }
-unpack_aux_data <- function(df) {
-  aux_names <- colnames(df)[stringr::str_which(colnames(df), ".*_aux_data$")]
-  for (aux_name in aux_names) {
-    df <- unpack_one_aux(df, aux_name)
+unnest_aux <- function(df, key) {
+  aux_col <- grep("_aux_data$", names(df), value = TRUE)
+  if (length(aux_col) != 1) {
+    stop("`df` needs exactly one *_aux_data column", call. = FALSE)
   }
-  df
-}
+  table_cols <- dplyr::as_tibble(df)[setdiff(names(df), aux_col)]
 
-# one *_aux_data column, from json string to a nested column of its fields
-unpack_one_aux <- function(df, aux_name) {
-  aux_list <- df |>
-    dplyr::ungroup() |>
-    dplyr::pull(dplyr::all_of(aux_name)) |>
-    lapply(\(aux) {
-      if (is.null(aux) || is.na(aux)) {
-        return(aux)
-      }
-      jsonlite::fromJSON(aux)
-    })
-  if (all(is.na(aux_list))) {
-    return(df)
+  row_entries <- lapply(df[[aux_col]], function(aux_json) {
+    value <- if (is.na(aux_json)) NULL else jsonlite::fromJSON(aux_json)[[key]]
+    if (length(value) == 0) return(NULL)
+    if (is.list(value)) dplyr::as_tibble(value) else dplyr::tibble(!!key := value)
+  })
+  n_entries <- vapply(row_entries,
+                      function(entry) if (is.null(entry)) 0L else nrow(entry),
+                      integer(1))
+  aux_fields <- dplyr::bind_rows(row_entries)
+
+  name_clashes <- intersect(names(aux_fields), names(table_cols))
+  if (length(name_clashes) > 0) {
+    warning("Dropped aux fields that repeat a column of the table: ",
+            paste(name_clashes, collapse = ", "), call. = FALSE)
+    aux_fields <- aux_fields[setdiff(names(aux_fields), name_clashes)]
   }
-
-  col_names <- purrr::flatten(aux_list) |>
-    names() |>
-    unique()
-  col_names <- col_names[!is.na(col_names) & col_names != ""]
-
-  aux_cols <- lapply(col_names, \(col_name) {
-    sapply(aux_list, \(aux) {
-      # cursed way to make sure that there are no "NULL" strings left over
-      # from weird jsonlite::fromJSON behavior,
-      # check https://github.com/jeroen/jsonlite/issues/70 to see if there has been a fix by now
-      if (length(aux) == 1 &&
-          (is.na(aux) ||
-           is.null(aux[col_name]) ||
-           aux[col_name] == "NULL"
-          ) || (
-            all(is.na(aux)) ||
-            all(is.null(aux[col_name])) ||
-            all(aux[col_name] == "NULL")
-          )
-      ) {
-        return(NA)
-      }
-      aux[col_name]
-    })
-  }) |>
-    `names<-`(value = col_names) |>
-    dplyr::as_tibble() |>
-    dplyr::mutate(dplyr::across(dplyr::everything(), \(aux) {
-      if (any(sapply(aux, \(aux_val) {
-        typeof(aux_val) == "list"
-      }))) {
-        aux <- lapply(aux, \(aux_val) {
-          if (all(is.na(aux_val))) {
-            return(NA)
-          }
-          dplyr::bind_rows(aux_val)
-        })
-      }
-      if (all(sapply(aux, is.atomic))) {
-        aux <- purrr::list_simplify(aux, strict = FALSE) # May need a better fix for NAs
-      }
-      aux
-    }))
-  df |>
-    cbind(aux_cols) |>
-    dplyr::select(-dplyr::all_of(aux_name)) |>
-    tidyr::nest("{aux_name}" := dplyr::all_of(colnames(aux_cols)))
+  # a row that produced no entries gets zero copies, so it drops out
+  dplyr::bind_cols(tidyr::uncount(table_cols, .env$n_entries), aux_fields)
 }

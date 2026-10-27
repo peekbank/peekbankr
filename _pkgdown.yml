@@ -17,10 +17,9 @@ reference:
     desc: >
       Helpers for the shapes Peekbank data arrives in.
     contents:
-      - unpack_aux_data
-      - cleanup_cdi_data
-      - populate_cdi_percentiles
-      - append_relative_cdi_scores
+      - unnest_aux
+      - add_cdi_percentiles
+      - add_cdi_proportions
 
   - title: Preparing a dataset for import
     desc: >
@@ -30,9 +29,8 @@ reference:
 
   - title: Superseded
     desc: >
-      The interface before the client. These still work and are not going
-      away, but a client pins one release for a whole analysis, which these
-      cannot.
+      Earlier interfaces. These still work and are not going away, but the
+      functions above replace them.
     contents:
       - connect_to_peekbank
       - get_db_info
@@ -49,3 +47,7 @@ reference:
       - get_sql_query
       - download_stimuli
       - get_readmes
+      - unpack_aux_data
+      - cleanup_cdi_data
+      - populate_cdi_percentiles
+      - append_relative_cdi_scores

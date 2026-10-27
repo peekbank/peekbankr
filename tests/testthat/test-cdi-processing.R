@@ -92,3 +92,72 @@ test_that("populate_cdi_percentiles guards its columns", {
   expect_error(populate_cdi_percentiles(dplyr::select(cdi_rows(), -"age")),
                "Missing required columns: age")
 })
+
+# add_cdi_percentiles and add_cdi_proportions; expected values are read off
+# inst/extdata/cdi_norms.csv and cdi_n_items.csv
+
+english <- function(...) {
+  tibble(language = "English (American)", ...)
+}
+
+test_that("add_cdi_percentiles gives the highest percentile a score reaches", {
+  # WG comprehension at 8 months: 5th percentile 1 word, 10th 2, 15th 4
+  out <- add_cdi_percentiles(english(instrument_type = "wg", measure = "comp",
+                                     age = 8.2, rawscore = c(0, 2, 3)))
+  expect_equal(out$norm_age, c(8, 8, 8))
+  expect_equal(out$norm_percentile, c(1, 10, 10))
+})
+
+test_that("add_cdi_percentiles compares against the same sex when it can", {
+  # WS production at 24 months: 50th percentile 279 words overall, 295 for
+  # girls, so 280 words is the 45th percentile among girls
+  out <- add_cdi_percentiles(english(instrument_type = "ws", measure = "prod",
+                                     age = 24, rawscore = 280,
+                                     sex = c("female", "unspecified")))
+  expect_equal(out$norm_percentile, c(50, 50))
+  expect_equal(out$norm_percentile_sex, c(45, NA))
+})
+
+test_that("add_cdi_percentiles covers the English short forms", {
+  # WS short (Level IIA) at 24 months: 50th percentile 62 words, 55th 66
+  out <- add_cdi_percentiles(english(instrument_type = "wsshort",
+                                     measure = "prod", age = 24,
+                                     rawscore = 63))
+  expect_equal(out$norm_percentile, 50)
+})
+
+test_that("add_cdi_percentiles leaves scores without norms NA and says so", {
+  cdi <- tibble(
+    language = c("English (American)", "Spanish (Mexican)"),
+    instrument_type = c("wg", "ws"),
+    measure = c("comp", "prod"),
+    age = c(30, 24),
+    rawscore = c(100, 300)
+  )
+  expect_message(out <- add_cdi_percentiles(cdi),
+                 "1 on forms without norms, 1 at ages outside the norms")
+  expect_true(all(is.na(out$norm_age)))
+  expect_true(all(is.na(out$norm_percentile)))
+  # no sex column, so no sex-specific percentile either
+  expect_true(all(is.na(out$norm_percentile_sex)))
+})
+
+test_that("add_cdi_percentiles names the columns it needs", {
+  expect_error(add_cdi_percentiles(english(instrument_type = "wg")),
+               "Missing required columns: measure, age, rawscore")
+})
+
+test_that("add_cdi_proportions divides by the words on the form", {
+  out <- add_cdi_proportions(english(instrument_type = c("ws", "wgshort"),
+                                     rawscore = c(340, 89)))
+  expect_equal(out$n_items, c(680L, 89L))
+  expect_equal(out$proportion, c(0.5, 1))
+})
+
+test_that("add_cdi_proportions leaves unknown forms NA and names them", {
+  expect_message(
+    out <- add_cdi_proportions(english(instrument_type = "not_a_form",
+                                       rawscore = 1)),
+    "English \\(American\\) not_a_form")
+  expect_true(is.na(out$proportion))
+})

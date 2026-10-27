@@ -1,5 +1,6 @@
-# The interface before the client: bare functions that each take a
-# `connection`. These are superseded but still work in order to not break old analysis scripts.
+# Superseded functions, kept working so old analysis scripts do not break: the
+# interface from before the client, where each function takes a `connection`,
+# and the earlier aux data and CDI helpers.
 
 validate_dataset_args <- function(dataset_id, dataset_name) {
   if (!is.null(dataset_id) && !is.numeric(dataset_id)) {
@@ -509,4 +510,334 @@ get_db_info <- function() {
     current = releases$release[releases$current],
     versions = stats::setNames(releases$redivis_tag, releases$release)
   )
+}
+
+#' Unpack the json sting in the *_aux_data column and turns
+#' it into a nested R list
+#'
+#' @description
+#' Superseded. Use [unnest_aux()], which goes straight to one row per entry.
+#'
+#' @param df a dataframe in the peekbank format that has an aux data column
+#'
+#' @return the input dataframe, with the *_aux_data column unpacked
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' subjects_table <- unpack_aux_data(df = subjects_table)
+#' }
+unpack_aux_data <- function(df) {
+  aux_names <- colnames(df)[stringr::str_which(colnames(df), ".*_aux_data$")]
+  for (aux_name in aux_names) {
+    df <- unpack_one_aux(df, aux_name)
+  }
+  df
+}
+
+# one *_aux_data column, from json string to a nested column of its fields
+unpack_one_aux <- function(df, aux_name) {
+  aux_list <- df |>
+    dplyr::ungroup() |>
+    dplyr::pull(dplyr::all_of(aux_name)) |>
+    lapply(\(aux) {
+      if (is.null(aux) || is.na(aux)) {
+        return(aux)
+      }
+      jsonlite::fromJSON(aux)
+    })
+  if (all(is.na(aux_list))) {
+    return(df)
+  }
+
+  col_names <- purrr::flatten(aux_list) |>
+    names() |>
+    unique()
+  col_names <- col_names[!is.na(col_names) & col_names != ""]
+
+  aux_cols <- lapply(col_names, \(col_name) {
+    sapply(aux_list, \(aux) {
+      # cursed way to make sure that there are no "NULL" strings left over
+      # from weird jsonlite::fromJSON behavior,
+      # check https://github.com/jeroen/jsonlite/issues/70 to see if there has been a fix by now
+      if (length(aux) == 1 &&
+          (is.na(aux) ||
+           is.null(aux[col_name]) ||
+           aux[col_name] == "NULL"
+          ) || (
+            all(is.na(aux)) ||
+            all(is.null(aux[col_name])) ||
+            all(aux[col_name] == "NULL")
+          )
+      ) {
+        return(NA)
+      }
+      aux[col_name]
+    })
+  }) |>
+    `names<-`(value = col_names) |>
+    dplyr::as_tibble() |>
+    dplyr::mutate(dplyr::across(dplyr::everything(), \(aux) {
+      if (any(sapply(aux, \(aux_val) {
+        typeof(aux_val) == "list"
+      }))) {
+        aux <- lapply(aux, \(aux_val) {
+          if (all(is.na(aux_val))) {
+            return(NA)
+          }
+          dplyr::bind_rows(aux_val)
+        })
+      }
+      if (all(sapply(aux, is.atomic))) {
+        aux <- purrr::list_simplify(aux, strict = FALSE) # May need a better fix for NAs
+      }
+      aux
+    }))
+  df |>
+    cbind(aux_cols) |>
+    dplyr::select(-dplyr::all_of(aux_name)) |>
+    tidyr::nest("{aux_name}" := dplyr::all_of(colnames(aux_cols)))
+}
+
+#' Checks cdi data for inconsistencies, warns about them, and fixes them
+#'
+#' @description
+#' Superseded. Peekbank allows more than one score for the same instrument,
+#' measure and age, so decide per analysis which to keep, e.g. with
+#' `dplyr::slice_max(rawscore, by = c(subject_id, instrument_type, measure, age))`.
+#'
+#' @param cdi_data a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "age", "sex", "measure", "rawscore"
+#'
+#' @return a cleaned up version of the cdi data
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' clean_cdi_data <- all_subjects %>%
+#'   unnest(subject_aux_data) %>%
+#'   filter(!is.na(cdi_responses)) %>%
+#'   unnest(cdi_responses) %>%
+#'   peekbankr::cleanup_cdi_data()
+#' }
+cleanup_cdi_data <- function(cdi_data) {
+  # TODO: what else do we need to check here? Ask the others about this
+
+  required_columns <- c(
+    "subject_id",
+    "language",
+    "instrument_type",
+    "age",
+    "sex",
+    "measure",
+    "rawscore"
+  )
+
+  missing_cols <- setdiff(required_columns, colnames(cdi_data))
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  # Check if there are multiple scores for the same cdi administration within a single participant
+  duplicate_removed_rows <- cdi_data %>%
+    dplyr::group_by(.data$subject_id, .data$instrument_type, .data$measure,
+                    .data$age, .data$language) %>%
+    dplyr::filter(.data$rawscore != max(.data$rawscore, na.rm = TRUE))
+
+  if (nrow(duplicate_removed_rows) > 0) {
+    warning("there are some duplicate cdi values in your data. These were ",
+            "removed, but you should check the input data.", call. = FALSE)
+    print(duplicate_removed_rows)
+
+    # fix the duplicates for analysis until the input data is fixed
+    cdi_data <- cdi_data %>%
+      dplyr::group_by(.data$subject_id, .data$instrument_type, .data$measure,
+                      .data$age, .data$language) %>%
+      dplyr::filter(.data$rawscore == max(.data$rawscore, na.rm = TRUE))
+  }
+
+  return(cdi_data)
+}
+
+#' Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.
+#'
+#' @description
+#' Superseded. Use [add_cdi_percentiles()].
+#'
+#' @param subjects_table a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "age", "sex", "measure", "rawscore"
+#'
+#' @return the input table with added columns containing the reference age used, the reference year used, and both gender specific and general percentile values for the cdi score
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' full_cdi_data <- all_subjects %>%
+#'   unnest(subject_aux_data) %>%
+#'   filter(!is.na(cdi_responses)) %>%
+#'   unnest(cdi_responses) %>%
+#'   peekbankr::cleanup_cdi_data() %>%
+#'   peekbankr::populate_cdi_percentiles()
+#' }
+populate_cdi_percentiles <- function(subjects_table) {
+  required_columns <- c(
+    "subject_id",
+    "language",
+    "instrument_type",
+    "age",
+    "sex",
+    "measure",
+    "rawscore"
+  )
+
+  output_columns <- c(
+    "reference_age",
+    "reference_year",
+    "percentile_all",
+    "percentile_sex",
+    "norm_score_all",
+    "norm_score_sex"
+  )
+
+  missing_cols <- setdiff(required_columns, colnames(subjects_table))
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  existing_output_cols <- intersect(output_columns, colnames(subjects_table))
+  if (length(existing_output_cols) > 0) {
+    stop("Output columns already exist: ", paste(existing_output_cols, collapse = ", "))
+  }
+
+  norms <- utils::read.csv(system.file("extdata", "cdi_norms.csv",
+                                       package = "peekbankr"))
+
+  # the short forms are scored by add_cdi_percentiles, not here
+  cdi_norms_long <- norms %>%
+    dplyr::filter(.data$instrument_type %in% c("wg", "ws")) %>%
+    dplyr::transmute(
+      language = .data$language,
+      instrument_type = .data$instrument_type,
+      measure = .data$measure,
+      norm_sex = .data$sex,
+      reference_age = as.numeric(.data$age),
+      norm_percentile = as.numeric(.data$percentile),
+      score = as.numeric(.data$score)
+    )
+
+  # a floor at percentile 1, so a score below the 5th percentile still matches
+  cdi_norms_long <- cdi_norms_long %>%
+    dplyr::bind_rows(
+      cdi_norms_long %>%
+        dplyr::distinct(.data$reference_age, .data$language,
+                        .data$instrument_type, .data$measure, .data$norm_sex) %>%
+        dplyr::mutate(norm_percentile = 1, score = 0)
+    )
+
+  # find reference age for each participants entry
+  subject_table_with_ref_age <- subjects_table %>%
+    dplyr::inner_join(
+      cdi_norms_long %>% dplyr::distinct(.data$reference_age, .data$instrument_type,
+                                         .data$measure, .data$language),
+      by = c(
+        "instrument_type",
+        "measure", "language"
+      ),
+      relationship = "many-to-many"
+    ) %>%
+    dplyr::mutate(age_diff = abs(.data$age - .data$reference_age)) %>%
+    dplyr::group_by(dplyr::across(!dplyr::all_of(c("age_diff", "reference_age")))) %>%
+    dplyr::slice_min(abs(.data$age_diff), n = 1, with_ties = FALSE) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-"age_diff")
+
+  subject_table_with_cdi_percentiles <- subject_table_with_ref_age %>%
+    dplyr::inner_join(
+      cdi_norms_long,
+      by = c("instrument_type", "measure", "reference_age", "language"),
+      relationship = "many-to-many"
+    ) %>%
+    dplyr::filter(.data$score <= .data$rawscore) %>%
+    dplyr::group_by(dplyr::across(!dplyr::all_of(c("score", "norm_percentile")))) %>%
+    dplyr::slice_max(.data$score, n = 1, with_ties = FALSE) %>%
+    dplyr::ungroup() %>%
+    tidyr::pivot_wider(names_from = "norm_sex", values_from = c("norm_percentile", "score")) %>%
+    dplyr::mutate(
+      percentile_all = .data$norm_percentile_both,
+      percentile_sex = dplyr::case_when(
+        .data$sex == "male" ~ .data$norm_percentile_male,
+        .data$sex == "female" ~ .data$norm_percentile_female,
+        TRUE ~ NA
+      ),
+      norm_score_all = .data$score_both,
+      norm_score_sex = dplyr::case_when(
+        .data$sex == "male" ~ .data$score_male,
+        .data$sex == "female" ~ .data$score_female,
+        TRUE ~ NA
+      )
+    ) %>%
+    dplyr::select(dplyr::all_of(c("subject_id", "instrument_type", "measure", "age",
+                                  "language", "reference_age", "percentile_all",
+                                  "percentile_sex", "norm_score_all", "norm_score_sex"))) %>%
+    dplyr::mutate(reference_year = "2022")
+
+  return(subjects_table %>% dplyr::left_join(
+    subject_table_with_cdi_percentiles,
+    by = c("subject_id", "instrument_type", "measure", "age", "language")
+  ))
+}
+
+
+#' Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure
+#'
+#' @description
+#' Superseded. Use [add_cdi_proportions()].
+#'
+#' @param subjects_table a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "measure", "rawscore"
+#'
+#' @return the input table with an added "cdi_relative" column that contains the percentage of total points gained in the given administrations
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' cdi_data <- all_subjects %>%
+#'   unnest(subject_aux_data) %>%
+#'   filter(!is.na(cdi_responses)) %>%
+#'   unnest(cdi_responses) %>%
+#'   append_relative_cdi_scores()
+#' }
+append_relative_cdi_scores <- function(subjects_table) {
+  required_columns <- c(
+    "subject_id",
+    "instrument_type",
+    "language",
+    "measure",
+    "rawscore"
+  )
+
+  output_columns <- c(
+    "cdi_relative"
+  )
+
+  missing_cols <- setdiff(required_columns, colnames(subjects_table))
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+
+  existing_output_cols <- intersect(output_columns, colnames(subjects_table))
+  if (length(existing_output_cols) > 0) {
+    stop("Output columns already exist: ", paste(existing_output_cols, collapse = ", "))
+  }
+
+  # TODO: find instrument_length values for all languages
+  subjects_table %>%
+    dplyr::mutate(
+      instrument_length = dplyr::case_when(.data$instrument_type == "ws" ~ 680,
+        .data$instrument_type == "wg" & .data$language == "English (American)" ~ 396,
+        .data$instrument_type == "wsshort" ~ 100,
+        .data$instrument_type == "wg" & .data$language == "Spanish (Mexican)" ~ 428, # TODO: double-check Spanish WG length..
+        .default = NA
+      ),
+      cdi_relative = .data$rawscore / .data$instrument_length
+    ) %>%
+    dplyr::select(-"instrument_length")
 }

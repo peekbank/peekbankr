@@ -21,3 +21,17 @@ test_that("CDI pipeline runs on real subject aux data", {
 
   expect_no_error(peekbankr::populate_cdi_percentiles(cdi_data))
 })
+
+test_that("unnest_aux and the CDI additions run on real subject aux data", {
+  skip_network()
+
+  pb <- suppressMessages(peekbank("2026.1"))
+  cdi <- unnest_aux(pb$subjects, "cdi_responses") %>%
+    add_cdi_percentiles() %>%
+    add_cdi_proportions()
+
+  expect_gt(nrow(cdi), 0)
+  expect_true(all(c("subject_id", "dataset_name", "rawscore", "norm_percentile",
+                    "proportion") %in% names(cdi)))
+  expect_true(any(!is.na(cdi$norm_percentile)))
+})

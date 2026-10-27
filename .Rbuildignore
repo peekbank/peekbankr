@@ -9,3 +9,4 @@ _pkgdown.yml
 ^\.github$
 ^\.lintr$
 ^dev$
+^data-raw$

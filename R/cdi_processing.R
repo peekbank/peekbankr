@@ -1,232 +1,119 @@
-#' Checks cdi data for inconsistencies, warns about them, and fixes them
-#'
-#' @param cdi_data a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "age", "sex", "measure", "rawscore"
-#'
-#' @return a cleaned up version of the cdi data
-#' @export
-#'
-#' @examples
-#' \dontrun{
-#' clean_cdi_data <- all_subjects %>%
-#'   unnest(subject_aux_data) %>%
-#'   filter(!is.na(cdi_responses)) %>%
-#'   unnest(cdi_responses) %>%
-#'   peekbankr::cleanup_cdi_data()
-#' }
-cleanup_cdi_data <- function(cdi_data) {
-  # TODO: what else do we need to check here? Ask the others about this
-
-  required_columns <- c(
-    "subject_id",
-    "language",
-    "instrument_type",
-    "age",
-    "sex",
-    "measure",
-    "rawscore"
-  )
-
-  missing_cols <- setdiff(required_columns, colnames(cdi_data))
-  if (length(missing_cols) > 0) {
-    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+require_columns <- function(df, columns) {
+  missing <- setdiff(columns, names(df))
+  if (length(missing) > 0) {
+    stop("Missing required columns: ", paste(missing, collapse = ", "),
+         call. = FALSE)
   }
-
-  # Check if there are multiple scores for the same cdi administration within a single participant
-  duplicate_removed_rows <- cdi_data %>%
-    dplyr::group_by(.data$subject_id, .data$instrument_type, .data$measure,
-                    .data$age, .data$language) %>%
-    dplyr::filter(.data$rawscore != max(.data$rawscore, na.rm = TRUE))
-
-  if (nrow(duplicate_removed_rows) > 0) {
-    warning("there are some duplicate cdi values in your data. These were ",
-            "removed, but you should check the input data.", call. = FALSE)
-    print(duplicate_removed_rows)
-
-    # fix the duplicates for analysis until the input data is fixed
-    cdi_data <- cdi_data %>%
-      dplyr::group_by(.data$subject_id, .data$instrument_type, .data$measure,
-                      .data$age, .data$language) %>%
-      dplyr::filter(.data$rawscore == max(.data$rawscore, na.rm = TRUE))
-  }
-
-  return(cdi_data)
 }
 
-#' Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.
+#' Add vocabulary norm percentiles to CDI scores
 #'
-#' @param subjects_table a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "age", "sex", "measure", "rawscore"
+#' Looks up where each raw score falls in the vocabulary norms for its
+#' language, instrument, measure and age in months (rounded to the nearest
+#' month). The norms cover English (American):
+#' * WG and WG short form, comprehension and production, 8 to 18 months
+#' * WS and WS short form, production, 16 to 30 months
 #'
-#' @return the input table with added columns containing the reference age used, the reference year used, and both gender specific and general percentile values for the cdi score
+#' WG and WS use the 2022 Wordbank norms, the short forms the MB-CDI
+#' short-form norms: Level I for WG short and Level IIA for WS short.
+#'
+#' @param cdi CDI scores, one per row, e.g. from
+#'   `unnest_aux(pb$subjects, "cdi_responses")`. Needs `language`,
+#'   `instrument_type`, `measure`, `age` and `rawscore`; `sex` is used if
+#'   present.
+#'
+#' @return `cdi` with three columns added:
+#' * `norm_age`: the age in months whose norms were used
+#' * `norm_percentile`: the highest norm percentile (5, 10, ..., 95, 99) the
+#'   score reaches, or 1 below the 5th
+#' * `norm_percentile_sex`: the same against children of the same sex, `NA`
+#'   for sexes other than female and male
+#'
+#' All three are `NA` for forms without norms and for ages outside the range
+#' the norms cover.
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' full_cdi_data <- all_subjects %>%
-#'   unnest(subject_aux_data) %>%
-#'   filter(!is.na(cdi_responses)) %>%
-#'   unnest(cdi_responses) %>%
-#'   peekbankr::cleanup_cdi_data() %>%
-#'   peekbankr::populate_cdi_percentiles()
+#' pb <- peekbank("2026.1")
+#' cdi <- unnest_aux(pb$subjects, "cdi_responses") |>
+#'   add_cdi_percentiles()
 #' }
-populate_cdi_percentiles <- function(subjects_table) {
-  required_columns <- c(
-    "subject_id",
-    "language",
-    "instrument_type",
-    "age",
-    "sex",
-    "measure",
-    "rawscore"
-  )
+add_cdi_percentiles <- function(cdi) {
+  require_columns(cdi, c("language", "instrument_type", "measure", "age",
+                         "rawscore"))
+  norms <- utils::read.csv(system.file("extdata", "cdi_norms.csv",
+                                       package = "peekbankr"))
+  tables <- split(norms[c("percentile", "score")],
+                  paste(norms$language, norms$instrument_type, norms$measure,
+                        norms$sex, norms$age))
 
-  output_columns <- c(
-    "reference_age",
-    "reference_year",
-    "percentile_all",
-    "percentile_sex",
-    "norm_score_all",
-    "norm_score_sex"
-  )
-
-  missing_cols <- setdiff(required_columns, colnames(subjects_table))
-  if (length(missing_cols) > 0) {
-    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  form <- paste(cdi$language, cdi$instrument_type, cdi$measure)
+  norm_age <- floor(cdi$age + 0.5)
+  percentile_against <- function(sex) {
+    keys <- paste(form, sex, norm_age)
+    vapply(seq_along(keys), function(i) {
+      table <- tables[[keys[i]]]
+      if (is.null(table) || is.na(cdi$rawscore[i])) return(NA_real_)
+      max(c(1, table$percentile[table$score <= cdi$rawscore[i]]))
+    }, numeric(1))
   }
 
-  existing_output_cols <- intersect(output_columns, colnames(subjects_table))
-  if (length(existing_output_cols) > 0) {
-    stop("Output columns already exist: ", paste(existing_output_cols, collapse = ", "))
+  normed <- paste(form, "both", norm_age) %in% names(tables)
+  cdi$norm_age <- ifelse(normed, norm_age, NA_real_)
+  cdi$norm_percentile <- percentile_against("both")
+  cdi$norm_percentile_sex <- if ("sex" %in% names(cdi)) {
+    percentile_against(cdi$sex)
+  } else {
+    NA_real_
   }
 
-  norms_tables <- readRDS(system.file("extdata", "cdi_benchmarks_2022", "norms_tables.rds", package = "peekbankr"))
-
-  cdi_norms_long <- norms_tables %>%
-    purrr::imap(\(table, name){
-      table %>%
-        dplyr::as_tibble() %>%
-        tidyr::pivot_longer(cols = -"age", names_to = "reference_age",
-                            values_to = "score") %>%
-        dplyr::rename(norm_percentile = "age") %>%
-        dplyr::mutate(name = gsub(".csv", "", .env$name, fixed = TRUE)) %>%
-        tidyr::separate("name",
-          into = c("language", "instrument_type", "measure", "norm_sex"),
-          sep = "_"
-        ) %>%
-        # Add zero rows in one step
-        dplyr::bind_rows(., dplyr::distinct(., .data$reference_age, .data$language,
-                                            .data$instrument_type, .data$measure,
-                                            .data$norm_sex) %>%
-          dplyr::mutate(norm_percentile = 1, score = 0))
-    }) %>%
-    dplyr::bind_rows() %>%
-    # TODO: create a wordbank/iso lookup for all languages
-    dplyr::mutate(
-      language = ifelse(.data$language == "eng", "English (American)", NA),
-      reference_age = as.numeric(.data$reference_age)
-    )
-
-  # find reference age for each participants entry
-  subject_table_with_ref_age <- subjects_table %>%
-    dplyr::inner_join(
-      cdi_norms_long %>% dplyr::distinct(.data$reference_age, .data$instrument_type,
-                                         .data$measure, .data$language),
-      by = c(
-        "instrument_type",
-        "measure", "language"
-      ),
-      relationship = "many-to-many"
-    ) %>%
-    dplyr::mutate(age_diff = abs(.data$age - .data$reference_age)) %>%
-    dplyr::group_by(dplyr::across(!dplyr::all_of(c("age_diff", "reference_age")))) %>%
-    dplyr::slice_min(abs(.data$age_diff), n = 1, with_ties = FALSE) %>%
-    dplyr::ungroup() %>%
-    dplyr::select(-"age_diff")
-
-  subject_table_with_cdi_percentiles <- subject_table_with_ref_age %>%
-    dplyr::inner_join(
-      cdi_norms_long,
-      by = c("instrument_type", "measure", "reference_age", "language"),
-      relationship = "many-to-many"
-    ) %>%
-    dplyr::filter(.data$score <= .data$rawscore) %>%
-    dplyr::group_by(dplyr::across(!dplyr::all_of(c("score", "norm_percentile")))) %>%
-    dplyr::slice_max(.data$score, n = 1, with_ties = FALSE) %>%
-    dplyr::ungroup() %>%
-    tidyr::pivot_wider(names_from = "norm_sex", values_from = c("norm_percentile", "score")) %>%
-    dplyr::mutate(
-      percentile_all = .data$norm_percentile_both,
-      percentile_sex = dplyr::case_when(
-        .data$sex == "male" ~ .data$norm_percentile_m,
-        .data$sex == "female" ~ .data$norm_percentile_f,
-        TRUE ~ NA
-      ),
-      norm_score_all = .data$score_both,
-      norm_score_sex = dplyr::case_when(
-        .data$sex == "male" ~ .data$score_m,
-        .data$sex == "female" ~ .data$score_f,
-        TRUE ~ NA
-      )
-    ) %>%
-    dplyr::select(dplyr::all_of(c("subject_id", "instrument_type", "measure", "age",
-                                  "language", "reference_age", "percentile_all",
-                                  "percentile_sex", "norm_score_all", "norm_score_sex"))) %>%
-    dplyr::mutate(reference_year = "2022")
-
-  return(subjects_table %>% dplyr::left_join(
-    subject_table_with_cdi_percentiles,
-    by = c("subject_id", "instrument_type", "measure", "age", "language")
-  ))
+  no_norms <- !form %in% paste(norms$language, norms$instrument_type,
+                               norms$measure)
+  out_of_age <- !no_norms & !normed
+  if (any(no_norms | out_of_age)) {
+    message(sum(no_norms | out_of_age), " of ", nrow(cdi), " scores have no ",
+            "norm percentile: ", sum(no_norms), " on forms without norms, ",
+            sum(out_of_age), " at ages outside the norms. See ",
+            "?add_cdi_percentiles for what the norms cover.")
+  }
+  cdi
 }
 
-
-#' Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure
+#' Add the relative share of a CDI form's words to CDI scores
 #'
-#' @param subjects_table a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "measure", "rawscore"
+#' Divides each raw score by the number of words on its form, taken from the
+#' form's item list in Wordbank. Comprehension and production on the same form
+#' share one word list.
 #'
-#' @return the input table with an added "cdi_relative" column that contains the percentage of total points gained in the given administrations
+#' @param cdi CDI scores, one per row, e.g. from
+#'   `unnest_aux(pb$subjects, "cdi_responses")`. Needs `language`,
+#'   `instrument_type` and `rawscore`.
+#'
+#' @return `cdi` with `n_items`, the number of words on the form, and
+#'   `proportion`, the raw score divided by it
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' cdi_data <- all_subjects %>%
-#'   unnest(subject_aux_data) %>%
-#'   filter(!is.na(cdi_responses)) %>%
-#'   unnest(cdi_responses) %>%
-#'   append_relative_cdi_scores()
+#' pb <- peekbank("2026.1")
+#' cdi <- unnest_aux(pb$subjects, "cdi_responses") |>
+#'   add_cdi_proportions()
 #' }
-append_relative_cdi_scores <- function(subjects_table) {
-  required_columns <- c(
-    "subject_id",
-    "instrument_type",
-    "language",
-    "measure",
-    "rawscore"
-  )
+add_cdi_proportions <- function(cdi) {
+  require_columns(cdi, c("language", "instrument_type", "rawscore"))
+  item_counts <- utils::read.csv(system.file("extdata", "cdi_n_items.csv",
+                                             package = "peekbankr"))
 
-  output_columns <- c(
-    "cdi_relative"
-  )
+  form <- paste(cdi$language, cdi$instrument_type)
+  known_forms <- paste(item_counts$language, item_counts$instrument_type)
+  cdi$n_items <- item_counts$n_items[match(form, known_forms)]
+  cdi$proportion <- cdi$rawscore / cdi$n_items
 
-  missing_cols <- setdiff(required_columns, colnames(subjects_table))
-  if (length(missing_cols) > 0) {
-    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  unknown <- unique(form[is.na(cdi$n_items)])
+  if (length(unknown) > 0) {
+    message(sum(is.na(cdi$n_items)), " of ", nrow(cdi), " scores are on forms ",
+            "without a Wordbank item list: ", paste(unknown, collapse = ", "))
   }
-
-  existing_output_cols <- intersect(output_columns, colnames(subjects_table))
-  if (length(existing_output_cols) > 0) {
-    stop("Output columns already exist: ", paste(existing_output_cols, collapse = ", "))
-  }
-
-  # TODO: find instrument_length values for all languages
-  subjects_table %>%
-    dplyr::mutate(
-      instrument_length = dplyr::case_when(.data$instrument_type == "ws" ~ 680,
-        .data$instrument_type == "wg" & .data$language == "English (American)" ~ 396,
-        .data$instrument_type == "wsshort" ~ 100,
-        .data$instrument_type == "wg" & .data$language == "Spanish (Mexican)" ~ 428, # TODO: double-check Spanish WG length..
-        .default = NA
-      ),
-      cdi_relative = .data$rawscore / .data$instrument_length
-    ) %>%
-    dplyr::select(-"instrument_length")
+  cdi
 }
