@@ -72,30 +72,13 @@ pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016",
                          age < 24 & vanilla_trial)
 ```
 
-The exception is **`t_norm`** on `pb$subset$aoi_timepoints()`, as by
-default we transfers the table run-length encoded (one row per run of a
-constant AOI) and t_norm filters would result in unintuitive behavior.
-If you need to filter t_norm, either do it on the fetched result OR pass
-`rle = FALSE` to read the expanded table directly (which will make the
-fetch take a lot longer):
-
-``` r
-
-pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016", t_norm > 0) # Error
-
-pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016", t_norm > 0,
-                         rle = FALSE)
-```
-
-Every other column filters normally, including `aoi`, which is constant
-within a run. `pb$subset$xy_timepoints()` is not encoded, so it has no
-such restriction.
-
 For the timepoint tables, the predicates are translated to remote SQL
 queries, so only a subset of predicates is available. If you use a
 predicate that cannot be translated to a query, an error message will
-let you know. The smaller tables are filtered in R, so they take
-arbitrary `dplyr` expression.
+let you know. Predicates naming `t_norm` on `pb$subset$aoi_timepoints()`
+are the exception: they run in R on the downloaded samples, so they do
+not make the download smaller. The smaller tables are filtered in R, so
+they take arbitrary `dplyr` expression.
 
 ### Server-side queries
 

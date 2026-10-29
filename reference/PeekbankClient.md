@@ -44,7 +44,9 @@ Every table is reachable three ways:
   target and distractor stimuli (prefixed `target_` and `distractor_`)
   and its AOI region set; a timepoint's administration and trial. The
   result has the table's own columns either way. For the timepoint
-  tables the predicates run on the server to reduce transfer size.
+  tables the predicates run on the server to reduce transfer size,
+  except those naming `t_norm` on `aoi_timepoints`, which run on the
+  downloaded samples.
 
 - `db`:
 

@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,27 +89,20 @@
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span>,</span>
 <span>                         <span class="va">age</span> <span class="op">&lt;</span> <span class="fl">24</span> <span class="op">&amp;</span> <span class="va">vanilla_trial</span><span class="op">)</span></span></code></pre></div>
-<p>The exception is <strong><code>t_norm</code></strong> on <code>pb$subset$aoi_timepoints()</code>, as by default we transfers the table run-length encoded (one row per run of a constant AOI) and t_norm filters would result in unintuitive behavior. If you need to filter t_norm, either do it on the fetched result OR pass <code>rle = FALSE</code> to read the expanded table directly (which will make the fetch take a lot longer):</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span>, <span class="va">t_norm</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="co"># Error</span></span>
-<span></span>
-<span><span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span>, <span class="va">t_norm</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
-<span>                         rle <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>Every other column filters normally, including <code>aoi</code>, which is constant within a run. <code>pb$subset$xy_timepoints()</code> is not encoded, so it has no such restriction.</p>
-<p>For the timepoint tables, the predicates are translated to remote SQL queries, so only a subset of predicates is available. If you use a predicate that cannot be translated to a query, an error message will let you know. The smaller tables are filtered in R, so they take arbitrary <code>dplyr</code> expression.</p>
+<p>For the timepoint tables, the predicates are translated to remote SQL queries, so only a subset of predicates is available. If you use a predicate that cannot be translated to a query, an error message will let you know. Predicates naming <code>t_norm</code> on <code>pb$subset$aoi_timepoints()</code> are the exception: they run in R on the downloaded samples, so they do not make the download smaller. The smaller tables are filtered in R, so they take arbitrary <code>dplyr</code> expression.</p>
 </div>
 <div class="section level3">
 <h3 id="server-side-queries">Server-side queries<a class="anchor" aria-label="anchor" href="#server-side-queries"></a>
 </h3>
 <p><code>pb$db</code> holds a <a href="https://dbplyr.tidyverse.org/" class="external-link">dbplyr</a> handle on each table. <code>dplyr</code> verbs on it compile to SQL and run on the server; data transfer happens when you <code>collect()</code>. Here is an example that summarises a timepoint table without pulling it:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">db</span><span class="op">$</span><span class="va">aoi_timepoints</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">aoi</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">count</span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span>
 <span>  <span class="fu">collect</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <p><code>pb$db</code> also holds <code>aoi_timepoints_rle</code>, one row per run of a constant AOI, for anyone who wants the stored shape rather than the samples it expands to.</p>
 <p>Print the client to see the release it is pinned to and what is on it:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span></span>
 <span><span class="co">#&gt; &lt;peekbank&gt; release 2026.1 (Redivis version v1.4)</span></span>
 <span><span class="co">#&gt;   tables:  datasets subjects administrations trials trial_types stimuli</span></span>
@@ -123,7 +116,7 @@
 </h3>
 <p>Peekbank is released in named versions (e.g. <code>2026.1</code>), and <code><a href="reference/peekbank.html">peekbank()</a></code> requires one. <code><a href="reference/get_db_info.html">get_db_info()</a></code> lists what is available.</p>
 <p>Pass <code>"current"</code> to take whichever version was published most recently for testing, but this is strongly discouraged as future version releases will make the same code produce different results.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/peekbank.html">peekbank</a></span><span class="op">(</span><span class="st">"2026.1"</span><span class="op">)</span></span>
 <span><span class="va">pb</span><span class="op">$</span><span class="va">release</span>   <span class="co"># "2026.1"</span></span></code></pre></div>
 </div>
@@ -131,7 +124,7 @@
 <h3 id="data-files">Data files<a class="anchor" aria-label="anchor" href="#data-files"></a>
 </h3>
 <p>Raw data, processed intermediates, and per-dataset READMEs live in the companion <a href="https://redivis.com/datapages/datasets/peekbank_files" class="external-link">peekbank_files dataset</a>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">readmes</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span>  <span class="co"># dataset documentation</span></span>
 <span><span class="va">stimuli</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">images</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"reflook_v4"</span><span class="op">)</span>             <span class="co"># stimulus images</span></span></code></pre></div>
 </div>
