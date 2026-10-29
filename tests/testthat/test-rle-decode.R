@@ -36,6 +36,20 @@ test_that("decode_rle_timepoints keeps administrations and trials separate", {
   expect_equal(t3$aoi, c("other", "other"))
 })
 
+test_that("decode_rle_timepoints repeats carried columns along their run", {
+  rle_tbl <- tibble(
+    administration_id = 1L, trial_id = 1L,
+    t_norm = c(0L, 50L),
+    aoi = c("target", "distractor"),
+    length = c(2L, 1L),
+    age = c(20, 30)
+  )
+  out <- peekbankr:::decode_rle_timepoints(rle_tbl, carry = "age")
+  expect_equal(out$age, c(20, 20, 30))
+  expect_named(peekbankr:::decode_rle_timepoints(rle_tbl),
+               c("administration_id", "trial_id", "aoi", "t_norm"))
+})
+
 test_that("decoding round-trips an rle() encoding of a sample sequence", {
   aoi_seq <- c("target", "target", "distractor", "missing", "missing",
                "missing", "target")

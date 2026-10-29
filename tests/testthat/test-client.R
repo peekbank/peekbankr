@@ -262,23 +262,27 @@ test_that("predicates may still name locals and call functions", {
   expect_s3_class(pb$subset$administrations(.data$age < 24), "data.frame")
 })
 
-test_that("run-level columns are refused on the encoded table", {
+test_that("t_norm filters samples, not runs, on the encoded table", {
   skip_network()
   pb <- suppressMessages(peekbank("2026.1"))
   ds <- "pomper_saffran_2016"
-  # on the encoded table these describe a run, so pushing them down would
-  # keep or drop whole runs rather than samples
-  expect_error(pb$subset$aoi_timepoints(t_norm > 0), "describes a run")
-  expect_error(pb$subset$aoi_timepoints(length > 5), "describes a run")
-  expect_error(pb$subset$aoi_timepoints(vanilla_trial & t_norm > 0),
-               "describes a run")
+  expect_error(pb$subset$aoi_timepoints(length > 5), "No column `length`")
 
-  # the expanded table has one row per sample, so there they are exact
-  expanded <- pb$subset$aoi_timepoints(dataset_name == ds, t_norm > 0,
-                                       rle = FALSE)
-  after <- dplyr::filter(pb$subset$aoi_timepoints(dataset_name == ds),
-                         .data$t_norm > 0)
-  expect_equal(nrow(expanded), nrow(after))
+  # the expanded table has one row per sample, so there t_norm is exact
+  expect_equal(
+    pb$subset$aoi_timepoints(dataset_name == ds, t_norm > 0),
+    pb$subset$aoi_timepoints(dataset_name == ds, t_norm > 0, rle = FALSE),
+    ignore_attr = TRUE)
+
+  # a predicate mixing t_norm with a column the result does not have
+  mixed <- pb$subset$aoi_timepoints(dataset_name == ds,
+                                    t_norm > 1000 | !vanilla_trial)
+  expect_named(mixed, c("administration_id", "trial_id", "aoi", "t_norm"))
+  expect_equal(
+    mixed,
+    pb$subset$aoi_timepoints(dataset_name == ds,
+                             t_norm > 1000 | !vanilla_trial, rle = FALSE),
+    ignore_attr = TRUE)
 
   # aoi is constant within a run, so it is safe to push down
   expect_equal(

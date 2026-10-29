@@ -45,7 +45,9 @@ administration's dataset and subject; a trial's trial type, with its
 target and distractor stimuli (prefixed \code{target_} and \code{distractor_})
 and its AOI region set; a timepoint's administration and trial. The
 result has the table's own columns either way. For the timepoint
-tables the predicates run on the server to reduce transfer size.}
+tables the predicates run on the server to reduce transfer size,
+except those naming \code{t_norm} on \code{aoi_timepoints}, which run on the
+downloaded samples.}
 
 \item{\code{db}}{\code{dbplyr} handles on this release's tables, one field each.
 They carry the same columns as the fields above, but they are lazy queries,

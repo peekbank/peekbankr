@@ -117,7 +117,9 @@ PeekbankClient <- R6Class(
     #'   target and distractor stimuli (prefixed `target_` and `distractor_`)
     #'   and its AOI region set; a timepoint's administration and trial. The
     #'   result has the table's own columns either way. For the timepoint
-    #'   tables the predicates run on the server to reduce transfer size.
+    #'   tables the predicates run on the server to reduce transfer size,
+    #'   except those naming `t_norm` on `aoi_timepoints`, which run on the
+    #'   downloaded samples.
     subset = function(value) {
       private$assert_readonly(missing(value), "subset")
       if (is.null(private$subset_env)) {
@@ -274,39 +276,43 @@ PeekbankClient <- R6Class(
     # Predicates reach everything either the foreign keys lead to.
     timepoints = function(name, dots) {
       encoded <- identical(name, "aoi_timepoints_rle")
-      if (encoded) {
-        # The library uses RLE encoding to transmit the data but the
-        # user-facing api abstracts that fact away
-        # Because "t_norm" filters would behave weirdly and "length" only
-        # exists on RLE, we dont allow predicates formulated with them
-        vars <- lapply(dots, function(q) all.vars(rlang::quo_get_expr(q)))
-        used <- intersect(unique(unlist(vars)), c("t_norm", "length"))
-        if (length(used) > 0) {
-          stop("`", used[1], "` describes a run of samples here, not one ",
-               "sample, so filtering on it\n  would keep or drop whole runs. ",
-               "Filter the result instead, or pass\n  rle = FALSE to read the ",
-               "expanded table.", call. = FALSE)
-        }
-      }
-
       public_name <- if (encoded) "aoi_timepoints" else name
-      run_columns <- if (encoded) c("t_norm", "length") else character()
+      vars <- lapply(dots, function(q) all.vars(rlang::quo_get_expr(q)))
+
+      # The encoded table is transferred as runs of samples, which the user
+      # never sees. `length` only exists on the runs, and `t_norm` there is
+      # where a run starts, so predicates naming `t_norm` run on the decoded
+      # samples instead, with any other columns they name carried along.
+      if (encoded && "length" %in% unlist(vars)) {
+        stop("No column `length` to filter aoi_timepoints on. It only ",
+             "exists on the run-length\n  encoded table, ",
+             "pb$db$aoi_timepoints_rle.", call. = FALSE)
+      }
+      on_samples <- vapply(vars, function(v) encoded && "t_norm" %in% v,
+                           logical(1))
+      sample_dots <- dots[on_samples]
+      run_dots <- dots[!on_samples]
 
       query <- self$db[[name]]
+      result_columns <- colnames(query)
+      carry <- character()
       if (length(dots) > 0) {
-        result_columns <- colnames(query)
         view <- private$db_predicate_view(name)
         private$reject_unknown_columns(
-          dots, setdiff(colnames(view), run_columns), public_name)
-        query <- view %>%
-          dplyr::filter(!!!dots) %>%
-          dplyr::select(dplyr::all_of(result_columns))
+          dots, setdiff(colnames(view), "length"), public_name)
+        carry <- setdiff(intersect(unlist(vars[on_samples]), colnames(view)),
+                         result_columns)
+        if (length(run_dots) > 0 || length(carry) > 0) {
+          query <- view %>%
+            dplyr::filter(!!!run_dots) %>%
+            dplyr::select(dplyr::all_of(c(result_columns, carry)))
+        }
       }
       order <- if (identical(name, "xy_timepoints")) "xy_timepoint_id" else
         c("administration_id", "trial_id", "t_norm")
       sql <- as.character(
         sql_render(dplyr::arrange(query, !!!rlang::syms(order))))
-      rows <- if (length(dots) == 0) pb_query(private$con, sql) else
+      rows <- if (length(run_dots) == 0) pb_query(private$con, sql) else
         tryCatch(pb_query(private$con, sql), error = function(e) {
           stop(conditionMessage(e), "\n  Predicates on ", public_name,
                " are translated to SQL. Use !! for values computed by a\n  ",
@@ -320,9 +326,12 @@ PeekbankClient <- R6Class(
       # keep the expanded rows too
       key <- paste(private$con$redivis_tag, "decoded", sql)
       if (is.null(.peekbankr_env[[key]])) {
-        .peekbankr_env[[key]] <- decode_rle_timepoints(rows)
+        .peekbankr_env[[key]] <- decode_rle_timepoints(rows, carry)
       }
-      .peekbankr_env[[key]]
+      if (length(sample_dots) == 0) return(.peekbankr_env[[key]])
+      .peekbankr_env[[key]] %>%
+        dplyr::filter(!!!sample_dots) %>%
+        dplyr::select(-dplyr::all_of(carry))
     },
 
     # A table narrowed by predicates that may name anything a row of it
