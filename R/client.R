@@ -316,7 +316,13 @@ PeekbankClient <- R6Class(
         })
 
       if (is.null(rows)) return(NULL)
-      if (encoded) decode_rle_timepoints(rows) else rows
+      if (!encoded) return(rows)
+      # keep the expanded rows too
+      key <- paste(private$con$redivis_tag, "decoded", sql)
+      if (is.null(.peekbankr_env[[key]])) {
+        .peekbankr_env[[key]] <- decode_rle_timepoints(rows)
+      }
+      .peekbankr_env[[key]]
     },
 
     # A table narrowed by predicates that may name anything a row of it
