@@ -50,7 +50,7 @@
 <div class="section level1">
 <div class="page-header"><h1 id="an-r-interface-to-peekbank">An R interface to peekbank<a class="anchor" aria-label="anchor" href="#an-r-interface-to-peekbank"></a>
 </h1></div>
-<p>The <code>peekbankr</code> package allows you to access data in <a href="https://peekbank.github.io/peekbank-website/" class="external-link">Peekbank</a>, an open database of developmental eye-tracking data, from R. Data are retrieved from the versioned <a href="https://redivis.com/datapages/datasets/peekbank" class="external-link">peekbank dataset on Redivis</a>; the <code>get_</code> functions return tidy tables without you having to write queries. The package vignette provides examples of the data loading functions and what the resulting data look like.</p>
+<p>The <code>peekbankr</code> package allows you to access data in <a href="https://peekbank.github.io/peekbank-website/" class="external-link">Peekbank</a>, an open database of developmental eye-tracking data, from R. Data are retrieved from the versioned <a href="https://redivis.com/datapages/datasets/peekbank" class="external-link">peekbank dataset on Redivis</a>; a <code><a href="reference/peekbank.html">peekbank()</a></code> client pinned to one release hands you its tables as tidy tibbles without you having to write queries. The package vignette provides examples of the data loading functions and what the resulting data look like.</p>
 <div class="section level3">
 <h3 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h3>
@@ -114,7 +114,7 @@
 <div class="section level3">
 <h3 id="database-versions">Database versions<a class="anchor" aria-label="anchor" href="#database-versions"></a>
 </h3>
-<p>Peekbank is released in named versions (e.g. <code>2026.1</code>), and <code><a href="reference/peekbank.html">peekbank()</a></code> requires one. <code><a href="reference/get_db_info.html">get_db_info()</a></code> lists what is available.</p>
+<p>Peekbank is released in named versions (e.g. <code>2026.1</code>), and <code><a href="reference/peekbank.html">peekbank()</a></code> requires one. <code><a href="reference/peekbank_releases.html">peekbank_releases()</a></code> lists what is available.</p>
 <p>Pass <code>"current"</code> to take whichever version was published most recently for testing, but this is strongly discouraged as future version releases will make the same code produce different results.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/peekbank.html">peekbank</a></span><span class="op">(</span><span class="st">"2026.1"</span><span class="op">)</span></span>
