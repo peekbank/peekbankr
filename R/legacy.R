@@ -1,6 +1,7 @@
 # Superseded functions, kept working so old analysis scripts do not break: the
 # interface from before the client, where each function takes a `connection`,
-# and the earlier aux data and CDI helpers.
+# and the earlier aux data and CDI helpers. Their output stays as it was too,
+# so `excluded` and `vanilla_trial` are 0/1 here, not the client's logicals.
 
 validate_dataset_args <- function(dataset_id, dataset_name) {
   if (!is.null(dataset_id) && !is.numeric(dataset_id)) {
@@ -232,7 +233,7 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
   validate_dataset_args(dataset_id, dataset_name)
   con <- resolve_connection(connection)
   keep <- matching_dataset_ids(con, dataset_id, dataset_name)
-  restrict_to_datasets(fetch_table(con, "trials"), keep)
+  restrict_to_datasets(fetch_table(con, "trials", logical_flags = FALSE), keep)
 }
 
 #' Get trial types
@@ -258,7 +259,8 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
   validate_dataset_args(dataset_id, dataset_name)
   con <- resolve_connection(connection)
   keep <- matching_dataset_ids(con, dataset_id, dataset_name)
-  restrict_to_datasets(fetch_table(con, "trial_types"), keep)
+  restrict_to_datasets(fetch_table(con, "trial_types", logical_flags = FALSE),
+                       keep)
 }
 
 #' Get stimuli

@@ -341,7 +341,9 @@ test_that("the bare fields match the legacy getters", {
   con <- suppressMessages(connect_to_peekbank("2026.1"))
   expect_equal(pb$datasets, get_datasets(connection = con))
   expect_equal(pb$administrations, get_administrations(connection = con))
-  expect_equal(pb$trials, get_trials(connection = con))
+  # the legacy getters keep excluded as 0/1
+  expect_equal(pb$trials, peekbankr:::as_logical_flags(
+    "trials", get_trials(connection = con)))
   expect_equal(pb$stimuli, get_stimuli(connection = con))
 })
 

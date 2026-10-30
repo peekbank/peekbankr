@@ -8,7 +8,8 @@ The `peekbankr` package allows you to access data in
 [Peekbank](https://peekbank.github.io/peekbank-website/), an open database of
 developmental eye-tracking data, from R. Data are retrieved from the
 versioned [peekbank dataset on Redivis](https://redivis.com/datapages/datasets/peekbank);
-the `get_` functions return tidy tables without you having to write queries.
+a `peekbank()` client pinned to one release hands you its tables as tidy
+tibbles without you having to write queries.
 The package vignette provides examples of the data loading functions and
 what the resulting data look like.
 
@@ -102,7 +103,7 @@ pb
 ### Database versions
 
 Peekbank is released in named versions (e.g. `2026.1`), and `peekbank()`
-requires one. `get_db_info()` lists what is available.
+requires one. `peekbank_releases()` lists what is available.
 
 Pass `"current"` to take whichever version was published most recently for testing, but this is strongly discouraged as future version releases will make the same code produce different results.
 

@@ -23,12 +23,12 @@ dataset_joined_tables <- c("administrations", "subjects", "trials",
 
 # One of Redivis's tables turned into one peekbankr hands out:
 # * `dataset_name` joined on where the table references a dataset
-# * the 0/1 flags as logicals
+# * the 0/1 flags as logicals, unless `logical_flags` is FALSE
 # * `aoi_timepoints` put in the shape its encoded form decodes to
 #
 # `read_table` supplies one of Redivis's tables by name so the same joins
 # can run on tibbles for pb$x and on dbplyr handles for pb$db$x
-table_view <- function(name, read_table) {
+table_view <- function(name, read_table, logical_flags = TRUE) {
   if (identical(name, "aoi_timepoints")) {
     # the columns and the order decode_rle_timepoints() produces, so the two
     # encodings are interchangeable.
@@ -36,7 +36,8 @@ table_view <- function(name, read_table) {
                          dplyr::all_of(c("administration_id", "trial_id",
                                          "aoi", "t_norm"))))
   }
-  tbl <- as_logical_flags(name, read_table(name))
+  tbl <- read_table(name)
+  if (logical_flags) tbl <- as_logical_flags(name, tbl)
   if (!name %in% dataset_joined_tables) return(tbl)
   if (identical(name, "subjects")) {
     # a subject is tested in one dataset, reached through its administrations
@@ -76,8 +77,8 @@ as_logical_flags <- function(name, tbl) {
 }
 
 # the view read into memory, by passing the reader that returns tibbles
-fetch_table <- function(con, name) {
-  table_view(name, function(n) pb_table(con, n))
+fetch_table <- function(con, name, logical_flags = TRUE) {
+  table_view(name, function(n) pb_table(con, n), logical_flags)
 }
 
 # join `other` on, keeping only the columns `frame` does not already have
