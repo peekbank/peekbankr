@@ -1,6 +1,8 @@
 # Get trial types
 
-Superseded. Use `pb$trial_types` or `pb$subset$trial_types()` on a
+**\[superseded\]**
+
+Use `pb$trial_types` or `pb$subset$trial_types()` on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client.
 

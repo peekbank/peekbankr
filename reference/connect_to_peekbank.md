@@ -1,6 +1,8 @@
 # Connect to Peekbank
 
-Superseded. Use
+**\[superseded\]**
+
+Use
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md),
 which returns a client that pins a release for a whole analysis.
 

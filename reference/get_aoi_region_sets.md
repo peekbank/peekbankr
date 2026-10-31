@@ -1,6 +1,8 @@
 # Get AOI region sets
 
-Superseded. Use `pb$aoi_region_sets` on a
+**\[superseded\]**
+
+Use `pb$aoi_region_sets` on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client.
 

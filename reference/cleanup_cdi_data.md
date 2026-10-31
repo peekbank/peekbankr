@@ -1,7 +1,9 @@
 # Checks cdi data for inconsistencies, warns about them, and fixes them
 
-Superseded. Peekbank allows more than one score for the same instrument,
-measure and age, so decide per analysis which to keep, e.g. with
+**\[superseded\]**
+
+Peekbank allows more than one score for the same instrument, measure and
+age, so decide per analysis which to keep, e.g. with
 `dplyr::slice_max(rawscore, by = c(subject_id, instrument_type, measure, age))`.
 
 ## Usage

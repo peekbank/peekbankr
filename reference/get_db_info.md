@@ -1,6 +1,8 @@
 # Get information on database connection options
 
-Superseded. Use
+**\[superseded\]**
+
+Use
 [`peekbank_releases()`](https://peekbank.github.io/peekbankr/reference/peekbank_releases.md).
 
 ## Usage

@@ -1,6 +1,8 @@
 # Unpack the json sting in the \*\_aux_data column and turns it into a nested R list
 
-Superseded. Use
+**\[superseded\]**
+
+Use
 [`unnest_aux()`](https://peekbank.github.io/peekbankr/reference/unnest_aux.md),
 which goes straight to one row per entry.
 

@@ -1,6 +1,8 @@
 # Download stimulus images for the Peekbank repository
 
-Superseded. Use `pb$images()` on a
+**\[superseded\]**
+
+Use `pb$images()` on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client.
 

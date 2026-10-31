@@ -1,6 +1,8 @@
 # Download dataset README files
 
-Superseded. Use `pb$readmes()` on a
+**\[superseded\]**
+
+Use `pb$readmes()` on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client.
 

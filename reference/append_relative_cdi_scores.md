@@ -1,6 +1,8 @@
 # Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure
 
-Superseded. Use
+**\[superseded\]**
+
+Use
 [`add_cdi_proportions()`](https://peekbank.github.io/peekbankr/reference/add_cdi_proportions.md).
 
 ## Usage

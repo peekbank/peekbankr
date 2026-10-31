@@ -1,7 +1,9 @@
 # Get AOI timepoints
 
-Superseded. Use `pb$aoi_timepoints`, or `pb$subset$aoi_timepoints()` to
-filter on the server, on a
+**\[superseded\]**
+
+Use `pb$aoi_timepoints`, or `pb$subset$aoi_timepoints()` to filter on
+the server, on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client.
 

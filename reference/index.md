@@ -65,47 +65,49 @@ Earlier interfaces. These still work and are not going away, but the
 functions above replace them.
 
 - [`connect_to_peekbank()`](https://peekbank.github.io/peekbankr/reference/connect_to_peekbank.md)
-  : Connect to Peekbank
+  **\[superseded\]** : Connect to Peekbank
 - [`get_db_info()`](https://peekbank.github.io/peekbankr/reference/get_db_info.md)
-  : Get information on database connection options
+  **\[superseded\]** : Get information on database connection options
 - [`list_peekbank_tables()`](https://peekbank.github.io/peekbankr/reference/list_peekbank_tables.md)
-  : List of peekbank tables
+  **\[superseded\]** : List of peekbank tables
 - [`get_datasets()`](https://peekbank.github.io/peekbankr/reference/get_datasets.md)
-  : Get datasets
+  **\[superseded\]** : Get datasets
 - [`get_subjects()`](https://peekbank.github.io/peekbankr/reference/get_subjects.md)
-  : Get subjects
+  **\[superseded\]** : Get subjects
 - [`get_administrations()`](https://peekbank.github.io/peekbankr/reference/get_administrations.md)
-  : Get administrations
+  **\[superseded\]** : Get administrations
 - [`get_trials()`](https://peekbank.github.io/peekbankr/reference/get_trials.md)
-  : Get trials
+  **\[superseded\]** : Get trials
 - [`get_trial_types()`](https://peekbank.github.io/peekbankr/reference/get_trial_types.md)
-  : Get trial types
+  **\[superseded\]** : Get trial types
 - [`get_stimuli()`](https://peekbank.github.io/peekbankr/reference/get_stimuli.md)
-  : Get stimuli
+  **\[superseded\]** : Get stimuli
 - [`get_aoi_region_sets()`](https://peekbank.github.io/peekbankr/reference/get_aoi_region_sets.md)
-  : Get AOI region sets
+  **\[superseded\]** : Get AOI region sets
 - [`get_aoi_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_aoi_timepoints.md)
-  : Get AOI timepoints
+  **\[superseded\]** : Get AOI timepoints
 - [`get_xy_timepoints()`](https://peekbank.github.io/peekbankr/reference/get_xy_timepoints.md)
-  : Get XY timepoints
+  **\[superseded\]** : Get XY timepoints
 - [`get_sql_query()`](https://peekbank.github.io/peekbankr/reference/get_sql_query.md)
-  : Run a SQL query against peekbank
+  **\[superseded\]** : Run a SQL query against peekbank
 - [`download_stimuli()`](https://peekbank.github.io/peekbankr/reference/download_stimuli.md)
-  : Download stimulus images for the Peekbank repository
+  **\[superseded\]** : Download stimulus images for the Peekbank
+  repository
 - [`get_readmes()`](https://peekbank.github.io/peekbankr/reference/get_readmes.md)
-  : Download dataset README files
+  **\[superseded\]** : Download dataset README files
 - [`unpack_aux_data()`](https://peekbank.github.io/peekbankr/reference/unpack_aux_data.md)
-  : Unpack the json sting in the \*\_aux_data column and turns it into a
-  nested R list
+  **\[superseded\]** : Unpack the json sting in the \*\_aux_data column
+  and turns it into a nested R list
 - [`cleanup_cdi_data()`](https://peekbank.github.io/peekbankr/reference/cleanup_cdi_data.md)
-  : Checks cdi data for inconsistencies, warns about them, and fixes
-  them
+  **\[superseded\]** : Checks cdi data for inconsistencies, warns about
+  them, and fixes them
 - [`populate_cdi_percentiles()`](https://peekbank.github.io/peekbankr/reference/populate_cdi_percentiles.md)
-  : Populate the provided cdi data with percentile values for that
-  specific age, instrument_type, measure and language. Loosely based on
-  the work from this repo
+  **\[superseded\]** : Populate the provided cdi data with percentile
+  values for that specific age, instrument_type, measure and language.
+  Loosely based on the work from this repo
   https://github.com/kachergis/cdi-percentiles/tree/main by George
   Kachergis and Jess Mankewitz with advice from Virginia Marchman.
 - [`append_relative_cdi_scores()`](https://peekbank.github.io/peekbankr/reference/append_relative_cdi_scores.md)
-  : Adds a relative cdi score indicating the percentage of total
-  achievable points the subject got on each given measure
+  **\[superseded\]** : Adds a relative cdi score indicating the
+  percentage of total achievable points the subject got on each given
+  measure

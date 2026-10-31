@@ -1,6 +1,8 @@
 # Run a SQL query against peekbank
 
-Superseded. Use `pb$query()` on a
+**\[superseded\]**
+
+Use `pb$query()` on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client, or `pb$db$<table>` for a dbplyr handle.
 

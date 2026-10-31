@@ -1,6 +1,8 @@
 # Get subjects
 
-Superseded. Use `pb$subjects` on a
+**\[superseded\]**
+
+Use `pb$subjects` on a
 [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md)
 client.
 
