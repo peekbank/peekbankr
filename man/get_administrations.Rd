@@ -26,7 +26,9 @@ A tibble of Administrations data, filtered down by supplied
 arguments.
 }
 \description{
-Superseded. Use \code{pb$administrations}, or
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$administrations}, or
 \code{pb$subset$administrations()} to narrow it, on a \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{

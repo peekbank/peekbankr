@@ -14,7 +14,9 @@ A tibble of AOI Region Sets data, filtered down by supplied
 arguments.
 }
 \description{
-Superseded. Use \code{pb$aoi_region_sets} on a \code{\link[=peekbank]{peekbank()}} client.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$aoi_region_sets} on a \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{
 \dontrun{

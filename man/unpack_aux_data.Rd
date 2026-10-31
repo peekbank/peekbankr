@@ -14,7 +14,9 @@ unpack_aux_data(df)
 the input dataframe, with the *_aux_data column unpacked
 }
 \description{
-Superseded. Use \code{\link[=unnest_aux]{unnest_aux()}}, which goes straight to one row per entry.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{\link[=unnest_aux]{unnest_aux()}}, which goes straight to one row per entry.
 }
 \examples{
 \dontrun{

@@ -171,14 +171,6 @@ test_that("a predicate can span the administration and the trial", {
   expect_lte(nrow(either), nrow(young) + nrow(odd))
 })
 
-test_that("rle = FALSE reads the expanded table instead", {
-  skip_network()
-  pb <- suppressMessages(peekbank("current"))
-  sql <- captured_sql(pb$subset$aoi_timepoints(age < 24, rle = FALSE))
-  expect_false(grepl("aoi_timepoints_rle", sql, fixed = TRUE))
-  expect_match(sql, "aoi_timepoints", fixed = TRUE)
-})
-
 test_that("a named argument is caught with a hint", {
   skip_network()
   pb <- suppressMessages(peekbank("current"))
@@ -271,7 +263,7 @@ test_that("t_norm filters samples, not runs, on the encoded table", {
   # the expanded table has one row per sample, so there t_norm is exact
   expect_equal(
     pb$subset$aoi_timepoints(dataset_name == ds, t_norm > 0),
-    pb$subset$aoi_timepoints(dataset_name == ds, t_norm > 0, rle = FALSE),
+    expanded_aoi_timepoints(pb, dataset_name == ds, t_norm > 0),
     ignore_attr = TRUE)
 
   # a predicate mixing t_norm with a column the result does not have
@@ -280,8 +272,8 @@ test_that("t_norm filters samples, not runs, on the encoded table", {
   expect_named(mixed, c("administration_id", "trial_id", "aoi", "t_norm"))
   expect_equal(
     mixed,
-    pb$subset$aoi_timepoints(dataset_name == ds,
-                             t_norm > 1000 | !vanilla_trial, rle = FALSE),
+    expanded_aoi_timepoints(pb, dataset_name == ds,
+                            t_norm > 1000 | !vanilla_trial),
     ignore_attr = TRUE)
 
   # aoi is constant within a run, so it is safe to push down
@@ -300,13 +292,6 @@ test_that("predicates reach the whole dataset, not just its name", {
                nrow(pb$subset$aoi_timepoints(dataset_name == ds)))
 })
 
-test_that("xy_timepoints has no run-length encoding to ask about", {
-  skip_network()
-  pb <- suppressMessages(peekbank("current"))
-  expect_false("rle" %in% names(formals(pb$subset$xy_timepoints)))
-  expect_true("rle" %in% names(formals(pb$subset$aoi_timepoints)))
-})
-
 test_that("the RLE decode reproduces the stored expanded table", {
   skip_network()
   pb <- suppressMessages(peekbank("2026.1"))
@@ -316,8 +301,7 @@ test_that("the RLE decode reproduces the stored expanded table", {
     as.data.frame(d[order(d$administration_id, d$trial_id, d$t_norm), ])
   }
   decoded <- pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016")
-  stored <- pb$subset$aoi_timepoints(dataset_name == "pomper_saffran_2016",
-                                     rle = FALSE)
+  stored <- expanded_aoi_timepoints(pb, dataset_name == "pomper_saffran_2016")
   expect_equal(ordered(decoded), ordered(stored), ignore_attr = TRUE)
 
   # the encoding is an implementation detail, so it cannot change the columns

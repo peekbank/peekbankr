@@ -26,7 +26,9 @@ A tibble of XY timepoints data, filtered down by supplied
 arguments.
 }
 \description{
-Superseded. Use \code{pb$xy_timepoints} or \code{pb$subset$xy_timepoints()} on a
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$xy_timepoints} or \code{pb$subset$xy_timepoints()} on a
 \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{

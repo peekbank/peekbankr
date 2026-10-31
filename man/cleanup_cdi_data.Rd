@@ -13,7 +13,9 @@ cleanup_cdi_data(cdi_data)
 a cleaned up version of the cdi data
 }
 \description{
-Superseded. Peekbank allows more than one score for the same instrument,
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Peekbank allows more than one score for the same instrument,
 measure and age, so decide per analysis which to keep, e.g. with
 \code{dplyr::slice_max(rawscore, by = c(subject_id, instrument_type, measure, age))}.
 }

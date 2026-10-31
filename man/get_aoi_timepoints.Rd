@@ -29,7 +29,9 @@ A tibble of AOI Timepoints data, filtered down by supplied
 arguments.
 }
 \description{
-Superseded. Use \code{pb$aoi_timepoints}, or
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$aoi_timepoints}, or
 \code{pb$subset$aoi_timepoints()} to filter on the server, on a \code{\link[=peekbank]{peekbank()}}
 client.
 }

@@ -13,7 +13,9 @@ populate_cdi_percentiles(subjects_table)
 the input table with added columns containing the reference age used, the reference year used, and both gender specific and general percentile values for the cdi score
 }
 \description{
-Superseded. Use \code{\link[=add_cdi_percentiles]{add_cdi_percentiles()}}.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{\link[=add_cdi_percentiles]{add_cdi_percentiles()}}.
 }
 \examples{
 \dontrun{

@@ -131,10 +131,8 @@ PeekbankClient <- R6Class(
           local({
             name <- nm
             e[[name]] <- if (identical(name, "aoi_timepoints")) {
-              function(..., rle = TRUE) {
-                private$timepoints(
-                  if (rle) "aoi_timepoints_rle" else "aoi_timepoints",
-                  rlang::enquos(...))
+              function(...) {
+                private$timepoints("aoi_timepoints_rle", rlang::enquos(...))
               }
             } else if (identical(name, "xy_timepoints")) {
               function(...) {
@@ -317,8 +315,11 @@ PeekbankClient <- R6Class(
           stop(conditionMessage(e), "\n  Predicates on ", public_name,
                " are translated to SQL. Use !! for values computed by a\n  ",
                "function in R. The functions that translate are listed at\n  ",
+               "https://dplyr.tidyverse.org/reference/filter.html",
+               "#useful-filter-functions\n  and\n  ",
                "https://docs.redivis.com/api/client-libraries/redivis-r/",
-               "reference/redivis/redivisusdconnect_dbi", call. = FALSE)
+               "reference/redivis/redivisusdconnect_dbi",
+               "#supported-dplyr-functions", call. = FALSE)
         })
 
       if (is.null(rows)) return(NULL)

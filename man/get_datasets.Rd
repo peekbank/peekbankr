@@ -13,7 +13,9 @@ get_datasets(connection = NULL)
 A tibble of Datasets data.
 }
 \description{
-Superseded. Use \code{pb$datasets} on a \code{\link[=peekbank]{peekbank()}} client.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$datasets} on a \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{
 \dontrun{

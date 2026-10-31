@@ -17,7 +17,9 @@ get_trials(dataset_id = NULL, dataset_name = NULL, connection = NULL)
 A tibble of Trials data, filtered down by supplied arguments.
 }
 \description{
-Superseded. Use \code{pb$trials} or \code{pb$subset$trials()} on a \code{\link[=peekbank]{peekbank()}}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$trials} or \code{pb$subset$trials()} on a \code{\link[=peekbank]{peekbank()}}
 client.
 }
 \examples{

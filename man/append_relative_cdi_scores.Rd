@@ -13,7 +13,9 @@ append_relative_cdi_scores(subjects_table)
 the input table with an added "cdi_relative" column that contains the percentage of total points gained in the given administrations
 }
 \description{
-Superseded. Use \code{\link[=add_cdi_proportions]{add_cdi_proportions()}}.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{\link[=add_cdi_proportions]{add_cdi_proportions()}}.
 }
 \examples{
 \dontrun{

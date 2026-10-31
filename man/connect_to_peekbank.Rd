@@ -32,7 +32,9 @@ version was published most recently}
 A \code{peekbank_connection} handle pinning the resolved version
 }
 \description{
-Superseded. Use \code{\link[=peekbank]{peekbank()}}, which returns a client that pins a release
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{\link[=peekbank]{peekbank()}}, which returns a client that pins a release
 for a whole analysis.
 }
 \details{

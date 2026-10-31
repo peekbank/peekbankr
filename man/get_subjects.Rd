@@ -15,7 +15,9 @@ link longitudinal Administrations, which is the primary table you probably
 want.
 }
 \description{
-Superseded. Use \code{pb$subjects} on a \code{\link[=peekbank]{peekbank()}} client.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$subjects} on a \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{
 \dontrun{

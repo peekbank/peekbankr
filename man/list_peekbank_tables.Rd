@@ -13,7 +13,9 @@ list_peekbank_tables(connection)
 A vector of the names of tables in peekbank
 }
 \description{
-Superseded. Use \code{pb$tables} on a \code{\link[=peekbank]{peekbank()}} client.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$tables} on a \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{
 \dontrun{

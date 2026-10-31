@@ -15,7 +15,9 @@ validate_dataset_args <- function(dataset_id, dataset_name) {
 #' Connect to Peekbank
 #'
 #' @description
-#' Superseded. Use [peekbank()], which returns a client that pins a release
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use [peekbank()], which returns a client that pins a release
 #' for a whole analysis.
 #'
 #' @details
@@ -72,7 +74,9 @@ resolve_connection <- function(connection) {
 #' List of peekbank tables
 #'
 #' @description
-#' Superseded. Use `pb$tables` on a [peekbank()] client.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$tables` on a [peekbank()] client.
 #'
 #' @param connection A connection to the peekbank database
 #'
@@ -91,7 +95,9 @@ list_peekbank_tables <- function(connection) {
 #' Get datasets
 #'
 #' @description
-#' Superseded. Use `pb$datasets` on a [peekbank()] client.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$datasets` on a [peekbank()] client.
 #'
 #' @inheritParams list_peekbank_tables
 #'
@@ -160,7 +166,9 @@ sql_in_clause <- function(column, ids) {
 #' Get administrations
 #'
 #' @description
-#' Superseded. Use `pb$administrations`, or
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$administrations`, or
 #' `pb$subset$administrations()` to narrow it, on a [peekbank()] client.
 #'
 #' @param age A numeric vector of a single age or a min age and max age
@@ -192,7 +200,9 @@ get_administrations <- function(age = NULL, dataset_id = NULL,
 #' Get subjects
 #'
 #' @description
-#' Superseded. Use `pb$subjects` on a [peekbank()] client.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$subjects` on a [peekbank()] client.
 #'
 #' @inheritParams list_peekbank_tables
 #'
@@ -213,7 +223,9 @@ get_subjects <- function(connection = NULL) {
 #' Get trials
 #'
 #' @description
-#' Superseded. Use `pb$trials` or `pb$subset$trials()` on a [peekbank()]
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$trials` or `pb$subset$trials()` on a [peekbank()]
 #' client.
 #'
 #' @param dataset_id An integer vector of one or more dataset ids
@@ -239,7 +251,9 @@ get_trials <- function(dataset_id = NULL, dataset_name = NULL,
 #' Get trial types
 #'
 #' @description
-#' Superseded. Use `pb$trial_types` or `pb$subset$trial_types()` on a
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$trial_types` or `pb$subset$trial_types()` on a
 #' [peekbank()] client.
 #'
 #' @param dataset_id An integer vector of one or more dataset ids
@@ -266,7 +280,9 @@ get_trial_types <- function(dataset_id = NULL, dataset_name = NULL,
 #' Get stimuli
 #'
 #' @description
-#' Superseded. Use `pb$stimuli` or `pb$subset$stimuli()` on a [peekbank()]
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$stimuli` or `pb$subset$stimuli()` on a [peekbank()]
 #' client.
 #'
 #' @param dataset_id An integer vector of one or more dataset ids
@@ -292,7 +308,9 @@ get_stimuli <- function(dataset_id = NULL, dataset_name = NULL,
 #' Get AOI region sets
 #'
 #' @description
-#' Superseded. Use `pb$aoi_region_sets` on a [peekbank()] client.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$aoi_region_sets` on a [peekbank()] client.
 #'
 #' @inheritParams list_peekbank_tables
 #'
@@ -312,7 +330,9 @@ get_aoi_region_sets <- function(connection = NULL) {
 #' Get AOI timepoints
 #'
 #' @description
-#' Superseded. Use `pb$aoi_timepoints`, or
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$aoi_timepoints`, or
 #' `pb$subset$aoi_timepoints()` to filter on the server, on a [peekbank()]
 #' client.
 #'
@@ -364,7 +384,9 @@ get_aoi_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
 #' Get XY timepoints
 #'
 #' @description
-#' Superseded. Use `pb$xy_timepoints` or `pb$subset$xy_timepoints()` on a
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$xy_timepoints` or `pb$subset$xy_timepoints()` on a
 #' [peekbank()] client.
 #'
 #' @inheritParams get_trials
@@ -399,7 +421,9 @@ get_xy_timepoints <- function(dataset_id = NULL, dataset_name = NULL,
 #' Run a SQL query against peekbank
 #'
 #' @description
-#' Superseded. Use `pb$query()` on a [peekbank()] client, or `pb$db$<table>`
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$query()` on a [peekbank()] client, or `pb$db$<table>`
 #' for a dbplyr handle.
 #'
 #' Queries are BigQuery Standard SQL, run against the peekbank dataset on
@@ -424,7 +448,9 @@ get_sql_query <- function(sql_query_string, connection = NULL) {
 #' Download stimulus images for the Peekbank repository
 #'
 #' @description
-#' Superseded. Use `pb$images()` on a [peekbank()] client.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$images()` on a [peekbank()] client.
 #'
 #' This function downloads stimulus images for selected Peekbank datasets from
 #' Redivis. It retrieves stimulus metadata from a
@@ -463,7 +489,9 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data",
 #' Download dataset README files
 #'
 #' @description
-#' Superseded. Use `pb$readmes()` on a [peekbank()] client.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use `pb$readmes()` on a [peekbank()] client.
 #'
 #' Downloads README files for Peekbank datasets from Redivis.
 #'
@@ -489,7 +517,9 @@ get_readmes <- function(datasets = c(),
 #' Get information on database connection options
 #'
 #' @description
-#' Superseded. Use [peekbank_releases()].
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use [peekbank_releases()].
 #'
 #' @details
 #' Data are retrieved from the versioned peekbank
@@ -518,7 +548,9 @@ get_db_info <- function() {
 #' it into a nested R list
 #'
 #' @description
-#' Superseded. Use [unnest_aux()], which goes straight to one row per entry.
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use [unnest_aux()], which goes straight to one row per entry.
 #'
 #' @param df a dataframe in the peekbank format that has an aux data column
 #'
@@ -605,7 +637,9 @@ unpack_one_aux <- function(df, aux_name) {
 #' Checks cdi data for inconsistencies, warns about them, and fixes them
 #'
 #' @description
-#' Superseded. Peekbank allows more than one score for the same instrument,
+#' `r lifecycle::badge("superseded")`
+#'
+#' Peekbank allows more than one score for the same instrument,
 #' measure and age, so decide per analysis which to keep, e.g. with
 #' `dplyr::slice_max(rawscore, by = c(subject_id, instrument_type, measure, age))`.
 #'
@@ -664,7 +698,9 @@ cleanup_cdi_data <- function(cdi_data) {
 #' Populate the provided cdi data with percentile values for that specific age, instrument_type, measure and language. Loosely based on the work from this repo https://github.com/kachergis/cdi-percentiles/tree/main by George Kachergis and Jess Mankewitz with advice from Virginia Marchman.
 #'
 #' @description
-#' Superseded. Use [add_cdi_percentiles()].
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use [add_cdi_percentiles()].
 #'
 #' @param subjects_table a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "age", "sex", "measure", "rawscore"
 #'
@@ -792,7 +828,9 @@ populate_cdi_percentiles <- function(subjects_table) {
 #' Adds a relative cdi score indicating the percentage of total achievable points the subject got on each given measure
 #'
 #' @description
-#' Superseded. Use [add_cdi_proportions()].
+#' `r lifecycle::badge("superseded")`
+#'
+#' Use [add_cdi_proportions()].
 #'
 #' @param subjects_table a subjects table with unnested cdi data, needs columns "subject_id", "language", "instrument_type", "measure", "rawscore"
 #'

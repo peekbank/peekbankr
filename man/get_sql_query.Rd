@@ -15,7 +15,9 @@ get_sql_query(sql_query_string, connection = NULL)
 A tibble of the query results
 }
 \description{
-Superseded. Use \code{pb$query()} on a \code{\link[=peekbank]{peekbank()}} client, or \verb{pb$db$<table>}
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$query()} on a \code{\link[=peekbank]{peekbank()}} client, or \verb{pb$db$<table>}
 for a dbplyr handle.
 
 Queries are BigQuery Standard SQL, run against the peekbank dataset on

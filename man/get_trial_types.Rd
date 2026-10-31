@@ -17,7 +17,9 @@ get_trial_types(dataset_id = NULL, dataset_name = NULL, connection = NULL)
 A tibble of Trial Types data, filtered down by supplied arguments.
 }
 \description{
-Superseded. Use \code{pb$trial_types} or \code{pb$subset$trial_types()} on a
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$trial_types} or \code{pb$subset$trial_types()} on a
 \code{\link[=peekbank]{peekbank()}} client.
 }
 \examples{

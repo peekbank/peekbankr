@@ -12,7 +12,9 @@ latest Redivis version) and \code{versions} (a named vector mapping Peekbank
 release names to Redivis dataset version tags)
 }
 \description{
-Superseded. Use \code{\link[=peekbank_releases]{peekbank_releases()}}.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{\link[=peekbank_releases]{peekbank_releases()}}.
 }
 \details{
 Data are retrieved from the versioned peekbank

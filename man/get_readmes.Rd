@@ -17,7 +17,9 @@ No return value, called for side effects. README files are saved to
 the specified directory and the path is printed via message.
 }
 \description{
-Superseded. Use \code{pb$readmes()} on a \code{\link[=peekbank]{peekbank()}} client.
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#superseded}{\figure{lifecycle-superseded.svg}{options: alt='[Superseded]'}}}{\strong{[Superseded]}}
+
+Use \code{pb$readmes()} on a \code{\link[=peekbank]{peekbank()}} client.
 
 Downloads README files for Peekbank datasets from Redivis.
 }
