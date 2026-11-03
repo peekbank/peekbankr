@@ -52,19 +52,22 @@ test_that("get_datasets returns data on the current version", {
 # fails once that is fixed upstream, which is the signal to drop the workaround.
 test_that("redivis's file helpers still crash on the peekbank file tree", {
   skip_network()
-  worked <- tryCatch({
-    pb_files_dataset()$table("files")$file("pomper_saffran_2016/README.md")
-    TRUE
-  }, error = function(e) FALSE)
+  # the crash recurses on ever-longer regexes and warns at every step
+  err <- tryCatch(suppressWarnings(
+    pb_files_dataset()$table("newman_vocoded_2012")$file(
+      "Study 1 (24 and _ channels)/10ES_order2_averages edited.xls")),
+    error = identity)
 
-  if (worked) {
+  if (!inherits(err, "error")) {
     fail(paste0(
       "redivis's $file() no longer crashes, so the workaround is obsolete.\n",
-      "In R/redivis.R, replace the body of pb_fetch_file() with:\n",
-      "  pb_files_dataset()$table(\"files\")$file(file_name)$download(\n",
+      "In R/redivis.R, fetch files with\n",
+      "  pb_files_dataset()$table(folder)$file(file_name)$download(\n",
       "    path = dest, overwrite = TRUE, progress = FALSE)\n",
-      "dropping the utils::getFromNamespace() call and the comment above it, ",
-      "then delete this test."))
+      "instead of pb_fetch_file(), then delete this test."))
+  } else {
+    # the crash is an error from R's regex engine; an API error (e.g. a
+    # renamed folder or file) means the test no longer reaches it
+    expect_false(inherits(err, "redivis_error"), info = conditionMessage(err))
   }
-  succeed()
 })

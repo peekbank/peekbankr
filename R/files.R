@@ -10,20 +10,27 @@ fetch_stimulus_images <- function(con, datasets = c(), dir = "stimulus_data",
       dplyr::filter(.data$dataset_name %in% .env$datasets)
   }
 
+  # paths are relative to the dataset's raw_data/; strip leading "/", as that is not worth failing an import over
   wanted <- stimuli_df %>%
-    dplyr::mutate(full_stimulus_path = paste0(.data$dataset_name, "/raw_data/",
-                                              .data$stimulus_image_path))
+    dplyr::mutate(full_stimulus_path = paste0(
+      .data$dataset_name, "/", sub("^/", "", .data$stimulus_image_path)))
 
-  # files live in the peekbank_files dataset on Redivis; one query per
-  # dataset keeps the file listing small
-  listings <- lapply(unique(wanted$dataset_name), function(ds) {
-    pb_files_query(paste0(ds, "/raw_data/"))
+  # each dataset's raw data is a folder of the peekbank_files dataset on Redivis.
+  # Some datasets of older releases have been renamed, so their images count as missing.
+  # Older releases dont support images anyway as paths were not consistent, so we are not missing
+  # anything crucial by doing this
+  with_folder <- intersect(unique(wanted$dataset_name), pb_folder_names())
+  listings <- lapply(with_folder, function(ds) {
+    files <- pb_folder_files(ds)
+    if (is.null(files)) return(NULL)
+    dplyr::mutate(files, file_name = paste0(ds, "/", .data$file_name))
   })
-  index <- dplyr::bind_rows(listings)
-  files <- dplyr::inner_join(
-    wanted %>% dplyr::distinct(.data$full_stimulus_path),
-    index, by = c("full_stimulus_path" = "file_name")) %>%
-    dplyr::rename(file_name = "full_stimulus_path")
+  # the empty tibble keeps the columns when no dataset has a folder
+  index <- dplyr::bind_rows(
+    dplyr::tibble(file_id = character(), file_name = character(),
+                  size = numeric()),
+    listings)
+  files <- index[index$file_name %in% wanted$full_stimulus_path, ]
 
   missing <- setdiff(wanted$full_stimulus_path, files$file_name)
   if (length(missing) > 0) {
@@ -69,8 +76,9 @@ fetch_readmes <- function(con, datasets = c(), dir = "dataset_readmes") {
 # saved as <dataset>.md under dir; returns their local paths named by dataset,
 # NA where a download failed
 download_readmes <- function(datasets, dir) {
-  # READMEs live at <dataset>/README.md in the peekbank_files dataset
-  index <- pb_files_query("")
+  # READMEs at storage time live at <dataset>/README.md in the _processed_data folder of the
+  # peekbank_files dataset
+  index <- pb_folder_files("_processed_data")
   if (is.null(index)) return(NULL)
   readmes <- index[grepl("^[^/]+/README\\.md$", index$file_name), ]
   ds_names <- sub("/README\\.md$", "", readmes$file_name)

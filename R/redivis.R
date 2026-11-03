@@ -172,8 +172,10 @@ print.peekbank_connection <- function(x, ...) {
 
 # ---- data files (raw_data / processed_data / READMEs) -----------------------
 # Peekbank's files live in the companion datapages.peekbank_files dataset on
-# Redivis: a single file-index table `files` whose file names are relative
-# paths (<dataset>/raw_data/..., <dataset>/README.md).
+# Redivis. Each dataset has a file-index table (folder) named after it,
+# holding its raw data with file names relative to raw_data/. The
+# _processed_data folder holds every dataset's processed data and README, as
+# <dataset>/<file>.
 
 peekbank_files_reference <- "peekbank_files:frvk"
 
@@ -182,17 +184,21 @@ pb_files_dataset <- function() {
     peekbank_files_reference)
 }
 
-# tibble of (file_id, file_name, size) for files under a name prefix
-pb_files_query <- function(prefix) {
+# tibble of (file_id, file_name, size) for the files in one folder
+pb_folder_files <- function(folder) {
   if (!redivis_available()) return(NULL)
-  sql <- sprintf(
-    "SELECT file_id, file_name, size FROM files WHERE STARTS_WITH(file_name, '%s')",
-    gsub("'", "\\\\'", prefix))
+  sql <- sprintf("SELECT file_id, file_name, size FROM `%s`", folder)
   pb_try(pb_files_dataset()$query(sql)$to_tibble())
 }
 
+pb_folder_names <- function() {
+  if (!redivis_available()) return(NULL)
+  tables <- pb_try(pb_files_dataset()$list_tables())
+  vapply(tables, function(t) t$properties$name, character(1))
+}
+
 # Fetch one file from the peekbank_files dataset, given a row of a
-# pb_files_query() result.
+# pb_folder_files() result.
 #
 # Workaround for a redivis bug, observed in 0.12.12: the public helpers
 # ($file(), list_files(), to_directory()) all build a directory tree through
@@ -204,8 +210,9 @@ pb_files_query <- function(prefix) {
 # and the function recurses on an ever-longer path until the pattern will not
 # compile. Building the file from its id instead sidesteps the tree walk.
 #
-# When that is fixed upstream, this function becomes:
-#   pb_files_dataset()$table("files")$file(file_name)$download(
+# Folders containing such a directory (e.g. newman_vocoded_2012) all hit it.
+# When that is fixed upstream, a file can be fetched with:
+#   pb_files_dataset()$table(folder)$file(file_name)$download(
 #     path = dest, overwrite = TRUE, progress = FALSE)
 pb_fetch_file <- function(file_id, file_name, size, dest) {
   redivis_file <- utils::getFromNamespace("File", "redivis")
@@ -214,7 +221,7 @@ pb_fetch_file <- function(file_id, file_name, size, dest) {
                      path = dest, overwrite = TRUE, progress = FALSE)
 }
 
-# download rows of a pb_files_query() result, recreating the relative paths
+# download rows of a pb_folder_files() result, recreating the relative paths
 # under local_base_dir; returns the local paths (NA for failures)
 pb_download_files <- function(files, local_base_dir, skip_existing = TRUE) {
   paths <- rep(NA_character_, nrow(files))
