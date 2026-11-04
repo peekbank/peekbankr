@@ -157,12 +157,33 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
       msg_new <- .msg("- {fieldname} should be an object at the top level or NA, not list.")
       msg_error <- c(msg_error, msg_new)
     }
+    if (fieldclass == "JSONField") {
+      aux <- as.character(content_tb[!is.na(content_tb) & content_tb != ""])
+      n_invalid <- sum(!vapply(aux, function(x) isTRUE(jsonlite::validate(x)), logical(1)))
+      if (n_invalid > 0) {
+        msg_new <- .msg("- {fieldname} has {n_invalid} value(s) that are not valid JSON.")
+        msg_error <- c(msg_error, msg_new)
+      }
+    }
 
     # step 2: check if values are in the required type/format
+    # (read.csv reads a column with anything but numbers in it as character)
     if (!is_null_allowed && (fieldclass == "IntegerField" || fieldclass == "ForeignKey")) {
       is_type_valid <- is.integer(content_tb)
       if (!is_type_valid) {
         msg_new <- .msg("- {fieldclass} column {fieldname} should contain integers only.")
+        msg_error <- c(msg_error, msg_new)
+      }
+    } else if (fieldclass %in% c("IntegerField", "ForeignKey", "FloatField")) {
+      is_type_valid <- is.numeric(content_tb) || all(is.na(content_tb))
+      if (!is_type_valid) {
+        msg_new <- .msg("- Column {fieldname} should contain numbers only.")
+        msg_error <- c(msg_error, msg_new)
+      }
+    } else if (fieldclass == "BooleanField") {
+      is_type_valid <- is.logical(content_tb)
+      if (!is_type_valid) {
+        msg_new <- .msg("- Column {fieldname} should contain TRUE or FALSE only.")
         msg_error <- c(msg_error, msg_new)
       }
     } else if (!is_null_allowed && fieldclass == "CharField") {
@@ -177,6 +198,12 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     } else {
       # no required data type
       is_type_valid <- TRUE
+    }
+    # the release stores these as 32-bit integers
+    if (fieldclass %in% c("IntegerField", "ForeignKey") && is.numeric(content_tb) &&
+        any(abs(content_tb) > .Machine$integer.max, na.rm = TRUE)) {
+      msg_new <- .msg("- Column {fieldname} has values beyond the 32-bit integer range.")
+      msg_error <- c(msg_error, msg_new)
     }
 
     # step 3: if word/label choices are required, check if the values are valid
@@ -320,6 +347,10 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
       if (any(!is.numeric(cdi$rawscore))) {
         msg_new <- .msg("- Some subject(s) have CDI responses that have a
                           non-numeric rawscore.")
+        msg_error <- c(msg_error, msg_new)
+      } else if (any(cdi$rawscore %% 1 != 0, na.rm = TRUE)) {
+        msg_new <- .msg("- Some subject(s) have CDI responses that have a
+                          rawscore that is not a whole number.")
         msg_error <- c(msg_error, msg_new)
       }
       if ("percentile" %in% colnames(cdi)){ # separate conditions as & does not short-circut
@@ -539,7 +570,9 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
   # start checking each table format against json
   dict_tables <- list()
 
-  for (table_type in table_list) {
+  # tables the coding method does not require are checked as well when present
+  # (eyetracking requires all of them)
+  for (table_type in ds.list_ds_tables("eyetracking")) {
     file_csv <- file.path(dir_csv, paste0(table_type, file_ext))
     if (file.exists(file_csv)) {
       # read in csv file and check if the data is valid
@@ -592,72 +625,56 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
     msg_error_all <- c(msg_error_all, .msg("Global issue: - trials order values are not unique within administrations"))
   }
 
-  table_pairs <- list(
-    c("trials", "aoi_timepoints", "trial_id"),
-    c("administrations", "aoi_timepoints", "administration_id"),
-    c("administrations", "subjects", "subject_id"),
-    c("trials", "trial_types", "trial_type_id"),
-    c("stimuli", "trial_types", "stimulus_id")
-  )
-
   if("xy_timepoints" %in% table_list){
     if (!("aoi_region_sets" %in% names(dict_tables)) || all(is.na(dict_tables[["trial_types"]]$aoi_region_set_id))) {
       stop("Dataset has xy_timepoints but is missing valid aoi_region_sets data. ",
            "Please provide an aoi_region_sets table and ensure aoi_region_set_id values in trial_types are not all NA.")
     }
-    table_pairs <- table_pairs %>%
-      append(list(c("aoi_region_sets", "trial_types", "aoi_region_set_id"))) %>%
-      append(list(c("xy_timepoints", "administrations", "administration_id", "forward")))
   }
 
-  # check if there are any orphaned ids left with no connection to other tables
-  errors_orphans <- unlist(lapply(
-    table_pairs,
-    function(vec) {
-
-      table_1 <- dict_tables[[vec[1]]]
-      table_2 <- dict_tables[[vec[2]]]
-      join_id <- vec[3]
-      direction <- if (length(vec) >= 4) vec[4] else "both"
-
-      if(vec[1] == "stimuli" && vec[2] == "trial_types"){
-        table_2 <- table_2 %>% tidyr::pivot_longer(
-          cols = dplyr::all_of(c("distractor_id", "target_id")),
-          names_to = "stimulus_type",
-          values_to = "stimulus_id"
-        )
+  # every foreign key has to point at a row of the table it refers to (a table
+  # the dataset does not have counts as empty)
+  peekjson <- ds.get_peekjson()
+  for (table_type in names(dict_tables)) {
+    fields <- ds.get_json_fields(table_type)
+    for (i in which(fields$field_class == "ForeignKey")) {
+      key <- fields$field_name[i]
+      target <- peekjson$table[match(fields$options$to[i], peekjson$model_class)]
+      target_fields <- ds.get_json_fields(target)
+      target_id <- target_fields$field_name[target_fields$options$primary_key %in% TRUE]
+      dangling <- setdiff(stats::na.omit(dict_tables[[table_type]][[key]]),
+                          dict_tables[[target]][[target_id]])
+      if (length(dangling) > 0) {
+        msg_error_all <- c(msg_error_all, .msg("Global issue: - {table_type}.{key} has values that are not ids in {target}: {paste(utils::head(dangling), collapse = ', ')}"))
       }
-
-      errors <- c()
-
-      if (direction %in% c("both", "forward")) {
-        one_not_in_two <- table_1 %>%
-          dplyr::filter(!is.na(.data[[join_id]])) %>%
-          dplyr::anti_join(table_2, by = join_id)
-        if(nrow(one_not_in_two) != 0){
-          print(one_not_in_two)
-          errors <- c(errors, .msg("Global issue: - not all {join_id} in {vec[1]} have a match in {vec[2]}"))
-        }
-      }
-
-      if (direction %in% c("both", "reverse")) {
-        two_not_in_one <- table_2 %>%
-          dplyr::filter(!is.na(.data[[join_id]])) %>%
-          dplyr::anti_join(table_1, by = join_id)
-        if(nrow(two_not_in_one) != 0){
-          print(two_not_in_one)
-          errors <- c(errors, .msg("Global issue: - not all {join_id} in {vec[2]} have a match in {vec[1]}"))
-        }
-      }
-
-      return(errors)
     }
-  ))
+  }
 
-  msg_error_all <- c(msg_error_all, errors_orphans)
+  # and every row has to be used by the table that refers to it
+  usages <- list(
+    c("subjects", "administrations", "subject_id"),
+    c("administrations", "aoi_timepoints", "administration_id"),
+    c("trial_types", "trials", "trial_type_id"),
+    c("trials", "aoi_timepoints", "trial_id"),
+    c("stimuli", "trial_types", "stimulus_id"),
+    c("aoi_region_sets", "trial_types", "aoi_region_set_id")
+  )
+  for (usage in usages) {
+    if (is.null(dict_tables[[usage[1]]])) next
+    used_in <- dict_tables[[usage[2]]]
+    if (usage[1] == "stimuli") {
+      used_in <- tidyr::pivot_longer(used_in, cols = dplyr::all_of(c("distractor_id", "target_id")),
+                                     values_to = "stimulus_id")
+    }
+    unused <- dplyr::anti_join(dict_tables[[usage[1]]], used_in, by = usage[3])
+    if (nrow(unused) != 0) {
+      print(unused)
+      msg_error_all <- c(msg_error_all, .msg("Global issue: - not all {usage[3]} in {usage[1]} have a match in {usage[2]}"))
+    }
+  }
 
   msg_error_all <- c(msg_error_all,
-                     check_aoi_consistency(dict_tables, dir_csv, file_ext))
+                     check_aoi_consistency(dict_tables))
 
   msg_warning_all <- msg_warning_all[!names(msg_warning_all) %in% suppress_warnings]
   return(list(errors = msg_error_all, warnings = collapse_warnings(msg_warning_all)))
@@ -667,18 +684,9 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 # the ones those coordinates imply (as opposed to e.g. mismatching coding provided
 # by the lab or an erroneous reimplementation of the aoi computiation)
 
-check_aoi_consistency <- function(dict_tables, dir_csv, file_ext = ".csv") {
-  tbl_names <- c("xy_timepoints", "aoi_region_sets", "aoi_timepoints",
-                 "trials", "trial_types", "administrations")
-
-  tb <- purrr::map(purrr::set_names(tbl_names), function(name) {
-    if (!is.null(dict_tables[[name]])) return(dict_tables[[name]])
-    f <- file.path(dir_csv, paste0(name, file_ext))
-    if (file.exists(f)) utils::read.csv(f) else NULL
-  })
-
+check_aoi_consistency <- function(tb) {
   # nothing to hold the aoi column against
-  if (any(vapply(tb, is.null, logical(1)))) return(NULL)
+  if (is.null(tb$xy_timepoints) || is.null(tb$aoi_region_sets)) return(NULL)
   if (all(is.na(tb$trial_types$aoi_region_set_id))) return(NULL)
 
   joined <- tb$xy_timepoints %>%
