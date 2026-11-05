@@ -8,16 +8,7 @@ new_connection <- function(version) {
   )
 }
 
-fetch_table_names <- function(con) {
-  tables <- pb_try(pb_dataset(con$redivis_tag)$list_tables())
-  if (is.null(tables)) return(NULL)
-  # the folders holding each dataset's files are not data tables
-  tables <- Filter(function(t) !isTRUE(t$properties$isFileIndex), tables)
-  names <- vapply(tables, function(t) {
-    if (!is.null(t$name)) t$name else t$properties$name
-  }, character(1))
-  sort(unname(names))
-}
+fetch_table_names <- function(con) pb_table_listing(con$redivis_tag)$tables
 
 # the tables whose rows belong to a dataset, and so can be given its name
 dataset_joined_tables <- c("administrations", "subjects", "trials",

@@ -185,19 +185,26 @@ print.peekbank_connection <- function(x, ...) {
 # the release's Redivis version, holding its README.md and its raw data under
 # raw_data/.
 
-# the names of the folders in a Redivis version, cached per session
-pb_folder_names <- function(redivis_tag) {
-  key <- paste("folders", redivis_tag)
+# the names of the data tables and of the folders (file-index tables) in a
+# Redivis version, cached per session
+pb_table_listing <- function(redivis_tag) {
+  # starts with the tag, so a client's clear_cache() drops it
+  key <- paste(redivis_tag, "(table listing)")
   if (is.null(.peekbankr_env[[key]])) {
     if (!redivis_available()) return(NULL)
     tables <- pb_try(pb_dataset(redivis_tag)$list_tables())
     if (is.null(tables)) return(NULL)
-    folders <- Filter(function(t) isTRUE(t$properties$isFileIndex), tables)
-    .peekbankr_env[[key]] <- vapply(folders, function(t) t$properties$name,
-                                    character(1))
+    names <- vapply(tables, function(t) {
+      if (!is.null(t$name)) t$name else t$properties$name
+    }, character(1))
+    folder <- vapply(tables, function(t) isTRUE(t$properties$isFileIndex), logical(1))
+    .peekbankr_env[[key]] <- list(tables = sort(unname(names[!folder])),
+                                  folders = unname(names[folder]))
   }
   .peekbankr_env[[key]]
 }
+
+pb_folder_names <- function(redivis_tag) pb_table_listing(redivis_tag)$folders
 
 # tibble of (file_id, file_name, size) for the files in one folder
 pb_folder_files <- function(redivis_tag, folder) {
