@@ -18,13 +18,13 @@ Source:
 [`DESCRIPTION`](https://github.com/peekbank/peekbankr/blob/master/DESCRIPTION)
 
 Braginsky M, MacDonald K, Frank M, Xu L, Steffan A (2026). *peekbankr:
-Accessing and Working with Peekbank Data*. R package version 0.9.0,
+Accessing and Working with Peekbank Data*. R package version 0.10.0,
 <https://peekbank.github.io/peekbankr/>.
 
     @Manual{,
       title = {peekbankr: Accessing and Working with Peekbank Data},
       author = {Mika Braginsky and Kyle MacDonald and Michael Frank and Linger Xu and Adrian Steffan},
       year = {2026},
-      note = {R package version 0.9.0},
+      note = {R package version 0.10.0},
       url = {https://peekbank.github.io/peekbankr/},
     }
