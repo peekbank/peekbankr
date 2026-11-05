@@ -284,49 +284,85 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
       msg_error <- c(msg_error, "No CDI data found, check subjects.csv and the column specification")
     }
 
+    # The fields an entry of each known list in subject_aux_data may have.
+    # Other top-level keys are free-form.
+    aux_fields <- list(
+      cdi_responses = list(required = c("instrument_type", "measure", "age", "rawscore", "language"),
+                           optional = "percentile"),
+      lang_measures = list(required = c("instrument_type", "language", "rawscore"),
+                           optional = "age"),
+      lang_exposures = list(required = c("language", "exposure"),
+                            optional = character())
+    )
+    # one row per entry of a list, with its subject in .subject. Binding the
+    # entries keeps a stray field like lab_subject_id from clashing with the
+    # subject's own columns.
+    aux_entries <- function(key) {
+      has <- vapply(sad[[key]], is.data.frame, logical(1))
+      entries <- stats::setNames(sad[[key]][has], sad$lab_subject_id[has])
+      # A field that is text for one subject and a number for another cannot be
+      # combined. It becomes text, which the type checks below then report.
+      fields <- unique(unlist(lapply(entries, names)))
+      mixed <- Filter(function(f) {
+        values <- lapply(entries, function(d) d[intersect(f, names(d))])
+        inherits(tryCatch(dplyr::bind_rows(values), error = identity), "error")
+      }, fields)
+      entries <- lapply(entries, function(d) dplyr::mutate(d, dplyr::across(dplyr::any_of(mixed), as.character)))
+      dplyr::bind_rows(entries, .id = ".subject")
+    }
+
+    for (key in intersect(names(aux_fields), colnames(sad))) {
+      entries <- aux_entries(key)
+      if (nrow(entries) == 0) next
+      fields <- setdiff(colnames(entries), ".subject")
+      required <- aux_fields[[key]]$required
+      extra <- setdiff(fields, c(required, aux_fields[[key]]$optional))
+      if (length(extra) > 0) {
+        msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries with fields that
+                          are not part of the specification: {paste(extra, collapse = ', ')}."))
+      }
+      missing <- setdiff(required, fields)
+      present <- intersect(required, fields)
+      with_na <- present[vapply(entries[present], anyNA, logical(1))]
+      if (length(missing) > 0) {
+        msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries that are missing
+                          the following required fields: {paste(missing, collapse = ', ')}."))
+      } else if (length(with_na) > 0) {
+        msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries with NA values in
+                          the following required fields: {paste(with_na, collapse = ', ')}."))
+      }
+    }
+
+    if ("lang_measures" %in% colnames(sad)) {
+      measures <- aux_entries("lang_measures")
+      if ("rawscore" %in% colnames(measures) && !is.numeric(measures$rawscore)) {
+        msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries that have a
+                          non-numeric rawscore."))
+      }
+      if ("language" %in% colnames(measures) &&
+          any(!(measures$language %in% c(NA, pkg_globals$WORDBANK_ALLOWED_LANGUAGES)))) {
+        wrong <- setdiff(measures$language, c(NA, pkg_globals$WORDBANK_ALLOWED_LANGUAGES))
+        msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries with a language
+                          that does not follow the Wordbank specification: {paste(wrong, collapse = ', ')}."))
+      }
+    }
+
+    # exposures name any language a child hears, so their language is not checked
+    if ("lang_exposures" %in% colnames(sad)) {
+      exposures <- aux_entries("lang_exposures")
+      if ("exposure" %in% colnames(exposures) && !is.numeric(exposures$exposure)) {
+        msg_error <- c(msg_error, .msg("- Some subject(s) have lang_exposures entries that have a
+                          non-numeric exposure."))
+      }
+    }
+
     if ("cdi_responses" %in% colnames(sad)) {
       if(!cdi_expected){
         msg_error <- c(msg_error, "No cdi expected, but CDI data found")
       }
 
-      sad_cdi <- sad %>%
-        # only keep those with cdi data
-        dplyr::filter(sapply(.data[["cdi_responses"]], class) == "data.frame")
-
-      # check that each CDI response has the correct columns
-      msg_new <- NULL
-
-      purrr::walk(sad_cdi$cdi_responses, \(cdi) {
-
-        if(nrow(cdi) == 0){
-          return()
-        }
-
-        columns_to_check <- c("instrument_type", "measure", "age", "rawscore", "language")
-
-        missing_cdi <- setdiff(columns_to_check,
-                               colnames(cdi))
-
-        if (length(missing_cdi) > 0) {
-          msg_new <<- .msg("- Some subject(s) have CDI responses that are missing
-                          the following required fields: {missing_cdi}.")
-        } else {
-          columns_with_na <- columns_to_check[sapply(cdi[columns_to_check], function(x) any(is.na(x)))]
-
-          if (length(columns_with_na) > 0) {
-            msg_new <<- .msg("- Some subject(s) have CDI responses with NA values in the following required fields:
-                   {paste(columns_with_na, collapse=', ')}.")
-          }
-        }
-      })
-
-      if(!is.null(msg_new)){
-        msg_error <- c(msg_error, msg_new)
-      }
-
       # check for correct format of CDI response columns
-      cdi <- sad_cdi %>%
-        tidyr::unnest("cdi_responses")
+      cdi <- aux_entries("cdi_responses")
 
       if (any(!(cdi$instrument_type %in% c("wg", "ws", "wsshort", "wgshort")))) {
         msg_new <- .msg("- Some subject(s) have CDI responses that have an
@@ -374,11 +410,11 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
 
       # check for duplicate CDI scores per subject
       cdi_dupes <- cdi %>%
-        dplyr::group_by(.data$lab_subject_id, .data$instrument_type,
+        dplyr::group_by(.data$.subject, .data$instrument_type,
                         .data$measure, .data$age, .data$language) %>%
         dplyr::filter(dplyr::n() > 1)
       if (nrow(cdi_dupes) > 0) {
-        dupe_ids <- unique(cdi_dupes$lab_subject_id)
+        dupe_ids <- unique(cdi_dupes$.subject)
         msg_warning[["cdi_collision"]] <- .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}")
       }
     }
