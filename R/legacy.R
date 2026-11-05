@@ -498,6 +498,7 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data",
 #' @param datasets Character vector of dataset names. If empty (default),
 #'   downloads READMEs for all datasets.
 #' @param local_base_dir Directory to save README files to (default: "dataset_readmes")
+#' @param connection A connection to the peekbank database
 #'
 #' @return No return value, called for side effects. README files are saved to
 #'   the specified directory and the path is printed via message.
@@ -505,12 +506,15 @@ download_stimuli <- function(con, local_base_dir = "stimulus_data",
 #'
 #' @examples
 #' \dontrun{
-#' get_readmes()
-#' get_readmes(datasets = c("pomper_saffran_2016"))
+#' con <- connect_to_peekbank("2025.1")
+#' get_readmes(connection = con)
+#' get_readmes(datasets = c("pomper_saffran_2016"), connection = con)
 #' }
 get_readmes <- function(datasets = c(),
-                        local_base_dir = "dataset_readmes") {
-  download_readmes(if (length(datasets) > 0) datasets, local_base_dir)
+                        local_base_dir = "dataset_readmes",
+                        connection = NULL) {
+  con <- resolve_connection(connection)
+  download_readmes(con, if (length(datasets) > 0) datasets, local_base_dir)
   invisible(NULL)
 }
 

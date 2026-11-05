@@ -100,9 +100,19 @@ release_name_at <- function(redivis_tag) {
   .peekbankr_env[[key]]
 }
 
-# a release name, or "current", to the release and the Redivis version tag
-# holding it
+# a release name, "current" or "next", to the release and the Redivis version
+# tag holding it
 resolve_release <- function(db_version = "current") {
+  if (identical(db_version, "next")) {
+    # the draft of the next release, which only editors of the dataset can read
+    release <- tryCatch(release_name_at("next"), error = function(e) NULL)
+    if (is.null(release)) {
+      stop("Could not read the draft of the next release. Only editors of the ",
+           "peekbank dataset on Redivis can, while there is a draft.", call. = FALSE)
+    }
+    message("Using the draft of release '", release, "' (Redivis version next).")
+    return(list(release = release, redivis_tag = "next"))
+  }
   idx <- published_redivis_tags()
   if (is.null(idx)) {
     stop("Could not reach the peekbank dataset on Redivis to resolve ",
@@ -170,35 +180,54 @@ print.peekbank_connection <- function(x, ...) {
   invisible(x)
 }
 
-# ---- data files (raw_data / processed_data / READMEs) -----------------------
-# Peekbank's files live in the companion datapages.peekbank_files dataset on
-# Redivis. Each dataset has a file-index table (folder) named after it,
-# holding its raw data with file names relative to raw_data/. The
-# _processed_data folder holds every dataset's processed data and README, as
-# <dataset>/<file>.
+# ---- data files (raw data / READMEs) ----------------------------------------
+# Each dataset of a release has a file-index table (folder) of the same name in
+# the release's Redivis version, holding its README.md and its raw data under
+# raw_data/.
 
-peekbank_files_reference <- "peekbank_files:frvk"
-
-pb_files_dataset <- function() {
-  redivis::redivis$organization(peekbank_organization)$dataset(
-    peekbank_files_reference)
+# the names of the folders in a Redivis version, cached per session
+pb_folder_names <- function(redivis_tag) {
+  key <- paste("folders", redivis_tag)
+  if (is.null(.peekbankr_env[[key]])) {
+    if (!redivis_available()) return(NULL)
+    tables <- pb_try(pb_dataset(redivis_tag)$list_tables())
+    if (is.null(tables)) return(NULL)
+    folders <- Filter(function(t) isTRUE(t$properties$isFileIndex), tables)
+    .peekbankr_env[[key]] <- vapply(folders, function(t) t$properties$name,
+                                    character(1))
+  }
+  .peekbankr_env[[key]]
 }
 
 # tibble of (file_id, file_name, size) for the files in one folder
-pb_folder_files <- function(folder) {
+pb_folder_files <- function(redivis_tag, folder) {
   if (!redivis_available()) return(NULL)
   sql <- sprintf("SELECT file_id, file_name, size FROM `%s`", folder)
-  pb_try(pb_files_dataset()$query(sql)$to_tibble())
+  pb_try(pb_dataset(redivis_tag)$query(sql)$to_tibble())
 }
 
-pb_folder_names <- function() {
-  if (!redivis_available()) return(NULL)
-  tables <- pb_try(pb_files_dataset()$list_tables())
-  vapply(tables, function(t) t$properties$name, character(1))
+# The Redivis version holding the files of a connection's release. Releases
+# from before releases held their files (before 2026.2) use the oldest release that does as
+# it is the closest to them in time, and it does not change any more.
+# This enables at least some file fetching even if not fully supported
+files_redivis_tag <- function(connection) {
+  if (length(pb_folder_names(connection$redivis_tag)) > 0) {
+    return(connection$redivis_tag)
+  }
+  # loop through in release order to get the first one with files
+  for (redivis_tag in rev(published_redivis_tags()$redivis_tags)) {
+    if (length(pb_folder_names(redivis_tag)) > 0) {
+      message("Release ", connection$release, " holds no files, so they are ",
+              "taken from release ", release_name_at(redivis_tag),
+              ", the oldest one that does")
+      return(redivis_tag)
+    }
+  }
+  message("No Peekbank release holds its files yet")
+  NULL
 }
 
-# Fetch one file from the peekbank_files dataset, given a row of a
-# pb_folder_files() result.
+# Fetch one file from Redivis, given a row of a pb_folder_files() result.
 #
 # Workaround for a redivis bug, observed in 0.12.12: the public helpers
 # ($file(), list_files(), to_directory()) all build a directory tree through
@@ -212,7 +241,7 @@ pb_folder_names <- function() {
 #
 # Folders containing such a directory (e.g. newman_vocoded_2012) all hit it.
 # When that is fixed upstream, a file can be fetched with:
-#   pb_files_dataset()$table(folder)$file(file_name)$download(
+#   pb_dataset(redivis_tag)$table(folder)$file(file_name)$download(
 #     path = dest, overwrite = TRUE, progress = FALSE)
 pb_fetch_file <- function(file_id, file_name, size, dest) {
   redivis_file <- utils::getFromNamespace("File", "redivis")

@@ -102,7 +102,8 @@ Pin a database version.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{version}}{A Peekbank release name such as "2025.1", or "current"
+\item{\code{version}}{A Peekbank release name such as "2025.1", "current", or
+"next" for the unreleased draft
 for whichever was published most recently. Required: see
 \code{\link[=peekbank]{peekbank()}}.}
 }

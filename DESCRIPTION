@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing and Working with Peekbank Data
-Version: 0.7.0
+Version: 0.8.0
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
@@ -13,7 +13,7 @@ Description: Collection of tools for working with peekbank, an open repository f
     developmental eye-tracking data.
 Depends: R (>= 4.1.0)
 License: GPL-3
-URL: https://github.com/peekbank/peekbankr
+URL: https://peekbank.github.io/peekbankr/, https://github.com/peekbank/peekbankr
 BugReports: https://github.com/peekbank/peekbankr/issues
 Encoding: UTF-8
 Imports:

@@ -4,13 +4,19 @@
 \alias{get_readmes}
 \title{Download dataset README files}
 \usage{
-get_readmes(datasets = c(), local_base_dir = "dataset_readmes")
+get_readmes(
+  datasets = c(),
+  local_base_dir = "dataset_readmes",
+  connection = NULL
+)
 }
 \arguments{
 \item{datasets}{Character vector of dataset names. If empty (default),
 downloads READMEs for all datasets.}
 
 \item{local_base_dir}{Directory to save README files to (default: "dataset_readmes")}
+
+\item{connection}{A connection to the peekbank database}
 }
 \value{
 No return value, called for side effects. README files are saved to
@@ -25,7 +31,8 @@ Downloads README files for Peekbank datasets from Redivis.
 }
 \examples{
 \dontrun{
-get_readmes()
-get_readmes(datasets = c("pomper_saffran_2016"))
+con <- connect_to_peekbank("2025.1")
+get_readmes(connection = con)
+get_readmes(datasets = c("pomper_saffran_2016"), connection = con)
 }
 }

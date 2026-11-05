@@ -5,7 +5,7 @@ output:
   rmarkdown::html_vignette:
     toc: true
 vignette: >
-  %\VignetteIndexEntry{peekbankr}
+  %\VignetteIndexEntry{Accessing Peekbank Data}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 ---

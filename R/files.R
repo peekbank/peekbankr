@@ -15,15 +15,19 @@ fetch_stimulus_images <- function(con, datasets = c(), dir = "stimulus_data",
     dplyr::mutate(full_stimulus_path = paste0(
       .data$dataset_name, "/", sub("^/", "", .data$stimulus_image_path)))
 
-  # each dataset's raw data is a folder of the peekbank_files dataset on Redivis.
-  # Some datasets of older releases have been renamed, so their images count as missing.
-  # Older releases dont support images anyway as paths were not consistent, so we are not missing
-  # anything crucial by doing this
-  with_folder <- intersect(unique(wanted$dataset_name), pb_folder_names())
+  # Datasets of older releases that are not in the release holding the files
+  # (e.g. renamed ones) count as missing. Their image paths were not
+  # consistent anyway, so there isnt much lost.
+  redivis_tag <- files_redivis_tag(con)
+  folders <- if (is.null(redivis_tag)) c() else pb_folder_names(redivis_tag)
+  with_folder <- intersect(unique(wanted$dataset_name), folders)
   listings <- lapply(with_folder, function(ds) {
-    files <- pb_folder_files(ds)
+    files <- pb_folder_files(redivis_tag, ds)
     if (is.null(files)) return(NULL)
-    dplyr::mutate(files, file_name = paste0(ds, "/", .data$file_name))
+    # saved as <dataset>/<path>, without the raw_data/ of the folder
+    files %>%
+      dplyr::filter(startsWith(.data$file_name, "raw_data/")) %>%
+      dplyr::mutate(file_name = paste0(ds, "/", sub("^raw_data/", "", .data$file_name)))
   })
   # the empty tibble keeps the columns when no dataset has a folder
   index <- dplyr::bind_rows(
@@ -35,7 +39,7 @@ fetch_stimulus_images <- function(con, datasets = c(), dir = "stimulus_data",
   missing <- setdiff(wanted$full_stimulus_path, files$file_name)
   if (length(missing) > 0) {
     message(length(missing), " stimulus files were not found in the ",
-            "peekbank_files dataset (e.g. ", missing[1], ")")
+            "files of the release (e.g. ", missing[1], ")")
   }
 
   local <- pb_download_files(files, dir, skip_existing = skip_existing)
@@ -57,7 +61,7 @@ fetch_readmes <- function(con, datasets = c(), dir = "dataset_readmes") {
       dplyr::filter(.data$dataset_name %in% .env$datasets)
   }
 
-  paths <- download_readmes(datasets_df$dataset_name, dir)
+  paths <- download_readmes(con, datasets_df$dataset_name, dir)
   if (is.null(paths)) return(NULL)
   local <- unname(paths[datasets_df$dataset_name])
 
@@ -72,20 +76,21 @@ fetch_readmes <- function(con, datasets = c(), dir = "dataset_readmes") {
     )
 }
 
-# the READMEs of the named datasets (every one in peekbank_files if NULL),
-# saved as <dataset>.md under dir; returns their local paths named by dataset,
-# NA where a download failed
-download_readmes <- function(datasets, dir) {
-  # READMEs at storage time live at <dataset>/README.md in the _processed_data folder of the
-  # peekbank_files dataset
-  index <- pb_folder_files("_processed_data")
-  if (is.null(index)) return(NULL)
-  readmes <- index[grepl("^[^/]+/README\\.md$", index$file_name), ]
+# the READMEs of the named datasets (every one in the release if NULL), saved
+# as <dataset>.md under dir; returns their local paths named by dataset, NA
+# where a download failed
+download_readmes <- function(con, datasets, dir) {
+  # each dataset's README.md is at the top of its folder in the release
+  redivis_tag <- files_redivis_tag(con)
+  if (is.null(redivis_tag)) return(NULL)
+  ds_names <- pb_folder_names(redivis_tag)
+  if (!is.null(datasets)) ds_names <- intersect(ds_names, datasets)
+  readmes <- dplyr::bind_rows(lapply(ds_names, function(ds) {
+    files <- pb_folder_files(redivis_tag, ds)
+    files <- files[files$file_name == "README.md", ]
+    dplyr::mutate(files, file_name = paste0(ds, "/README.md"))
+  }))
   ds_names <- sub("/README\\.md$", "", readmes$file_name)
-  if (!is.null(datasets)) {
-    readmes <- readmes[ds_names %in% datasets, ]
-    ds_names <- ds_names[ds_names %in% datasets]
-  }
 
   if (!dir.exists(dir)) dir.create(dir, recursive = TRUE)
 

@@ -27,7 +27,8 @@ PeekbankClient <- R6Class(
   public = list(
 
     #' @description Pin a database version.
-    #' @param version A Peekbank release name such as "2025.1", or "current"
+    #' @param version A Peekbank release name such as "2025.1", "current", or
+    #'   "next" for the unreleased draft
     #'   for whichever was published most recently. Required: see
     #'   [peekbank()].
     initialize = function(version) {
@@ -77,6 +78,12 @@ PeekbankClient <- R6Class(
     print = function(...) {
       cat("<peekbank> release ", private$con$release,
           " (Redivis version ", private$con$redivis_tag, ")\n", sep = "")
+      # older releases do not record the commit of the import code
+      commit <- pb_table(private$con, "release_info")[["import_commit"]]
+      if (length(commit) == 1 && !is.na(commit)) {
+        cat("  code:    https://github.com/peekbank/peekbank-data-import/tree/",
+            commit, "\n", sep = "")
+      }
       methods <- setdiff(names(PeekbankClient$public_methods),
                          c("initialize", "print", "clone"))
       wrap <- function(label, x) {
@@ -441,7 +448,9 @@ print.peekbank_method <- function(x, ...) {
 #' comes from that version, so an analysis cannot mix releases.
 #'
 #' @param version A Peekbank release name such as "2025.1". Pass "current" to
-#'   take whichever version was published most recently
+#'   take whichever version was published most recently, or "next" for the
+#'   unreleased draft of the next release (only editors of the dataset on
+#'   Redivis can read it)
 #'
 #' @return A [PeekbankClient]
 #' @export

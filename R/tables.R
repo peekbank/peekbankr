@@ -9,11 +9,13 @@ new_connection <- function(version) {
 }
 
 fetch_table_names <- function(con) {
-  names <- pb_try(
-    vapply(pb_dataset(con$redivis_tag)$list_tables(), function(t) {
-      if (!is.null(t$name)) t$name else t$properties$name
-    }, character(1)))
-  if (is.null(names)) return(NULL)
+  tables <- pb_try(pb_dataset(con$redivis_tag)$list_tables())
+  if (is.null(tables)) return(NULL)
+  # the folders holding each dataset's files are not data tables
+  tables <- Filter(function(t) !isTRUE(t$properties$isFileIndex), tables)
+  names <- vapply(tables, function(t) {
+    if (!is.null(t$name)) t$name else t$properties$name
+  }, character(1))
   sort(unname(names))
 }
 
