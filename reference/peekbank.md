@@ -14,7 +14,9 @@ peekbank(version)
 - version:
 
   A Peekbank release name such as "2025.1". Pass "current" to take
-  whichever version was published most recently
+  whichever version was published most recently, or "next" for the
+  unreleased draft of the next release (only editors of the dataset on
+  Redivis can read it)
 
 ## Value
 

@@ -125,8 +125,9 @@ Pin a database version.
 
 - `version`:
 
-  A Peekbank release name such as "2025.1", or "current" for whichever
-  was published most recently. Required: see
+  A Peekbank release name such as "2025.1", "current", or "next" for the
+  unreleased draft for whichever was published most recently. Required:
+  see
   [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md).
 
 ------------------------------------------------------------------------

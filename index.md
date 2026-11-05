@@ -134,9 +134,9 @@ pb$release   # "2026.1"
 
 ### Data files
 
-Raw data, processed intermediates, and per-dataset READMEs live in the
-companion [peekbank_files
-dataset](https://redivis.com/datapages/datasets/peekbank_files):
+Each release holds the README and raw data of its datasets, so the
+stimulus images and READMEs you get match the release. Releases from
+before that take them from the oldest release that holds them:
 
 ``` r
 

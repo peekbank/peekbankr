@@ -11,7 +11,11 @@ Downloads README files for Peekbank datasets from Redivis.
 ## Usage
 
 ``` r
-get_readmes(datasets = c(), local_base_dir = "dataset_readmes")
+get_readmes(
+  datasets = c(),
+  local_base_dir = "dataset_readmes",
+  connection = NULL
+)
 ```
 
 ## Arguments
@@ -25,6 +29,10 @@ get_readmes(datasets = c(), local_base_dir = "dataset_readmes")
 
   Directory to save README files to (default: "dataset_readmes")
 
+- connection:
+
+  A connection to the peekbank database
+
 ## Value
 
 No return value, called for side effects. README files are saved to the
@@ -34,7 +42,8 @@ specified directory and the path is printed via message.
 
 ``` r
 if (FALSE) { # \dontrun{
-get_readmes()
-get_readmes(datasets = c("pomper_saffran_2016"))
+con <- connect_to_peekbank("2025.1")
+get_readmes(connection = con)
+get_readmes(datasets = c("pomper_saffran_2016"), connection = con)
 } # }
 ```

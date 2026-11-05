@@ -11,7 +11,7 @@ Downloads README files for Peekbank datasets from Redivis."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,11 @@ Downloads README files for Peekbank datasets from Redivis."></head><body>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>, local_base_dir <span class="op">=</span> <span class="st">"dataset_readmes"</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">get_readmes</span><span class="op">(</span></span>
+<span>  datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  local_base_dir <span class="op">=</span> <span class="st">"dataset_readmes"</span>,</span>
+<span>  connection <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -60,6 +64,10 @@ downloads READMEs for all datasets.</p></dd>
 <dt id="arg-local-base-dir">local_base_dir<a class="anchor" aria-label="anchor" href="#arg-local-base-dir"></a></dt>
 <dd><p>Directory to save README files to (default: "dataset_readmes")</p></dd>
 
+
+<dt id="arg-connection">connection<a class="anchor" aria-label="anchor" href="#arg-connection"></a></dt>
+<dd><p>A connection to the peekbank database</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -70,8 +78,9 @@ the specified directory and the path is printed via message.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
-<span class="r-in"><span><span class="fu">get_readmes</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">get_readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pomper_saffran_2016"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu"><a href="connect_to_peekbank.html">connect_to_peekbank</a></span><span class="op">(</span><span class="st">"2025.1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">get_readmes</span><span class="op">(</span>connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">get_readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pomper_saffran_2016"</span><span class="op">)</span>, connection <span class="op">=</span> <span class="va">con</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
