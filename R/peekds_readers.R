@@ -60,11 +60,8 @@ ds.get_json_fields <- function(table_type) {
 #'
 #' @export
 ds.list_ds_tables <- function(coding_methods = c("eyetracking")) {
-  # get json file from github
   peekjson <- ds.get_peekjson()
-  # get the list of tables other than admin
-  table_list <- peekjson$table
-  table_list_auto <- table_list[table_list != "admin"]
+  table_list_auto <- peekjson$table
 
   table_list_manual <- table_list_auto[!(table_list_auto %in%
                                            c("xy_timepoints",

@@ -655,38 +655,5 @@
         }
       }
     ]
-  },
-  {
-    "model_class": "Admin",
-    "table": "admin",
-    "fields": [
-      {
-        "field_name": "admin_id",
-        "field_class": "IntegerField",
-        "options": {
-          "primary_key":true,
-          "null": false,
-          "default": "None"
-        }
-      },
-      {
-        "field_name": "date",
-        "field_class": "DateField",
-        "options": {
-          "null": false,
-          "default": "datetime.now",
-          "max_length": 255
-        }
-      },
-      {
-        "field_name": "version",
-        "field_class": "CharField",
-        "options": {
-          "null": false,
-          "default": "None",
-          "max_length": 255
-        }
-      }
-    ]
   }
 ]
