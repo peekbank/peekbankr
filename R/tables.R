@@ -1,4 +1,4 @@
-# The tables in the dhape peekbankr hands out, derived from the ones redivis.R pulled.
+# The tables in the shape peekbankr hands out, derived from the ones redivis.R pulled.
 
 new_connection <- function(version) {
   ver <- resolve_release(version)
@@ -54,6 +54,27 @@ table_view <- function(name, read_table, logical_flags = TRUE) {
     dplyr::select(read_table("datasets"),
                   dplyr::all_of(c("dataset_id", "dataset_name"))),
     by = "dataset_id")
+}
+
+# expand a run-length-encoded AOI timepoints table (one row per run of a
+# constant AOI within an administration x trial, with t_norm the run start
+# and `length` the run length in samples) back to one row per 25 ms sample.
+# Columns named in `carry` are constant within a run and repeat along with it.
+decode_rle_timepoints <- function(aoi_timepoints, carry = character()) {
+  timestep <- 1000 / pkg_globals$SAMPLE_RATE
+  runs <- as.integer(aoi_timepoints$length)
+  # one element per output sample: the run it came from, and how far into it
+  source_row <- rep.int(seq_len(nrow(aoi_timepoints)), runs)
+  offset <- sequence(runs) - 1L
+
+  decoded <- dplyr::tibble(
+    administration_id = aoi_timepoints$administration_id[source_row],
+    trial_id = aoi_timepoints$trial_id[source_row],
+    aoi = aoi_timepoints$aoi[source_row],
+    t_norm = as.integer(aoi_timepoints$t_norm[source_row] + offset * timestep)
+  )
+  for (col in carry) decoded[[col]] <- aoi_timepoints[[col]][source_row]
+  decoded
 }
 
 # The schema stores these two as 0/1 integers, turn them into logicals
