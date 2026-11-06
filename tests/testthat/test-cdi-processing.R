@@ -161,3 +161,69 @@ test_that("add_cdi_proportions leaves unknown forms NA and names them", {
     "English \\(American\\) not_a_form")
   expect_true(is.na(out$proportion))
 })
+
+test_that("nearest_cdi takes the closest score on each form and measure", {
+  administrations <- tibble(administration_id = 1:3, subject_id = c(1, 1, 2),
+                            age = c(18, 24, 12), dataset_name = "a",
+                            tracker = "eyelink")
+  cdi <- english(
+    subject_id = c(1, 1, 1, 1, 1, 2),
+    dataset_name = "a",
+    instrument_type = c("wg", "wg", "wg", "ws", "ws", "wg"),
+    measure = c("prod", "prod", "comp", "prod", "prod", "comp"),
+    age = c(16, 19, 18, 26, 22, 20),
+    rawscore = 1:6
+  )
+  out <- nearest_cdi(administrations, cdi, max_age_diff = 3) %>%
+    dplyr::arrange(administration_id, measure)
+
+  # every column of both, the shared dataset_name once
+  expect_setequal(names(out), c(names(administrations), "language",
+                                "instrument_type", "measure", "cdi_age",
+                                "rawscore"))
+  # administration 3 has no score within 3 months
+  expect_equal(out$administration_id, c(1, 1, 2))
+  expect_equal(out$instrument_type, c("wg", "wg", "ws"))
+  expect_equal(out$measure, c("comp", "prod", "prod"))
+  # administration 2 is 2 months from both ws scores and gets the earlier one
+  expect_equal(out$cdi_age, c(18, 19, 22))
+
+  out <- nearest_cdi(administrations, cdi, max_age_diff = 3,
+                     prefer_later = TRUE) %>%
+    dplyr::arrange(administration_id, measure)
+  expect_equal(out$cdi_age, c(18, 19, 26))
+})
+
+test_that("nearest_cdi keeps every row of the table, in its order", {
+  trials <- tibble(trial_id = 1:3, subject_id = c(2, 1, 1),
+                   age = c(24, 18, 18))
+  cdi <- english(subject_id = 1:2, instrument_type = "ws", measure = "prod",
+                 age = c(18, 24))
+  out <- nearest_cdi(trials, cdi, max_age_diff = 3)
+  expect_equal(out$trial_id, 1:3)
+  expect_equal(out$cdi_age, c(24, 18, 18))
+})
+
+test_that("nearest_cdi takes a score in each language", {
+  administrations <- tibble(administration_id = 1, subject_id = 1, age = 24)
+  cdi <- tibble(subject_id = 1, instrument_type = "ws", measure = "prod",
+                language = c("English (American)", "Spanish (Mexican)"),
+                age = c(23, 25))
+  out <- nearest_cdi(administrations, cdi, max_age_diff = 3)
+  expect_setequal(out$language, c("English (American)", "Spanish (Mexican)"))
+})
+
+test_that("add_cdi_percentiles gives the same before and after nearest_cdi", {
+  administrations <- tibble(administration_id = 1:2, subject_id = 1:2,
+                            age = c(18, 25))
+  cdi <- english(subject_id = 1:2, instrument_type = "ws", measure = "prod",
+                 sex = "female", age = c(20, 24), rawscore = c(50, 280))
+
+  before <- nearest_cdi(administrations, add_cdi_percentiles(cdi),
+                        max_age_diff = 3)
+  after <- add_cdi_percentiles(nearest_cdi(administrations, cdi,
+                                           max_age_diff = 3))
+  # the norms are those of the scores' ages, not the administrations'
+  expect_equal(after$norm_age, c(20, 24))
+  expect_equal(after, before)
+})

@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing and Working with Peekbank Data
-Version: 0.12.0
+Version: 0.13.0
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
@@ -20,7 +20,7 @@ Imports:
     R6 (>= 2.5.0),
     DBI (>= 1.1.0),
     dbplyr (>= 2.3.0),
-    dplyr (>= 1.0.4),
+    dplyr (>= 1.1.0),
     glue (>= 1.4.2),
     jsonlite (>= 1.7.2),
     magrittr (>= 2.0.1),

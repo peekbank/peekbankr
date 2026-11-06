@@ -20,7 +20,8 @@ require_columns <- function(df, columns) {
 #' @param cdi CDI scores, one per row, e.g. from
 #'   `unnest_aux(pb$subjects, "cdi_responses")`. Needs `language`,
 #'   `instrument_type`, `measure`, `age` and `rawscore`; `sex` is used if
-#'   present.
+#'   present. The score's age is read from `cdi_age` instead where there is
+#'   one, as [nearest_cdi()] creates that name.
 #'
 #' @return `cdi` with three columns added:
 #' * `norm_age`: the age in months whose norms were used
@@ -40,7 +41,9 @@ require_columns <- function(df, columns) {
 #'   add_cdi_percentiles()
 #' }
 add_cdi_percentiles <- function(cdi) {
-  require_columns(cdi, c("language", "instrument_type", "measure", "age",
+  # after nearest_cdi(), the score's age is cdi_age and age is the row's
+  age_col <- if ("cdi_age" %in% names(cdi)) "cdi_age" else "age"
+  require_columns(cdi, c("language", "instrument_type", "measure", age_col,
                          "rawscore"))
   norms <- utils::read.csv(system.file("extdata", "cdi_norms.csv",
                                        package = "peekbankr"))
@@ -49,7 +52,7 @@ add_cdi_percentiles <- function(cdi) {
                         norms$sex, norms$age))
 
   form <- paste(cdi$language, cdi$instrument_type, cdi$measure)
-  norm_age <- floor(cdi$age + 0.5)
+  norm_age <- floor(cdi[[age_col]] + 0.5)
   percentile_against <- function(sex) {
     keys <- paste(form, sex, norm_age)
     vapply(seq_along(keys), function(i) {
@@ -116,4 +119,48 @@ add_cdi_proportions <- function(cdi) {
             "without a Wordbank item list: ", paste(unknown, collapse = ", "))
   }
   cdi
+}
+
+#' Add the CDI scores closest in age
+#'
+#' For each row of `df`, picks the child's CDI score closest in age in each
+#' language, form and measure, among those at most `max_age_diff` months away.
+#'
+#' @param df A table with `subject_id` and `age`, e.g. `pb$administrations`
+#' @param cdi CDI scores, one per row, e.g. from
+#'   `unnest_aux(pb$subjects, "cdi_responses")`. Needs `subject_id`, `age`,
+#'   `language`, `instrument_type` and `measure`.
+#' @param max_age_diff The furthest a CDI score may be from the row's age, in
+#'   months
+#' @param prefer_later Of a score before and one after the row's age that are
+#'   equally close, pick the later one instead of the earlier one
+#'
+#' @return `df` with the columns of `cdi` added, one row per row of `df`,
+#'   language, form and measure, in the order of `df`. The score's age is
+#'   `cdi_age`, and columns `cdi` shares with `df` are taken from `df`. Rows
+#'   without a score close enough are left out.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' pb <- peekbank("2026.1")
+#' cdi <- unnest_aux(pb$subjects, "cdi_responses")
+#' nearest_cdi(pb$administrations, cdi, max_age_diff = 3)
+#' }
+nearest_cdi <- function(df, cdi, max_age_diff, prefer_later = FALSE) {
+  # cdi repeats subject columns like dataset_id that df may have too
+  cdi <- cdi %>%
+    dplyr::rename(cdi_age = "age") %>%
+    dplyr::select("subject_id", !dplyr::any_of(names(df)))
+
+  df %>%
+    dplyr::mutate(.row = dplyr::row_number()) %>%
+    dplyr::inner_join(cdi, by = "subject_id", relationship = "many-to-many") %>%
+    dplyr::filter(abs(.data$cdi_age - .data$age) <= max_age_diff) %>%
+    # of two equally close scores, slice_min keeps the first
+    dplyr::arrange(if (prefer_later) dplyr::desc(.data$cdi_age) else .data$cdi_age) %>%
+    dplyr::slice_min(abs(.data$cdi_age - .data$age), with_ties = FALSE,
+                     by = c(".row", "language", "instrument_type", "measure")) %>%
+    dplyr::arrange(.data$.row) %>%
+    dplyr::select(-".row")
 }

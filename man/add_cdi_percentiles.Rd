@@ -10,7 +10,8 @@ add_cdi_percentiles(cdi)
 \item{cdi}{CDI scores, one per row, e.g. from
 \code{unnest_aux(pb$subjects, "cdi_responses")}. Needs \code{language},
 \code{instrument_type}, \code{measure}, \code{age} and \code{rawscore}; \code{sex} is used if
-present.}
+present. The score's age is read from \code{cdi_age} instead where there is
+one, as \code{\link[=nearest_cdi]{nearest_cdi()}} creates that name.}
 }
 \value{
 \code{cdi} with three columns added:
