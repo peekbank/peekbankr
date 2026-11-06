@@ -1,6 +1,6 @@
-# sets the starting point of a given trial to be zero
+# Center each trial's times on its point of disambiguation
 
-sets the starting point of a given trial to be zero
+Center each trial's times on its point of disambiguation
 
 ## Usage
 
@@ -12,9 +12,11 @@ ds.normalize_times(df_table)
 
 - df_table:
 
-  to-be-resampled dataframe with t, aoi/xy values, trial_id and
-  administration_id
+  The output of
+  [`ds.rezero_times()`](https://peekbank.github.io/peekbankr/reference/ds.rezero_times.md),
+  with `point_of_disambiguation` in ms from the trial's start
 
 ## Value
 
-df_out with resampled time, xy or aoi value rows
+`df_table` with `t_zeroed` replaced by `t_norm`, the time from the point
+of disambiguation

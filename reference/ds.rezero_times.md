@@ -1,6 +1,6 @@
-# sets the starting point of a given trial to be zero
+# Shift each trial's times to start at zero
 
-sets the starting point of a given trial to be zero
+Shift each trial's times to start at zero
 
 ## Usage
 
@@ -12,9 +12,10 @@ ds.rezero_times(df_table)
 
 - df_table:
 
-  to-be-resampled dataframe with t, aoi/xy values, trial_id and
-  administration_id
+  Timepoints with `administration_id`, `trial_id` and `t`, the lab's
+  timestamps in ms
 
 ## Value
 
-df_out with resampled time, xy or aoi value rows
+`df_table` with `t` replaced by `t_zeroed`, the time since the trial's
+first timestamp

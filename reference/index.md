@@ -45,11 +45,11 @@ Used by the import scripts in peekbank-data-import, not by analyses.
 - [`ds.list_language_choices()`](https://peekbank.github.io/peekbankr/reference/ds.list_language_choices.md)
   : List current allowed language choices for db import
 - [`ds.normalize_times()`](https://peekbank.github.io/peekbankr/reference/ds.normalize_times.md)
-  : sets the starting point of a given trial to be zero
+  : Center each trial's times on its point of disambiguation
 - [`ds.resample_times()`](https://peekbank.github.io/peekbankr/reference/ds.resample_times.md)
   : This function resample times to be consistent across labs.
 - [`ds.rezero_times()`](https://peekbank.github.io/peekbankr/reference/ds.rezero_times.md)
-  : sets the starting point of a given trial to be zero
+  : Shift each trial's times to start at zero
 - [`ds.validate_for_db_import()`](https://peekbank.github.io/peekbankr/reference/ds.validate_for_db_import.md)
   : check all csv files against database schema for database import
 - [`ds.validate_table()`](https://peekbank.github.io/peekbankr/reference/ds.validate_table.md)
