@@ -20,6 +20,14 @@ what the resulting data look like.
 remotes::install_github("peekbank/peekbankr")
 ```
 
+peekbankr follows [semantic versioning](https://semver.org), and each version
+is tagged. To keep an analysis on one version of the package, the way
+`peekbank()` keeps it on one data release, install it by its tag:
+
+```r
+remotes::install_github("peekbank/peekbankr@v1.0.0")
+```
+
 The first data request will open a browser window to authorize Redivis
 access (free account). For non-interactive use, set a `REDIVIS_API_TOKEN`
 environment variable instead. That token needs the `data.metadata` scope.

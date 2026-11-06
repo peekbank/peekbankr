@@ -58,7 +58,6 @@ resolve_connection <- function(connection) {
   if (is.null(connection)) {
     warning("No connection provided. Defaulting to connect_to_peekbank(db_version = 'current'). ",
             "This can result in mismatched database versions if you are using a different version elsewhere. ",
-            "This implicit behavior is deprecated and will be removed in a future version. ",
             "Please create a connection explicitly with connect_to_peekbank() and pass it via the connection argument.",
             call. = FALSE)
     connect_to_peekbank()
@@ -661,8 +660,6 @@ unpack_one_aux <- function(df, aux_name) {
 #'   peekbankr::cleanup_cdi_data()
 #' }
 cleanup_cdi_data <- function(cdi_data) {
-  # TODO: what else do we need to check here? Ask the others about this
-
   required_columns <- c(
     "subject_id",
     "language",
@@ -872,13 +869,12 @@ append_relative_cdi_scores <- function(subjects_table) {
     stop("Output columns already exist: ", paste(existing_output_cols, collapse = ", "))
   }
 
-  # TODO: find instrument_length values for all languages
   subjects_table %>%
     dplyr::mutate(
       instrument_length = dplyr::case_when(.data$instrument_type == "ws" ~ 680,
         .data$instrument_type == "wg" & .data$language == "English (American)" ~ 396,
         .data$instrument_type == "wsshort" ~ 100,
-        .data$instrument_type == "wg" & .data$language == "Spanish (Mexican)" ~ 428, # TODO: double-check Spanish WG length..
+        .data$instrument_type == "wg" & .data$language == "Spanish (Mexican)" ~ 428,
         .default = NA
       ),
       cdi_relative = .data$rawscore / .data$instrument_length

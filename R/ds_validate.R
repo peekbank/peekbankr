@@ -252,7 +252,7 @@ check_fields <- function(df_table, table_type, is_null_field_required) {
 # timepoints have to be on the 40 Hz grid ds.resample_times() produces
 check_timepoints <- function(df_table, table_type) {
   msg_error <- c()
-  if (any(df_table$t_norm %% SAMPLE_DURATION != 0, na.rm = TRUE)) {
+  if (any(df_table[["t_norm"]] %% SAMPLE_DURATION != 0, na.rm = TRUE)) {
     msg_new <- .msg("- Column t_norm in table {table_type} is not sampled
                     at 40HZ.")
     msg_error <- c(msg_error, msg_new)
@@ -325,7 +325,7 @@ check_subject_aux <- function(df_table, cdi_expected) {
   # subject's own columns.
   aux_entries <- function(key) {
     has <- vapply(sad[[key]], is.data.frame, logical(1))
-    entries <- stats::setNames(sad[[key]][has], sad$lab_subject_id[has])
+    entries <- stats::setNames(sad[[key]][has], sad[["lab_subject_id"]][has])
     # A field that is text for one subject and a number for another cannot be
     # combined. It becomes text, which the type checks below then report.
     fields <- unique(unlist(lapply(entries, names)))
