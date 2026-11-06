@@ -71,9 +71,32 @@ file.exists.case.sensitive <- function(...) {
 #'
 #' @export
 ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_null_field_required = TRUE) {
+  checks <- c(
+    list(check_fields(df_table, table_type, is_null_field_required)),
+    switch(table_type,
+           aoi_timepoints = ,
+           xy_timepoints = list(check_timepoints(df_table, table_type)),
+           subjects = list(check_subjects(df_table),
+                           check_subject_aux(df_table, cdi_expected)),
+           trial_types = list(check_trial_types(df_table)),
+           stimuli = list(check_stimuli(df_table, dir_csv)),
+           administrations = list(check_administrations(df_table)),
+           trials = list(check_trials(df_table)))
+  )
 
   msg_error <- c()
   msg_warning <- list()
+  for (check in checks) {
+    msg_error <- c(msg_error, check$errors)
+    msg_warning <- c(msg_warning, check$warnings)
+  }
+  return(list(errors = msg_error, warnings = msg_warning))
+}
+
+# We check every table against this: columns against the schema and each
+# field's values against the field's type and options
+check_fields <- function(df_table, table_type, is_null_field_required) {
+  msg_error <- c()
   colnames_table <- colnames(df_table)
 
   fields_json <- ds.get_json_fields(table_type = table_type)
@@ -219,307 +242,308 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         }
       }
     }
+  }
 
-    # STEP 4.1:
-    # if aoi/xy_timepoints table, then check if resampling was done
-    if (table_type == "aoi_timepoints") {
-      remainder <- unique(df_table$t_norm %% SAMPLE_DURATION)
-      if (length(remainder) > 1 || remainder != 0) {
-        msg_new <- .msg("- Column t_norm in table {table_type} is notsampled
-                        at 40HZ.")
-        msg_error <- c(msg_error, msg_new)
-      }
+  list(errors = msg_error)
+}
+
+# timepoints have to be on the 40 Hz grid ds.resample_times() produces
+check_timepoints <- function(df_table, table_type) {
+  msg_error <- c()
+  remainder <- unique(df_table$t_norm %% SAMPLE_DURATION)
+  if (length(remainder) > 1 || remainder != 0) {
+    msg_new <- .msg("- Column t_norm in table {table_type} is not sampled
+                    at 40HZ.")
+    msg_error <- c(msg_error, msg_new)
+  }
+  list(errors = msg_error)
+}
+
+# native languages have to be language codes the schema allows
+check_subjects <- function(df_table) {
+  # a missing column is reported by check_fields()
+  if (!"native_language" %in% colnames(df_table)) return(list())
+
+  msg_error <- c()
+  language_list <- ds.list_language_choices()
+
+  # go through every native language in the subjects table, check if all the
+  # language codes are in the allowed list from json file
+  invalid_languages <- df_table %>%
+    dplyr::mutate(
+      row_number = seq_len(dplyr::n()),
+      valid_language = .data$native_language %>%
+        purrr::map_lgl(function(lang) {
+          all(stringr::str_trim(stringr::str_split(lang, ",")[[1]]) %in%
+                language_list)
+        })
+    ) %>%
+    dplyr::filter(!.data$valid_language)
+
+  if (nrow(invalid_languages) != 0) {
+    msg_new <- .msg("- The subjects' native languages in the following entry
+                    row(s) {invalid_languages$row_number} do not belong in
+                    the allowed language list in json. Please see function
+                   ds.list_language_choices().")
+    msg_error <- c(msg_error, msg_new)
+  }
+  list(errors = msg_error)
+}
+
+# the CDI scores, language measures and language exposures in
+# subject_aux_data have to follow their specification
+check_subject_aux <- function(df_table, cdi_expected) {
+  msg_error <- c()
+  msg_warning <- list()
+
+  # unpack subject aux data from JSON
+  sad <- df_table %>%
+    dplyr::select(dplyr::all_of(c("lab_subject_id", "subject_aux_data"))) %>%
+    unpack_aux_data() %>%
+    tidyr::unnest("subject_aux_data")
+
+  if(cdi_expected && !("cdi_responses" %in% colnames(sad))){
+    msg_error <- c(msg_error, "No CDI data found, check subjects.csv and the column specification")
+  }
+
+  # The fields an entry of each known list in subject_aux_data may have.
+  # Other top-level keys are free-form.
+  aux_fields <- list(
+    cdi_responses = list(required = c("instrument_type", "measure", "age", "rawscore", "language"),
+                         optional = "percentile"),
+    lang_measures = list(required = c("instrument_type", "language", "rawscore"),
+                         optional = "age"),
+    lang_exposures = list(required = c("language", "exposure"),
+                          optional = character())
+  )
+  # one row per entry of a list, with its subject in .subject. Binding the
+  # entries keeps a stray field like lab_subject_id from clashing with the
+  # subject's own columns.
+  aux_entries <- function(key) {
+    has <- vapply(sad[[key]], is.data.frame, logical(1))
+    entries <- stats::setNames(sad[[key]][has], sad$lab_subject_id[has])
+    # A field that is text for one subject and a number for another cannot be
+    # combined. It becomes text, which the type checks below then report.
+    fields <- unique(unlist(lapply(entries, names)))
+    mixed <- Filter(function(f) {
+      values <- lapply(entries, function(d) d[intersect(f, names(d))])
+      inherits(tryCatch(dplyr::bind_rows(values), error = identity), "error")
+    }, fields)
+    entries <- lapply(entries, function(d) dplyr::mutate(d, dplyr::across(dplyr::any_of(mixed), as.character)))
+    dplyr::bind_rows(entries, .id = ".subject")
+  }
+
+  for (key in intersect(names(aux_fields), colnames(sad))) {
+    entries <- aux_entries(key)
+    if (nrow(entries) == 0) next
+    fields <- setdiff(colnames(entries), ".subject")
+    required <- aux_fields[[key]]$required
+    extra <- setdiff(fields, c(required, aux_fields[[key]]$optional))
+    if (length(extra) > 0) {
+      msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries with fields that
+                        are not part of the specification: {paste(extra, collapse = ', ')}."))
     }
-    if (table_type == "xy_timepoints") {
-      remainder <- unique(df_table$t_norm %% SAMPLE_DURATION)
-      if (length(remainder) > 1 || remainder != 0) {
-        msg_new <- .msg("- Column t_norm in table {table_type} is not sampled
-                        at 40HZ.")
-        msg_error <- c(msg_error, msg_new)
-      }
-
-    }
-
-    # STEP 4.2:
-    # if subjects table, then check if native_language field was entered
-    # correctly
-    if (table_type == "subjects" && fieldname == "native_language") {
-      language_list <- ds.list_language_choices()
-
-      # go through every native language in the subjects table, check if all the
-      # language codes are in the allowed list from json file
-      invalid_languages <- df_table %>%
-        dplyr::mutate(
-          row_number = seq_len(dplyr::n()),
-          valid_language = .data$native_language %>%
-            purrr::map_lgl(function(lang) {
-              all(stringr::str_trim(stringr::str_split(lang, ",")[[1]]) %in%
-                    language_list)
-            })
-        ) %>%
-        dplyr::filter(!.data$valid_language)
-
-      if (nrow(invalid_languages) != 0) {
-        msg_new <- .msg("- The subjects' native languages in the following entry
-                        row(s) {invalid_languages$row_number} do not belong in
-                        the allowed language list in json. Please see function
-                       ds.list_language_choices().")
-        msg_error <- c(msg_error, msg_new)
-      }
+    missing <- setdiff(required, fields)
+    present <- intersect(required, fields)
+    with_na <- present[vapply(entries[present], anyNA, logical(1))]
+    if (length(missing) > 0) {
+      msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries that are missing
+                        the following required fields: {paste(missing, collapse = ', ')}."))
+    } else if (length(with_na) > 0) {
+      msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries with NA values in
+                        the following required fields: {paste(with_na, collapse = ', ')}."))
     }
   }
 
-  # STEP 4.3:
-  # if subjects table, then check if cdi_responses in subject_aux_data
-  # has the correct format
+  if ("lang_measures" %in% colnames(sad)) {
+    measures <- aux_entries("lang_measures")
+    if ("rawscore" %in% colnames(measures) && !is.numeric(measures$rawscore)) {
+      msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries that have a
+                        non-numeric rawscore."))
+    }
+    if ("language" %in% colnames(measures) &&
+        any(!(measures$language %in% c(NA, WORDBANK_ALLOWED_LANGUAGES)))) {
+      wrong <- setdiff(measures$language, c(NA, WORDBANK_ALLOWED_LANGUAGES))
+      msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries with a language
+                        that does not follow the Wordbank specification: {paste(wrong, collapse = ', ')}."))
+    }
+  }
 
-  if (table_type == "subjects") {
-    # unpack subject aux data from JSON
-    sad <- df_table %>%
-      dplyr::select(dplyr::all_of(c("lab_subject_id", "subject_aux_data"))) %>%
-      unpack_aux_data() %>%
-      tidyr::unnest("subject_aux_data")
+  # exposures name any language a child hears, so their language is not checked
+  if ("lang_exposures" %in% colnames(sad)) {
+    exposures <- aux_entries("lang_exposures")
+    if ("exposure" %in% colnames(exposures) && !is.numeric(exposures$exposure)) {
+      msg_error <- c(msg_error, .msg("- Some subject(s) have lang_exposures entries that have a
+                        non-numeric exposure."))
+    }
+  }
 
-    if(cdi_expected && !("cdi_responses" %in% colnames(sad))){
-      msg_error <- c(msg_error, "No CDI data found, check subjects.csv and the column specification")
+  if ("cdi_responses" %in% colnames(sad)) {
+    if(!cdi_expected){
+      msg_error <- c(msg_error, "No cdi expected, but CDI data found")
     }
 
-    # The fields an entry of each known list in subject_aux_data may have.
-    # Other top-level keys are free-form.
-    aux_fields <- list(
-      cdi_responses = list(required = c("instrument_type", "measure", "age", "rawscore", "language"),
-                           optional = "percentile"),
-      lang_measures = list(required = c("instrument_type", "language", "rawscore"),
-                           optional = "age"),
-      lang_exposures = list(required = c("language", "exposure"),
-                            optional = character())
-    )
-    # one row per entry of a list, with its subject in .subject. Binding the
-    # entries keeps a stray field like lab_subject_id from clashing with the
-    # subject's own columns.
-    aux_entries <- function(key) {
-      has <- vapply(sad[[key]], is.data.frame, logical(1))
-      entries <- stats::setNames(sad[[key]][has], sad$lab_subject_id[has])
-      # A field that is text for one subject and a number for another cannot be
-      # combined. It becomes text, which the type checks below then report.
-      fields <- unique(unlist(lapply(entries, names)))
-      mixed <- Filter(function(f) {
-        values <- lapply(entries, function(d) d[intersect(f, names(d))])
-        inherits(tryCatch(dplyr::bind_rows(values), error = identity), "error")
-      }, fields)
-      entries <- lapply(entries, function(d) dplyr::mutate(d, dplyr::across(dplyr::any_of(mixed), as.character)))
-      dplyr::bind_rows(entries, .id = ".subject")
+    # check for correct format of CDI response columns
+    cdi <- aux_entries("cdi_responses")
+
+    if (any(!(cdi$instrument_type %in% c("wg", "ws", "wsshort", "wgshort")))) {
+      msg_new <- .msg("- Some subject(s) have CDI responses that have an
+                        incorrect instrument_type.")
+      msg_error <- c(msg_error, msg_new)
+    }
+    if (any(!(cdi$measure %in% c("prod", "comp")))) {
+      msg_new <- .msg("- Some subject(s) have CDI responses that have an
+                        incorrect measure")
+      msg_error <- c(msg_error, msg_new)
     }
 
-    for (key in intersect(names(aux_fields), colnames(sad))) {
-      entries <- aux_entries(key)
-      if (nrow(entries) == 0) next
-      fields <- setdiff(colnames(entries), ".subject")
-      required <- aux_fields[[key]]$required
-      extra <- setdiff(fields, c(required, aux_fields[[key]]$optional))
-      if (length(extra) > 0) {
-        msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries with fields that
-                          are not part of the specification: {paste(extra, collapse = ', ')}."))
-      }
-      missing <- setdiff(required, fields)
-      present <- intersect(required, fields)
-      with_na <- present[vapply(entries[present], anyNA, logical(1))]
-      if (length(missing) > 0) {
-        msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries that are missing
-                          the following required fields: {paste(missing, collapse = ', ')}."))
-      } else if (length(with_na) > 0) {
-        msg_error <- c(msg_error, .msg("- Some subject(s) have {key} entries with NA values in
-                          the following required fields: {paste(with_na, collapse = ', ')}."))
-      }
+    if (any(!is.numeric(cdi$age))) {
+      msg_new <- .msg("- Some subject(s) have CDI responses that have a
+                        non-numeric age.")
+      msg_error <- c(msg_error, msg_new)
     }
-
-    if ("lang_measures" %in% colnames(sad)) {
-      measures <- aux_entries("lang_measures")
-      if ("rawscore" %in% colnames(measures) && !is.numeric(measures$rawscore)) {
-        msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries that have a
-                          non-numeric rawscore."))
-      }
-      if ("language" %in% colnames(measures) &&
-          any(!(measures$language %in% c(NA, WORDBANK_ALLOWED_LANGUAGES)))) {
-        wrong <- setdiff(measures$language, c(NA, WORDBANK_ALLOWED_LANGUAGES))
-        msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries with a language
-                          that does not follow the Wordbank specification: {paste(wrong, collapse = ', ')}."))
-      }
+    if (any(!is.numeric(cdi$rawscore))) {
+      msg_new <- .msg("- Some subject(s) have CDI responses that have a
+                        non-numeric rawscore.")
+      msg_error <- c(msg_error, msg_new)
+    } else if (any(cdi$rawscore %% 1 != 0, na.rm = TRUE)) {
+      msg_new <- .msg("- Some subject(s) have CDI responses that have a
+                        rawscore that is not a whole number.")
+      msg_error <- c(msg_error, msg_new)
     }
-
-    # exposures name any language a child hears, so their language is not checked
-    if ("lang_exposures" %in% colnames(sad)) {
-      exposures <- aux_entries("lang_exposures")
-      if ("exposure" %in% colnames(exposures) && !is.numeric(exposures$exposure)) {
-        msg_error <- c(msg_error, .msg("- Some subject(s) have lang_exposures entries that have a
-                          non-numeric exposure."))
-      }
-    }
-
-    if ("cdi_responses" %in% colnames(sad)) {
-      if(!cdi_expected){
-        msg_error <- c(msg_error, "No cdi expected, but CDI data found")
-      }
-
-      # check for correct format of CDI response columns
-      cdi <- aux_entries("cdi_responses")
-
-      if (any(!(cdi$instrument_type %in% c("wg", "ws", "wsshort", "wgshort")))) {
-        msg_new <- .msg("- Some subject(s) have CDI responses that have an
-                          incorrect instrument_type.")
-        msg_error <- c(msg_error, msg_new)
-      }
-      if (any(!(cdi$measure %in% c("prod", "comp")))) {
-        msg_new <- .msg("- Some subject(s) have CDI responses that have an
-                          incorrect measure")
-        msg_error <- c(msg_error, msg_new)
-      }
-
-      if (any(!is.numeric(cdi$age))) {
-        msg_new <- .msg("- Some subject(s) have CDI responses that have a
-                          non-numeric age.")
-        msg_error <- c(msg_error, msg_new)
-      }
-      if (any(!is.numeric(cdi$rawscore))) {
-        msg_new <- .msg("- Some subject(s) have CDI responses that have a
-                          non-numeric rawscore.")
-        msg_error <- c(msg_error, msg_new)
-      } else if (any(cdi$rawscore %% 1 != 0, na.rm = TRUE)) {
-        msg_new <- .msg("- Some subject(s) have CDI responses that have a
-                          rawscore that is not a whole number.")
-        msg_error <- c(msg_error, msg_new)
-      }
-      if ("percentile" %in% colnames(cdi)){ # separate conditions as & does not short-circut
-          if(any(!is.numeric(cdi$percentile))) {
+    if ("percentile" %in% colnames(cdi)){ # separate conditions as & does not short-circut
+      if(any(!is.numeric(cdi$percentile))) {
         msg_new <- .msg("- Some subject(s) have CDI responses that have a
                           non-numeric percentile.")
         msg_error <- c(msg_error, msg_new)
-          }
-        }
-      if (any(class(cdi$language) != "character")) {
-        msg_new <- .msg("- Some subject(s) have CDI responses that have a
-                          non-character language.")
-        msg_error <- c(msg_error, msg_new)
-      }
-
-      if (any(!(cdi$language %in% WORDBANK_ALLOWED_LANGUAGES))) {
-        print(setdiff(cdi$language, WORDBANK_ALLOWED_LANGUAGES))
-        msg_new <- .msg("- Some subject(s) have CDI responses that have a language that does not follow the Wordbank specification.")
-        msg_error <- c(msg_error, msg_new)
-      }
-
-      # check for duplicate CDI scores per subject
-      cdi_dupes <- cdi %>%
-        dplyr::group_by(.data$.subject, .data$instrument_type,
-                        .data$measure, .data$age, .data$language) %>%
-        dplyr::filter(dplyr::n() > 1)
-      if (nrow(cdi_dupes) > 0) {
-        dupe_ids <- unique(cdi_dupes$.subject)
-        msg_warning[["cdi_collision"]] <- .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}")
       }
     }
-  }
-
-  # STEP 5: trial_types table
-  if (table_type == "trial_types"){
-
-    # check if there are any entries that are duplicate and only differ by id
-    if((df_table %>% dplyr::select(-"trial_type_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
-      msg_new <- .msg("- trial types are not unique.")
-      msg_error <- c(msg_error, msg_new)
-    }
-  }
-
-  # STEP 6:
-  # if stimuli table, check if there are any entries that are duplicate and only differ by id
-  if (table_type == "stimuli"){
-    if((df_table %>% dplyr::select(-"stimulus_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
-      msg_new <- .msg("- stimulus entries are not unique.")
-      msg_error <- c(msg_error, msg_new)
-    }
-  }
-
-  # STEP 6.5:
-  # if stimuli table, check if there are any invalid image file paths (dont exist or wrong filetype)
-  if (table_type == "stimuli"){
-
-    to_check <- df_table %>% dplyr::filter(!is.na(.data$stimulus_image_path))
-
-    raw_data_dir <- file.path(dir_csv, '..', "raw_data")
-    if (!dir.exists(raw_data_dir)) {
-      message(paste0(
-        "raw_data directory not found at ", raw_data_dir,
-        ". The current setup expects the raw_data folder to live next to the ",
-        "processed_data folder. If this is not the case, the image filepath ",
-        "checking will not work properly."
-      ))
-    }
-    not_found <- to_check %>% dplyr::filter(
-      !file.exists.case.sensitive(file.path(raw_data_dir, .data$stimulus_image_path))
-    )
-
-    if(nrow(not_found)){
-      missing_files <- paste(not_found$stimulus_image_path, collapse = "\n  ")
-      msg_new <- .msg(sprintf("- stimulus filepaths not found:\n  %s", missing_files))
+    if (any(class(cdi$language) != "character")) {
+      msg_new <- .msg("- Some subject(s) have CDI responses that have a
+                        non-character language.")
       msg_error <- c(msg_error, msg_new)
     }
 
-    wrong_filetype <- to_check %>% dplyr::filter(
-      !grepl("\\.(jpe?g|png)$", .data$stimulus_image_path)
-    )
-
-    if(nrow(wrong_filetype)){
-      wrong_files <- paste(wrong_filetype$stimulus_image_path, collapse = ", ")
-      msg_warning[["stimulus_image_filetype"]] <- .msg("- some stimulus images have an unsupported format (supported: jpg, jpeg, png): {wrong_files}")
-    }
-  }
-
-
-  # STEP 7: check if the subjects age is consistently converted in the administration table
-  if (table_type == "administrations") {
-
-    # in the case of years, we need to differentiate when converting:
-    # if all years are given in full numbers, the conversion is not *12, but rather *12 + 6
-    years_given_full <- !any(df_table %>%
-                               dplyr::filter(.data$lab_age_units == "years",
-                                             !is.na(.data$lab_age)) %>%
-                               dplyr::mutate(year_is_decimal = .data$lab_age - floor(.data$lab_age) != 0) %>%
-                               dplyr::pull("year_is_decimal")
-                             )
-
-    converted_ages <- df_table %>%
-      dplyr::filter(!is.na(.data$lab_age)) %>%
-      dplyr::mutate(converted_age = dplyr::case_when(
-        .data$lab_age_units == "months" ~ .data$lab_age,
-        .data$lab_age_units == "years" ~ .data$lab_age * 12 + ifelse(years_given_full, 6, 0),
-        .data$lab_age_units == "days" ~ .data$lab_age / (365.25 / 12),
-        TRUE ~ NA,
-        )) %>%
-      dplyr::pull("converted_age")
-
-    if(!isTRUE(all.equal(df_table %>% dplyr::filter(!is.na(.data$lab_age)) %>% dplyr::pull("age"), converted_ages))){
-
-      msg_new <- .msg("- some ages do not match the conversion according to lab_age_unit and lab_age.")
-      msg_error <- c(msg_error, msg_new)
-    }
-  }
-
-  # STEP 8: trials table
-  if (table_type == "trials"){
-
-    if(any(is.na(df_table$excluded))){
-      msg_new <- .msg("- Column 'excluded' contains NA values. All trials must have excluded set to TRUE or FALSE.")
+    if (any(!(cdi$language %in% WORDBANK_ALLOWED_LANGUAGES))) {
+      print(setdiff(cdi$language, WORDBANK_ALLOWED_LANGUAGES))
+      msg_new <- .msg("- Some subject(s) have CDI responses that have a language that does not follow the Wordbank specification.")
       msg_error <- c(msg_error, msg_new)
     }
 
-    # check if there are cases where there is an exclusion reason but excluded is false
-    if(any(df_table %>% dplyr::mutate(incorrectly_included = !.data$excluded & (!is.na(.data$exclusion_reason) & .data$exclusion_reason != "")) %>% dplyr::pull("incorrectly_included"))){
-      msg_new <- .msg("- some trials have exclusion reasons even though they are marked as included.")
-      msg_error <- c(msg_error, msg_new)
+    # check for duplicate CDI scores per subject
+    cdi_dupes <- cdi %>%
+      dplyr::group_by(.data$.subject, .data$instrument_type,
+                      .data$measure, .data$age, .data$language) %>%
+      dplyr::filter(dplyr::n() > 1)
+    if (nrow(cdi_dupes) > 0) {
+      dupe_ids <- unique(cdi_dupes$.subject)
+      msg_warning[["cdi_collision"]] <- .msg("- Duplicate CDI entries found for subject(s): {paste(dupe_ids, collapse=', ')}")
     }
   }
+  list(errors = msg_error, warnings = msg_warning)
+}
 
-  return(list(errors = msg_error, warnings = msg_warning))
+# trial types may not be duplicates that only differ by id
+check_trial_types <- function(df_table) {
+  msg_error <- c()
+  if((df_table %>% dplyr::select(-"trial_type_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
+    msg_new <- .msg("- trial types are not unique.")
+    msg_error <- c(msg_error, msg_new)
+  }
+  list(errors = msg_error)
+}
+
+# stimuli may not be duplicates that only differ by id, and their images have
+# to exist in raw_data
+check_stimuli <- function(df_table, dir_csv) {
+  msg_error <- c()
+  msg_warning <- list()
+
+  if((df_table %>% dplyr::select(-"stimulus_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
+    msg_new <- .msg("- stimulus entries are not unique.")
+    msg_error <- c(msg_error, msg_new)
+  }
+
+  # check if there are any invalid image file paths (dont exist or wrong filetype)
+  to_check <- df_table %>% dplyr::filter(!is.na(.data$stimulus_image_path))
+
+  raw_data_dir <- file.path(dir_csv, '..', "raw_data")
+  if (!dir.exists(raw_data_dir)) {
+    message(paste0(
+      "raw_data directory not found at ", raw_data_dir,
+      ". The current setup expects the raw_data folder to live next to the ",
+      "processed_data folder. If this is not the case, the image filepath ",
+      "checking will not work properly."
+    ))
+  }
+  not_found <- to_check %>% dplyr::filter(
+    !file.exists.case.sensitive(file.path(raw_data_dir, .data$stimulus_image_path))
+  )
+
+  if(nrow(not_found)){
+    missing_files <- paste(not_found$stimulus_image_path, collapse = "\n  ")
+    msg_new <- .msg(sprintf("- stimulus filepaths not found:\n  %s", missing_files))
+    msg_error <- c(msg_error, msg_new)
+  }
+
+  wrong_filetype <- to_check %>% dplyr::filter(
+    !grepl("\\.(jpe?g|png)$", .data$stimulus_image_path)
+  )
+
+  if(nrow(wrong_filetype)){
+    wrong_files <- paste(wrong_filetype$stimulus_image_path, collapse = ", ")
+    msg_warning[["stimulus_image_filetype"]] <- .msg("- some stimulus images have an unsupported format (supported: jpg, jpeg, png): {wrong_files}")
+  }
+  list(errors = msg_error, warnings = msg_warning)
+}
+
+# age has to be lab_age converted from lab_age_units
+check_administrations <- function(df_table) {
+  msg_error <- c()
+
+  # in the case of years, we need to differentiate when converting:
+  # if all years are given in full numbers, the conversion is not *12, but rather *12 + 6
+  years_given_full <- !any(df_table %>%
+                             dplyr::filter(.data$lab_age_units == "years",
+                                           !is.na(.data$lab_age)) %>%
+                             dplyr::mutate(year_is_decimal = .data$lab_age - floor(.data$lab_age) != 0) %>%
+                             dplyr::pull("year_is_decimal")
+                           )
+
+  converted_ages <- df_table %>%
+    dplyr::filter(!is.na(.data$lab_age)) %>%
+    dplyr::mutate(converted_age = dplyr::case_when(
+      .data$lab_age_units == "months" ~ .data$lab_age,
+      .data$lab_age_units == "years" ~ .data$lab_age * 12 + ifelse(years_given_full, 6, 0),
+      .data$lab_age_units == "days" ~ .data$lab_age / (365.25 / 12),
+      TRUE ~ NA,
+      )) %>%
+    dplyr::pull("converted_age")
+
+  if(!isTRUE(all.equal(df_table %>% dplyr::filter(!is.na(.data$lab_age)) %>% dplyr::pull("age"), converted_ages))){
+
+    msg_new <- .msg("- some ages do not match the conversion according to lab_age_unit and lab_age.")
+    msg_error <- c(msg_error, msg_new)
+  }
+  list(errors = msg_error)
+}
+
+# every trial has to be marked as excluded or not, and only excluded trials
+# can have an exclusion reason
+check_trials <- function(df_table) {
+  msg_error <- c()
+
+  if(any(is.na(df_table$excluded))){
+    msg_new <- .msg("- Column 'excluded' contains NA values. All trials must have excluded set to TRUE or FALSE.")
+    msg_error <- c(msg_error, msg_new)
+  }
+
+  # check if there are cases where there is an exclusion reason but excluded is false
+  if(any(df_table %>% dplyr::mutate(incorrectly_included = !.data$excluded & (!is.na(.data$exclusion_reason) & .data$exclusion_reason != "")) %>% dplyr::pull("incorrectly_included"))){
+    msg_new <- .msg("- some trials have exclusion reasons even though they are marked as included.")
+    msg_error <- c(msg_error, msg_new)
+  }
+  list(errors = msg_error)
 }
 
 #' Check if within aoi_timepoints table, there is no duplication in all the administration_ids
