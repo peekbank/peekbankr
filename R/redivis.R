@@ -236,7 +236,7 @@ files_redivis_tag <- function(connection) {
 
 # Fetch one file from Redivis, given a row of a pb_files_listing() result.
 #
-# Workaround for a redivis bug, observed in 0.12.12: the public helpers
+# Workaround for a redivis bug, present as of 0.13.1: the public helpers
 # ($file(), list_files(), to_directory()) all build a directory tree through
 # add_directory_file(), which pastes a directory name straight into a regex:
 #
@@ -246,8 +246,9 @@ files_redivis_tag <- function(connection) {
 # and the function recurses on an ever-longer path until the pattern will not
 # compile. Building the file from its id instead sidesteps the tree walk.
 #
-# Folders containing such a directory (e.g. newman_vocoded_2012) all hit it.
-# When that is fixed upstream, a file can be fetched with:
+# Raw data paths go into the files table unchanged, so any dataset can bring in
+# such a directory, e.g. "Study 1 (24 and _ channels)" in newman_vocoded_2012.
+# When the bug is fixed upstream, a file can be fetched with:
 #   pb_dataset(redivis_tag)$table(peekbank_files_table)$file(file_name)$download(
 #     path = dest, overwrite = TRUE, progress = FALSE)
 pb_fetch_file <- function(file_id, file_name, size, dest) {
