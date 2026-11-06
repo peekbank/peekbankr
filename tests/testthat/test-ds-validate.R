@@ -31,6 +31,11 @@ test_that("ds.validate_table reports timepoints off the 40 Hz grid once", {
                "- Column t_norm in table aoi_timepoints is not sampled at 40HZ.")
 })
 
+test_that("ds.validate_table reports a missing t_norm instead of stopping", {
+  out <- ds.validate_table(dplyr::select(aoi_timepoints, -"t_norm"), "aoi_timepoints", FALSE, ".")
+  expect_match(error_text(out), "Cannot locate required field: t_norm")
+})
+
 test_that("check_fields holds the columns against the schema", {
   out <- peekbankr:::check_fields(
     dplyr::mutate(aoi_timepoints[1:2, ], aoi_timepoint_id = c(1L, 3L), trial_id = NULL,
@@ -122,8 +127,10 @@ test_that("check_administrations converts lab ages by their unit", {
 })
 
 test_that("check_trials wants excluded set, and reasons only on excluded trials", {
-  expect_match(error_text(peekbankr:::check_trials(tibble(excluded = c(FALSE, NA), exclusion_reason = NA))),
-               "Column 'excluded' contains NA values")
+  # an NA excluded is reported once, with or without a reason
+  expect_equal(error_text(peekbankr:::check_trials(tibble(excluded = c(FALSE, NA),
+                                                          exclusion_reason = c(NA, "fussy")))),
+               "- Column 'excluded' contains NA values. All trials must have excluded set to TRUE or FALSE.")
   expect_match(error_text(peekbankr:::check_trials(tibble(excluded = c(FALSE, TRUE),
                                                           exclusion_reason = "fussy"))),
                "exclusion reasons even though they are marked as included")

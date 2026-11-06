@@ -250,8 +250,7 @@ check_fields <- function(df_table, table_type, is_null_field_required) {
 # timepoints have to be on the 40 Hz grid ds.resample_times() produces
 check_timepoints <- function(df_table, table_type) {
   msg_error <- c()
-  remainder <- unique(df_table$t_norm %% SAMPLE_DURATION)
-  if (length(remainder) > 1 || remainder != 0) {
+  if (any(df_table$t_norm %% SAMPLE_DURATION != 0, na.rm = TRUE)) {
     msg_new <- .msg("- Column t_norm in table {table_type} is not sampled
                     at 40HZ.")
     msg_error <- c(msg_error, msg_new)
@@ -538,8 +537,9 @@ check_trials <- function(df_table) {
     msg_error <- c(msg_error, msg_new)
   }
 
-  # check if there are cases where there is an exclusion reason but excluded is false
-  if(any(df_table %>% dplyr::mutate(incorrectly_included = !.data$excluded & (!is.na(.data$exclusion_reason) & .data$exclusion_reason != "")) %>% dplyr::pull("incorrectly_included"))){
+  # check if there are cases where there is an exclusion reason but excluded is
+  # false (an NA excluded is reported above)
+  if(any(df_table %>% dplyr::mutate(incorrectly_included = !.data$excluded & (!is.na(.data$exclusion_reason) & .data$exclusion_reason != "")) %>% dplyr::pull("incorrectly_included"), na.rm = TRUE)){
     msg_new <- .msg("- some trials have exclusion reasons even though they are marked as included.")
     msg_error <- c(msg_error, msg_new)
   }
