@@ -69,10 +69,12 @@ file.exists.case.sensitive <- function(...) {
 #' result$warnings  # warnings that can be opted out of on a case by case basis
 #' }
 #'
-#' @export
+#' @noRd
 ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_null_field_required = TRUE) {
   checks <- c(
     list(check_fields(df_table, table_type, is_null_field_required)),
+    # the table checks skip what needs a column the table lacks, as
+    # check_fields() reports that
     switch(table_type,
            aoi_timepoints = ,
            xy_timepoints = list(check_timepoints(df_table, table_type)),
@@ -260,7 +262,6 @@ check_timepoints <- function(df_table, table_type) {
 
 # native languages have to be language codes the schema allows
 check_subjects <- function(df_table) {
-  # a missing column is reported by check_fields()
   if (!"native_language" %in% colnames(df_table)) return(list())
 
   msg_error <- c()
@@ -295,11 +296,15 @@ check_subject_aux <- function(df_table, cdi_expected) {
   msg_error <- c()
   msg_warning <- list()
 
-  # unpack subject aux data from JSON
-  sad <- df_table %>%
-    dplyr::select(dplyr::all_of(c("lab_subject_id", "subject_aux_data"))) %>%
-    unpack_aux_data() %>%
-    tidyr::unnest("subject_aux_data")
+  # unpack subject aux data from JSON; without it there is no CDI data either
+  sad <- if ("subject_aux_data" %in% colnames(df_table)) {
+    df_table %>%
+      dplyr::select(dplyr::any_of(c("lab_subject_id", "subject_aux_data"))) %>%
+      unpack_aux_data() %>%
+      tidyr::unnest("subject_aux_data")
+  } else {
+    dplyr::tibble()
+  }
 
   if(cdi_expected && !("cdi_responses" %in% colnames(sad))){
     msg_error <- c(msg_error, "No CDI data found, check subjects.csv and the column specification")
@@ -444,6 +449,8 @@ check_subject_aux <- function(df_table, cdi_expected) {
 
 # trial types may not be duplicates that only differ by id
 check_trial_types <- function(df_table) {
+  if (!"trial_type_id" %in% colnames(df_table)) return(list())
+
   msg_error <- c()
   if((df_table %>% dplyr::select(-"trial_type_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
     msg_new <- .msg("- trial types are not unique.")
@@ -458,10 +465,13 @@ check_stimuli <- function(df_table, dir_csv) {
   msg_error <- c()
   msg_warning <- list()
 
-  if((df_table %>% dplyr::select(-"stimulus_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
+  if ("stimulus_id" %in% colnames(df_table) &&
+      (df_table %>% dplyr::select(-"stimulus_id") %>% dplyr::distinct() %>% nrow()) != (df_table %>% nrow())){
     msg_new <- .msg("- stimulus entries are not unique.")
     msg_error <- c(msg_error, msg_new)
   }
+
+  if (!"stimulus_image_path" %in% colnames(df_table)) return(list(errors = msg_error))
 
   # check if there are any invalid image file paths (dont exist or wrong filetype)
   to_check <- df_table %>% dplyr::filter(!is.na(.data$stimulus_image_path))
@@ -498,6 +508,8 @@ check_stimuli <- function(df_table, dir_csv) {
 
 # age has to be lab_age converted from lab_age_units
 check_administrations <- function(df_table) {
+  if (!all(c("lab_age", "lab_age_units", "age") %in% colnames(df_table))) return(list())
+
   msg_error <- c()
 
   # in the case of years, we need to differentiate when converting:
@@ -536,6 +548,9 @@ check_trials <- function(df_table) {
     msg_new <- .msg("- Column 'excluded' contains NA values. All trials must have excluded set to TRUE or FALSE.")
     msg_error <- c(msg_error, msg_new)
   }
+  if (!all(c("excluded", "exclusion_reason") %in% colnames(df_table))) {
+    return(list(errors = msg_error))
+  }
 
   # check if there are cases where there is an exclusion reason but excluded is
   # false (an NA excluded is reported above)
@@ -551,7 +566,7 @@ check_trials <- function(df_table) {
 #'
 #' @param df_aoi_timepoints the aoi_timepoints dataframe
 #'
-#' @return an empty string when all the administration_ids are unique within each trial_id;
+#' @return NULL when all the administration_ids are unique within each trial_id;
 #'   Otherwise, the error message will be returned.
 #'
 #' @examples
@@ -559,7 +574,7 @@ check_trials <- function(df_table) {
 #' is_valid <- ds.validate_trial_uniqueness_constraint(df_aoi_timepoints = aoi_timepoints)
 #' }
 #'
-#' @export
+#' @noRd
 ds.validate_trial_uniqueness_constraint <- function(df_aoi_timepoints) {
   msg_error <- c()
 

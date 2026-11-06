@@ -10,8 +10,8 @@ linters: linters_with_defaults(
     vector_logic_linter = vector_logic_linter(),
     T_and_F_symbol_linter = T_and_F_symbol_linter(),
     semicolon_linter = semicolon_linter(),
-    # %<>% is the house style in the get_ functions, plain `=` assignment is not
-    assignment_linter = assignment_linter(operator = c("<-", "<<-", "%<>%")),
+    # `<-` for assignment, not `=`
+    assignment_linter = assignment_linter(),
     # cheap hygiene
     trailing_whitespace_linter = trailing_whitespace_linter(),
     trailing_blank_lines_linter = trailing_blank_lines_linter(),

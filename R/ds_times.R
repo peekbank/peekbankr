@@ -12,7 +12,7 @@ find_gap_points <- function(t_origin, t_resampled) {
 }
 
 # key private function to do resampling of aois within a single trial uses
-# approxfun to resample because missingness is coded as an integer and
+# approx() to resample because missingness is coded as an integer and
 # interpolation is "constant" then no "gaps" between AOIs are filled. actually
 # interpolating across blinks is left for a different function as this is a
 # theory-laden decision.
@@ -50,8 +50,8 @@ resample_aoi_trial <- function(df_trial) {
                 administration_id = df_trial$administration_id[1])
 }
 
-# key private function to do resampling of aois within a single trial
-# uses approxfun to resample
+# key private function to do resampling of xy coordinates within a single
+# trial, using approx()
 resample_xy_trial <- function(df_trial) {
   MISSING_CONST <- -10000
 
@@ -152,10 +152,6 @@ ds.normalize_times <- function(df_table) {
   return(df_out)
 }
 
-# nothing necessarily needs to be changed but we could either arrange the
-# resulting dataset by trial_id and administration_id or else use a different
-# workflow, for example nest after grouping by administration_id and trial_id?
-
 #' This function resample times to be consistent across labs.
 #'
 #' Resampling is done by the following steps:
@@ -165,17 +161,15 @@ ds.normalize_times <- function(df_table) {
 #' 2. create desired timepoint sequence with equal spacing according to
 #' pre-specified SAMPLE_RATE parameter
 #'
-#' 3. use approxfun to interpolate given data points to align with desired
-#' timepoint sequence "constant" interpolation method is used for AOI
-#' timepoints; "linear" interpolation method is used for xy timepoints; for more
-#' details on approxfun, please see:
-#' https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html
+#' 3. use [stats::approx()] with "constant" interpolation, for AOI and xy
+#' timepoints alike, to give each new timepoint the value of the last sample at
+#' or before it
 #'
 #' 4. after resampling, bind resampled dataframes back together and re-assign
-#' aoi_timepoint_id
+#' aoi_timepoint_id or xy_timepoint_id
 #'
-#' @param df_table to-be-resampled dataframe with t, aoi/xy values, trial_id and
-#'   administration_id
+#' @param df_table to-be-resampled dataframe with t_norm, aoi/xy values,
+#'   trial_id and administration_id
 #'
 #' @param table_type table name, can only be "aoi_timepoints" or "xy_timepoints"
 #'

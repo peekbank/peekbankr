@@ -26,7 +26,7 @@ ds.get_peekjson <- function() {
 #' fields_json <- ds.get_json_fields(table_type = "aoi_timepoints")
 #' }
 #'
-#' @export
+#' @noRd
 ds.get_json_fields <- function(table_type) {
   # get json file from github
   peekjson <- ds.get_peekjson()
@@ -119,7 +119,7 @@ ds.list_coding_methods <- function() {
 #' is_required <- ds.is_table_required(table_type = "xy_timepoints",
 #'                                  coding_method = "manual gaze coding")
 #' }
-#' @export
+#' @noRd
 ds.is_table_required <- function(table_type, coding_methods) {
   table_list <- ds.list_ds_tables(coding_methods)
   is_required <- table_type %in% table_list

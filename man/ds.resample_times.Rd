@@ -7,8 +7,8 @@
 ds.resample_times(df_table, table_type)
 }
 \arguments{
-\item{df_table}{to-be-resampled dataframe with t, aoi/xy values, trial_id and
-administration_id}
+\item{df_table}{to-be-resampled dataframe with t_norm, aoi/xy values,
+trial_id and administration_id}
 
 \item{table_type}{table name, can only be "aoi_timepoints" or "xy_timepoints"}
 }
@@ -23,13 +23,11 @@ Resampling is done by the following steps:
 \item iterate through every trial for every administration
 \item create desired timepoint sequence with equal spacing according to
 pre-specified SAMPLE_RATE parameter
-\item use approxfun to interpolate given data points to align with desired
-timepoint sequence "constant" interpolation method is used for AOI
-timepoints; "linear" interpolation method is used for xy timepoints; for more
-details on approxfun, please see:
-https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html
+\item use \code{\link[stats:approxfun]{stats::approx()}} with "constant" interpolation, for AOI and xy
+timepoints alike, to give each new timepoint the value of the last sample at
+or before it
 \item after resampling, bind resampled dataframes back together and re-assign
-aoi_timepoint_id
+aoi_timepoint_id or xy_timepoint_id
 }
 }
 \examples{

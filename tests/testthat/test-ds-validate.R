@@ -21,18 +21,18 @@ subjects <- function(...) {
 with_cdi <- function(...) sprintf('{"cdi_responses": [%s]}', paste(c(...), collapse = ", "))
 
 test_that("ds.validate_table passes a valid table", {
-  expect_equal(ds.validate_table(aoi_timepoints, "aoi_timepoints", FALSE, "."),
+  expect_equal(peekbankr:::ds.validate_table(aoi_timepoints, "aoi_timepoints", FALSE, "."),
                list(errors = NULL, warnings = list()))
 })
 
 test_that("ds.validate_table reports timepoints off the 40 Hz grid once", {
   off_grid <- dplyr::mutate(aoi_timepoints, t_norm = c(0L, 30L, 50L))
-  expect_equal(ds.validate_table(off_grid, "aoi_timepoints", FALSE, ".")$errors,
+  expect_equal(peekbankr:::ds.validate_table(off_grid, "aoi_timepoints", FALSE, ".")$errors,
                "- Column t_norm in table aoi_timepoints is not sampled at 40HZ.")
 })
 
 test_that("ds.validate_table reports a missing t_norm instead of stopping", {
-  out <- ds.validate_table(dplyr::select(aoi_timepoints, -"t_norm"), "aoi_timepoints", FALSE, ".")
+  out <- peekbankr:::ds.validate_table(dplyr::select(aoi_timepoints, -"t_norm"), "aoi_timepoints", FALSE, ".")
   expect_match(error_text(out), "Cannot locate required field: t_norm")
 })
 
@@ -136,4 +136,17 @@ test_that("check_trials wants excluded set, and reasons only on excluded trials"
                "exclusion reasons even though they are marked as included")
   expect_null(peekbankr:::check_trials(tibble(excluded = c(FALSE, TRUE),
                                               exclusion_reason = c("", "fussy")))$errors)
+})
+
+test_that("the table checks pass over columns the table lacks", {
+  expect_equal(peekbankr:::check_trial_types(tibble(condition = "a")), list())
+  expect_equal(peekbankr:::check_administrations(tibble(lab_age = 1, age = 1)), list())
+  expect_null(peekbankr:::check_trials(tibble(excluded = FALSE))$errors)
+  expect_null(peekbankr:::check_stimuli(tibble(stimulus_id = 0L), tempdir())$errors)
+  # without the aux column there is no CDI data, and without lab_subject_id it
+  # is still checked
+  expect_equal(peekbankr:::check_subject_aux(tibble(lab_subject_id = "a"), TRUE)$errors,
+               "No CDI data found, check subjects.csv and the column specification")
+  expect_equal(peekbankr:::check_subject_aux(tibble(subject_aux_data = with_cdi(cdi_json())), TRUE),
+               list(errors = NULL, warnings = list()))
 })
