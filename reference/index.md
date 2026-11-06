@@ -44,8 +44,6 @@ Used by the import scripts in peekbank-data-import, not by analyses.
   : List the tables required based on coding method
 - [`ds.list_language_choices()`](https://peekbank.github.io/peekbankr/reference/ds.list_language_choices.md)
   : List current allowed language choices for db import
-- [`ds.map_columns()`](https://peekbank.github.io/peekbankr/reference/ds.map_columns.md)
-  : Function for mapping raw data columns to processed table columns
 - [`ds.normalize_times()`](https://peekbank.github.io/peekbankr/reference/ds.normalize_times.md)
   : sets the starting point of a given trial to be zero
 - [`ds.resample_times()`](https://peekbank.github.io/peekbankr/reference/ds.resample_times.md)
