@@ -110,6 +110,16 @@ cdi <- unnest_aux(pb$subjects, "cdi_responses") %>%
   add_cdi_proportions()
 ```
 
+[`nearest_cdi()`](https://peekbank.github.io/peekbankr/reference/nearest_cdi.md)
+adds to each row of a table with `subject_id` and `age`, such as
+administrations, the child’s scores closest to it in age, one per
+language, form and measure, up to a cutoff in months:
+
+``` r
+
+nearest_cdi(pb$administrations, cdi, max_age_diff = 3)
+```
+
 Predicates can reach the column before it is unpacked, but only as text,
 since the server sees a JSON string:
 

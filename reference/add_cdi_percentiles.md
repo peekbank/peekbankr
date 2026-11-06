@@ -21,7 +21,10 @@ add_cdi_percentiles(cdi)
   CDI scores, one per row, e.g. from
   `unnest_aux(pb$subjects, "cdi_responses")`. Needs `language`,
   `instrument_type`, `measure`, `age` and `rawscore`; `sex` is used if
-  present.
+  present. The score's age is read from `cdi_age` instead where there is
+  one, as
+  [`nearest_cdi()`](https://peekbank.github.io/peekbankr/reference/nearest_cdi.md)
+  creates that name.
 
 ## Value
 

@@ -180,6 +180,8 @@ Helpers for the shapes Peekbank data arrives in.
   : Add vocabulary norm percentiles to CDI scores
 - [`add_cdi_proportions()`](https://peekbank.github.io/peekbankr/reference/add_cdi_proportions.md)
   : Add the relative share of a CDI form's words to CDI scores
+- [`nearest_cdi()`](https://peekbank.github.io/peekbankr/reference/nearest_cdi.md)
+  : Add the CDI scores closest in age
 
 ## Preparing a dataset for import
 

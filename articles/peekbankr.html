@@ -19,7 +19,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.12.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -151,9 +151,15 @@ the form’s words:</p>
 <code class="sourceCode R"><span><span class="va">cdi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/unnest_aux.html">unnest_aux</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">subjects</span>, <span class="st">"cdi_responses"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/add_cdi_percentiles.html">add_cdi_percentiles</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/add_cdi_proportions.html">add_cdi_proportions</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/nearest_cdi.html">nearest_cdi()</a></code> adds to each row of a table with
+<code>subject_id</code> and <code>age</code>, such as administrations,
+the child’s scores closest to it in age, one per language, form and
+measure, up to a cutoff in months:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/nearest_cdi.html">nearest_cdi</a></span><span class="op">(</span><span class="va">pb</span><span class="op">$</span><span class="va">administrations</span>, <span class="va">cdi</span>, max_age_diff <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
 <p>Predicates can reach the column before it is unpacked, but only as
 text, since the server sees a JSON string:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"cdi_responses"</span>, <span class="va">subject_aux_data</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -170,7 +176,7 @@ includes information about:</p>
 <p>Again, if you run the function with no arguments, then you get all
 the information for all administrations in the database, but you can now
 also filter on a dataset name or dataset id.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_administrations</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">administrations</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_administrations</span><span class="op">)</span></span></code></pre></div>
 <p>The age argument takes a number indicating the age(s) of children (in
@@ -184,7 +190,7 @@ were tested within a certain age range.</li>
 </ol>
 <p>For example, you can get the participant information for all of the
 children who were tested between the ages of 24 and 36 months.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_age_range</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">administrations</span><span class="op">(</span><span class="va">age</span> <span class="op">&gt;=</span> <span class="fl">24</span>, <span class="va">age</span> <span class="op">&lt;=</span> <span class="fl">36</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_age_range</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -200,7 +206,7 @@ information:</p>
 <li>Point of disambiguation</li>
 <li>IDs to link to other tables.</li>
 </ul>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_trials</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">trials</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_trials</span><span class="op">)</span></span></code></pre></div>
 <p>This function also takes dataset name and id filters.</p>
@@ -216,7 +222,7 @@ information:</p>
 <li>Image</li>
 <li>Novelty status</li>
 </ul>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_stimuli</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">stimuli</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_stimuli</span><span class="op">)</span></span></code></pre></div>
 <p>This function also takes dataset name and id filters.</p>
@@ -228,7 +234,7 @@ information:</p>
 information of the region of area of interest (AOI) for experiments
 using eye-trackers. It includes information of the dimensions of the x
 and y, such as the minimum and maximum dimension of the xy spaces.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_aoi_region_sets</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">aoi_region_sets</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_aoi_region_sets</span><span class="op">)</span></span></code></pre></div>
 <p>This function is not expected to be used commonly - this information
@@ -258,7 +264,7 @@ expressions rather than named arguments, so <code>==</code> and not
 variable (milliseconds) whose 0 point is the point of disambiguation on
 that trial (first timestep of the onset of the first time the target
 label is said).</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_aoi_timepoints</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">aoi_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d_aoi_timepoints</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -268,7 +274,7 @@ label is said).</p>
 <p>For experiments using eye-trackers (as opposed to hand coding from
 video), the <code>xy_timepoints</code> field holds a table including the
 x and y position across time.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d_xy_timepoints</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="va">subset</span><span class="op">$</span><span class="fu">xy_timepoints</span><span class="op">(</span><span class="va">dataset_name</span> <span class="op">==</span> <span class="st">"reflook_v4"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -279,7 +285,7 @@ x and y position across time.</p>
 and nothing is transferred until you <code><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect()</a></code>. The handles
 carry the same columns as the fields above, so a summary over a
 timepoint table costs you four rows rather than 36 million.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pb</span><span class="op">$</span><span class="va">db</span><span class="op">$</span><span class="va">aoi_timepoints</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">aoi</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/compute.html" class="external-link">collect</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
