@@ -24,9 +24,9 @@ resample_aoi_trial <- function(df_trial) {
   # round min/max to avoid sub-ms floating point errors from upstream rezero/normalize
   t_min <- round(min(t_origin))
   t_max <- round(max(t_origin))
-  t_start <- t_min - (t_min %% pkg_globals$SAMPLE_DURATION)
+  t_start <- t_min - (t_min %% SAMPLE_DURATION)
   t_resampled <- seq(from = t_start, to = t_max,
-                     by = pkg_globals$SAMPLE_DURATION)
+                     by = SAMPLE_DURATION)
 
   # exchange strings values with integers for resampling
   # this step critical for interpolating missing vals quickly and correctly
@@ -63,9 +63,9 @@ resample_xy_trial <- function(df_trial) {
   # round min/max to avoid sub-ms floating point errors from upstream rezero/normalize
   t_min <- round(min(t_origin))
   t_max <- round(max(t_origin))
-  t_start <- t_min - (t_min %% pkg_globals$SAMPLE_DURATION)
+  t_start <- t_min - (t_min %% SAMPLE_DURATION)
   t_resampled <- seq(from = t_start, to = t_max,
-                     by = pkg_globals$SAMPLE_DURATION)
+                     by = SAMPLE_DURATION)
 
   # because of the behavior of approx, we need numerical values for missingness
   x_origin[is.na(x_origin)] <- MISSING_CONST
@@ -99,17 +99,15 @@ resample_xy_trial <- function(df_trial) {
                 y = y_resampled)
 }
 
-#' sets the starting point of a given trial to be zero
+#' Shift each trial's times to start at zero
 #'
-#' @param df_table to-be-resampled dataframe with t, aoi/xy values, trial_id and
-#'   administration_id
+#' @param df_table Timepoints with `administration_id`, `trial_id` and `t`, the
+#'   lab's timestamps in ms
 #'
-#' @return df_out with resampled time, xy or aoi value rows
-
+#' @return `df_table` with `t` replaced by `t_zeroed`, the time since the
+#'   trial's first timestamp
 #' @export
 ds.rezero_times <- function(df_table) {
-  # first check if this data frame has all the correct columns required for
-  # normalize
   required_columns <- c("trial_id", "administration_id", "t")
 
   if (!all(required_columns %in% colnames(df_table))) {
@@ -118,7 +116,6 @@ ds.rezero_times <- function(df_table) {
               {paste(required_columns, collapse = ', ')}. Rezeroing times should
               be the first step in the time standardization process."))
   }
-  # center timestamp (0 POD)
   df_out <- df_table %>%
     dplyr::arrange(.data$trial_id, .data$t) %>%
     dplyr::group_by(.data$administration_id, .data$trial_id) %>%
@@ -127,13 +124,13 @@ ds.rezero_times <- function(df_table) {
   return(df_out)
 }
 
-#' sets the starting point of a given trial to be zero
+#' Center each trial's times on its point of disambiguation
 #'
-#' @param df_table to-be-resampled dataframe with t, aoi/xy values, trial_id and
-#'   administration_id
+#' @param df_table The output of [ds.rezero_times()], with
+#'   `point_of_disambiguation` in ms from the trial's start
 #'
-#' @return df_out with resampled time, xy or aoi value rows
-#'
+#' @return `df_table` with `t_zeroed` replaced by `t_norm`, the time from the
+#'   point of disambiguation
 #' @export
 ds.normalize_times <- function(df_table) {
   # first check if this data frame has all the correct columns required for

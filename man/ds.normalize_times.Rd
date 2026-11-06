@@ -2,17 +2,18 @@
 % Please edit documentation in R/ds_times.R
 \name{ds.normalize_times}
 \alias{ds.normalize_times}
-\title{sets the starting point of a given trial to be zero}
+\title{Center each trial's times on its point of disambiguation}
 \usage{
 ds.normalize_times(df_table)
 }
 \arguments{
-\item{df_table}{to-be-resampled dataframe with t, aoi/xy values, trial_id and
-administration_id}
+\item{df_table}{The output of \code{\link[=ds.rezero_times]{ds.rezero_times()}}, with
+\code{point_of_disambiguation} in ms from the trial's start}
 }
 \value{
-df_out with resampled time, xy or aoi value rows
+\code{df_table} with \code{t_zeroed} replaced by \code{t_norm}, the time from the
+point of disambiguation
 }
 \description{
-sets the starting point of a given trial to be zero
+Center each trial's times on its point of disambiguation
 }

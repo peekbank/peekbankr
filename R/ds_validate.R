@@ -223,7 +223,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
     # STEP 4.1:
     # if aoi/xy_timepoints table, then check if resampling was done
     if (table_type == "aoi_timepoints") {
-      remainder <- unique(df_table$t_norm %% pkg_globals$SAMPLE_DURATION)
+      remainder <- unique(df_table$t_norm %% SAMPLE_DURATION)
       if (length(remainder) > 1 || remainder != 0) {
         msg_new <- .msg("- Column t_norm in table {table_type} is notsampled
                         at 40HZ.")
@@ -231,7 +231,7 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
       }
     }
     if (table_type == "xy_timepoints") {
-      remainder <- unique(df_table$t_norm %% pkg_globals$SAMPLE_DURATION)
+      remainder <- unique(df_table$t_norm %% SAMPLE_DURATION)
       if (length(remainder) > 1 || remainder != 0) {
         msg_new <- .msg("- Column t_norm in table {table_type} is not sampled
                         at 40HZ.")
@@ -340,8 +340,8 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
                           non-numeric rawscore."))
       }
       if ("language" %in% colnames(measures) &&
-          any(!(measures$language %in% c(NA, pkg_globals$WORDBANK_ALLOWED_LANGUAGES)))) {
-        wrong <- setdiff(measures$language, c(NA, pkg_globals$WORDBANK_ALLOWED_LANGUAGES))
+          any(!(measures$language %in% c(NA, WORDBANK_ALLOWED_LANGUAGES)))) {
+        wrong <- setdiff(measures$language, c(NA, WORDBANK_ALLOWED_LANGUAGES))
         msg_error <- c(msg_error, .msg("- Some subject(s) have lang_measures entries with a language
                           that does not follow the Wordbank specification: {paste(wrong, collapse = ', ')}."))
       }
@@ -402,8 +402,8 @@ ds.validate_table <- function(df_table, table_type, cdi_expected, dir_csv, is_nu
         msg_error <- c(msg_error, msg_new)
       }
 
-      if (any(!(cdi$language %in% pkg_globals$WORDBANK_ALLOWED_LANGUAGES))) {
-        print(setdiff(cdi$language, pkg_globals$WORDBANK_ALLOWED_LANGUAGES))
+      if (any(!(cdi$language %in% WORDBANK_ALLOWED_LANGUAGES))) {
+        print(setdiff(cdi$language, WORDBANK_ALLOWED_LANGUAGES))
         msg_new <- .msg("- Some subject(s) have CDI responses that have a language that does not follow the Wordbank specification.")
         msg_error <- c(msg_error, msg_new)
       }

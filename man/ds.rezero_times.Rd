@@ -2,17 +2,18 @@
 % Please edit documentation in R/ds_times.R
 \name{ds.rezero_times}
 \alias{ds.rezero_times}
-\title{sets the starting point of a given trial to be zero}
+\title{Shift each trial's times to start at zero}
 \usage{
 ds.rezero_times(df_table)
 }
 \arguments{
-\item{df_table}{to-be-resampled dataframe with t, aoi/xy values, trial_id and
-administration_id}
+\item{df_table}{Timepoints with \code{administration_id}, \code{trial_id} and \code{t}, the
+lab's timestamps in ms}
 }
 \value{
-df_out with resampled time, xy or aoi value rows
+\code{df_table} with \code{t} replaced by \code{t_zeroed}, the time since the
+trial's first timestamp
 }
 \description{
-sets the starting point of a given trial to be zero
+Shift each trial's times to start at zero
 }

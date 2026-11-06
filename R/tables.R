@@ -61,7 +61,7 @@ table_view <- function(name, read_table, logical_flags = TRUE) {
 # and `length` the run length in samples) back to one row per 25 ms sample.
 # Columns named in `carry` are constant within a run and repeat along with it.
 decode_rle_timepoints <- function(aoi_timepoints, carry = character()) {
-  timestep <- 1000 / pkg_globals$SAMPLE_RATE
+  timestep <- 1000 / SAMPLE_RATE
   runs <- as.integer(aoi_timepoints$length)
   # one element per output sample: the run it came from, and how far into it
   source_row <- rep.int(seq_len(nrow(aoi_timepoints)), runs)

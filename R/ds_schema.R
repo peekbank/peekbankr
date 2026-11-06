@@ -9,7 +9,7 @@
 #'
 #' @export
 ds.get_peekjson <- function() {
-  peekjson <- jsonlite::fromJSON(system.file(pkg_globals$SCHEMA_FILE, package = "peekbankr"))
+  peekjson <- jsonlite::fromJSON(system.file("peekbank-schema.json", package = "peekbankr"))
   return(peekjson)
 }
 
@@ -146,3 +146,44 @@ ds.list_language_choices <- function() {
 
   return(language_list)
 }
+
+# The language names CDI scores and lang_measures in subjects' aux data must
+# use, as Wordbank spells them. Trial languages are ISO codes from the schema,
+# see ds.list_language_choices().
+WORDBANK_ALLOWED_LANGUAGES <- c(
+  "Danish",
+  "English (American)",
+  "English (Australian)",
+  "English (British)",
+  "French (French)",
+  "French (Quebecois)",
+  "German",
+  "Italian",
+  "Greek (Cypriot)",
+  "Norwegian",
+  "Portuguese (European)",
+  "Russian",
+  "Spanish (European)",
+  "Spanish (Mexican)",
+  "Swedish",
+  "Turkish",
+  "Croatian",
+  "Czech",
+  "Mandarin (Beijing)",
+  "Mandarin (Taiwanese)",
+  "Cantonese",
+  "Hebrew",
+  "Korean",
+  "Catalan",
+  "Dutch",
+  "Hungarian",
+  "Arabic (Saudi)",
+  "Latvian",
+  "Slovak",
+  "Kiswahili",
+  "American Sign Language",
+  "British Sign Language",
+  "Estonian",
+  "Kigiriama",
+  "Japanese"
+)
