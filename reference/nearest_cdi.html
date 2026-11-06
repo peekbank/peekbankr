@@ -9,7 +9,7 @@ language, form and measure, among those at most max_age_diff months away."></hea
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.5</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,8 +73,9 @@ equally close, pick the later one instead of the earlier one</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code>df</code> with the columns of <code>cdi</code> added, one row per row of <code>df</code>,
 language, form and measure, in the order of <code>df</code>. The score's age is
-<code>cdi_age</code>, and columns <code>cdi</code> shares with <code>df</code> are taken from <code>df</code>. Rows
-without a score close enough are left out.</p>
+<code>cdi_age</code>. Columns <code>cdi</code> shares with <code>df</code>, like <code>dataset_id</code>, appear once
+and have to hold the same values in both for each subject. Rows without a
+score close enough are left out.</p>
     </div>
 
     <div class="section level2">

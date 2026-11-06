@@ -34,9 +34,10 @@ nearest_cdi(df, cdi, max_age_diff, prefer_later = FALSE)
 ## Value
 
 `df` with the columns of `cdi` added, one row per row of `df`, language,
-form and measure, in the order of `df`. The score's age is `cdi_age`,
-and columns `cdi` shares with `df` are taken from `df`. Rows without a
-score close enough are left out.
+form and measure, in the order of `df`. The score's age is `cdi_age`.
+Columns `cdi` shares with `df`, like `dataset_id`, appear once and have
+to hold the same values in both for each subject. Rows without a score
+close enough are left out.
 
 ## Examples
 
