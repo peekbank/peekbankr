@@ -22,8 +22,9 @@ equally close, pick the later one instead of the earlier one}
 \value{
 \code{df} with the columns of \code{cdi} added, one row per row of \code{df},
 language, form and measure, in the order of \code{df}. The score's age is
-\code{cdi_age}, and columns \code{cdi} shares with \code{df} are taken from \code{df}. Rows
-without a score close enough are left out.
+\code{cdi_age}. Columns \code{cdi} shares with \code{df}, like \code{dataset_id}, appear once
+and have to hold the same values in both for each subject. Rows without a
+score close enough are left out.
 }
 \description{
 For each row of \code{df}, picks the child's CDI score closest in age in each

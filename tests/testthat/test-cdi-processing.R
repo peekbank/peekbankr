@@ -213,6 +213,18 @@ test_that("nearest_cdi takes a score in each language", {
   expect_setequal(out$language, c("English (American)", "Spanish (Mexican)"))
 })
 
+test_that("nearest_cdi stops when df and cdi disagree on a column they share", {
+  # a language column of the table's own would otherwise decide which
+  # language's scores are matched
+  administrations <- tibble(administration_id = 1, subject_id = 1, age = 24,
+                            language = "English (American)")
+  cdi <- tibble(subject_id = 1, instrument_type = "ws", measure = "prod",
+                language = c("English (American)", "Spanish (Mexican)"),
+                age = c(23, 25))
+  expect_error(nearest_cdi(administrations, cdi, max_age_diff = 3),
+               "different values in `language` for the same subject")
+})
+
 test_that("add_cdi_percentiles gives the same before and after nearest_cdi", {
   administrations <- tibble(administration_id = 1:2, subject_id = 1:2,
                             age = c(18, 25))

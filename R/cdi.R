@@ -137,8 +137,9 @@ add_cdi_proportions <- function(cdi) {
 #'
 #' @return `df` with the columns of `cdi` added, one row per row of `df`,
 #'   language, form and measure, in the order of `df`. The score's age is
-#'   `cdi_age`, and columns `cdi` shares with `df` are taken from `df`. Rows
-#'   without a score close enough are left out.
+#'   `cdi_age`. Columns `cdi` shares with `df`, like `dataset_id`, appear once
+#'   and have to hold the same values in both for each subject. Rows without a
+#'   score close enough are left out.
 #' @export
 #'
 #' @examples
@@ -148,14 +149,24 @@ add_cdi_proportions <- function(cdi) {
 #' nearest_cdi(pb$administrations, cdi, max_age_diff = 3)
 #' }
 nearest_cdi <- function(df, cdi, max_age_diff, prefer_later = FALSE) {
+  cdi <- dplyr::rename(cdi, cdi_age = "age")
   # cdi repeats subject columns like dataset_id that df may have too
-  cdi <- cdi %>%
-    dplyr::rename(cdi_age = "age") %>%
-    dplyr::select("subject_id", !dplyr::any_of(names(df)))
+  shared <- setdiff(intersect(names(df), names(cdi)), "subject_id")
 
-  df %>%
+  joined <- df %>%
     dplyr::mutate(.row = dplyr::row_number()) %>%
-    dplyr::inner_join(cdi, by = "subject_id", relationship = "many-to-many") %>%
+    dplyr::inner_join(cdi, by = "subject_id", suffix = c("", ".cdi"),
+                      relationship = "many-to-many")
+  for (col in shared) {
+    if (!isTRUE(all.equal(joined[[col]], joined[[paste0(col, ".cdi")]],
+                          check.attributes = FALSE))) {
+      stop("`df` and `cdi` have different values in `", col, "` for the same ",
+           "subject. Rename it in one of them.", call. = FALSE)
+    }
+  }
+
+  joined %>%
+    dplyr::select(-dplyr::all_of(paste0(shared, ".cdi", recycle0 = TRUE))) %>%
     dplyr::filter(abs(.data$cdi_age - .data$age) <= max_age_diff) %>%
     # of two equally close scores, slice_min keeps the first
     dplyr::arrange(if (prefer_later) dplyr::desc(.data$cdi_age) else .data$cdi_age) %>%
