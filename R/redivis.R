@@ -181,12 +181,12 @@ print.peekbank_connection <- function(x, ...) {
 }
 
 # ---- data files (raw data / READMEs) ----------------------------------------
-# Each dataset of a release has a file-index table (folder) of the same name in
-# the release's Redivis version, holding its README.md and its raw data under
-# raw_data/.
+# A release holds the files of its datasets in one file-index table, as
+# <dataset>/README.md and <dataset>/raw_data/<path>.
+peekbank_files_table <- "dataset_files"
 
-# the names of the data tables and of the folders (file-index tables) in a
-# Redivis version, cached per session
+# the names of the data tables in a Redivis version, and whether it holds the
+# dataset files, cached per session
 pb_table_listing <- function(redivis_tag) {
   # starts with the tag, so a client's clear_cache() drops it
   key <- paste(redivis_tag, "(table listing)")
@@ -199,17 +199,17 @@ pb_table_listing <- function(redivis_tag) {
     }, character(1))
     folder <- vapply(tables, function(t) isTRUE(t$properties$isFileIndex), logical(1))
     .peekbankr_env[[key]] <- list(tables = sort(unname(names[!folder])),
-                                  folders = unname(names[folder]))
+                                  has_files = peekbank_files_table %in% names[folder])
   }
   .peekbankr_env[[key]]
 }
 
-pb_folder_names <- function(redivis_tag) pb_table_listing(redivis_tag)$folders
+pb_has_files <- function(redivis_tag) isTRUE(pb_table_listing(redivis_tag)$has_files)
 
-# tibble of (file_id, file_name, size) for the files in one folder
-pb_folder_files <- function(redivis_tag, folder) {
+# tibble of (file_id, file_name, size) for the dataset files of a Redivis version
+pb_files_listing <- function(redivis_tag) {
   if (!redivis_available()) return(NULL)
-  sql <- sprintf("SELECT file_id, file_name, size FROM `%s`", folder)
+  sql <- sprintf("SELECT file_id, file_name, size FROM `%s`", peekbank_files_table)
   pb_try(pb_dataset(redivis_tag)$query(sql)$to_tibble())
 }
 
@@ -218,12 +218,12 @@ pb_folder_files <- function(redivis_tag, folder) {
 # it is the closest to them in time, and it does not change any more.
 # This enables at least some file fetching even if not fully supported
 files_redivis_tag <- function(connection) {
-  if (length(pb_folder_names(connection$redivis_tag)) > 0) {
+  if (pb_has_files(connection$redivis_tag)) {
     return(connection$redivis_tag)
   }
   # loop through in release order to get the first one with files
   for (redivis_tag in rev(published_redivis_tags()$redivis_tags)) {
-    if (length(pb_folder_names(redivis_tag)) > 0) {
+    if (pb_has_files(redivis_tag)) {
       message("Release ", connection$release, " holds no files, so they are ",
               "taken from release ", release_name_at(redivis_tag),
               ", the oldest one that does")
@@ -234,7 +234,7 @@ files_redivis_tag <- function(connection) {
   NULL
 }
 
-# Fetch one file from Redivis, given a row of a pb_folder_files() result.
+# Fetch one file from Redivis, given a row of a pb_files_listing() result.
 #
 # Workaround for a redivis bug, observed in 0.12.12: the public helpers
 # ($file(), list_files(), to_directory()) all build a directory tree through
@@ -248,7 +248,7 @@ files_redivis_tag <- function(connection) {
 #
 # Folders containing such a directory (e.g. newman_vocoded_2012) all hit it.
 # When that is fixed upstream, a file can be fetched with:
-#   pb_dataset(redivis_tag)$table(folder)$file(file_name)$download(
+#   pb_dataset(redivis_tag)$table(peekbank_files_table)$file(file_name)$download(
 #     path = dest, overwrite = TRUE, progress = FALSE)
 pb_fetch_file <- function(file_id, file_name, size, dest) {
   redivis_file <- utils::getFromNamespace("File", "redivis")
@@ -257,7 +257,7 @@ pb_fetch_file <- function(file_id, file_name, size, dest) {
                      path = dest, overwrite = TRUE, progress = FALSE)
 }
 
-# download rows of a pb_folder_files() result, recreating the relative paths
+# download rows of a pb_files_listing() result, recreating the relative paths
 # under local_base_dir; returns the local paths (NA for failures)
 pb_download_files <- function(files, local_base_dir, skip_existing = TRUE) {
   paths <- rep(NA_character_, nrow(files))
