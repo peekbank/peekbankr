@@ -12,7 +12,7 @@ ds.resample_times(df_table, table_type)
 
 - df_table:
 
-  to-be-resampled dataframe with t, aoi/xy values, trial_id and
+  to-be-resampled dataframe with t_norm, aoi/xy values, trial_id and
   administration_id
 
 - table_type:
@@ -30,14 +30,12 @@ df_out with resampled time, xy or aoi value rows
 2.  create desired timepoint sequence with equal spacing according to
     pre-specified SAMPLE_RATE parameter
 
-3.  use approxfun to interpolate given data points to align with desired
-    timepoint sequence "constant" interpolation method is used for AOI
-    timepoints; "linear" interpolation method is used for xy timepoints;
-    for more details on approxfun, please see:
-    https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html
+3.  use [`stats::approx()`](https://rdrr.io/r/stats/approxfun.html) with
+    "constant" interpolation, for AOI and xy timepoints alike, to give
+    each new timepoint the value of the last sample at or before it
 
 4.  after resampling, bind resampled dataframes back together and
-    re-assign aoi_timepoint_id
+    re-assign aoi_timepoint_id or xy_timepoint_id
 
 ## Examples
 

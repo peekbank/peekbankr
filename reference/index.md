@@ -31,13 +31,8 @@ Used by the import scripts in peekbank-data-import, not by analyses.
 - [`ds.compute_aois()`](https://peekbank.github.io/peekbankr/reference/ds.compute_aois.md)
   : Classify gaze samples into AOIs based x/y coordinates and provided
   region sets
-- [`ds.get_json_fields()`](https://peekbank.github.io/peekbankr/reference/ds.get_json_fields.md)
-  : Fetching the list of field names and requirements in each table
-  according to the schema json file
 - [`ds.get_peekjson()`](https://peekbank.github.io/peekbankr/reference/ds.get_peekjson.md)
   : parse the bundled peekbank schema json into a dataframe
-- [`ds.is_table_required()`](https://peekbank.github.io/peekbankr/reference/ds.is_table_required.md)
-  : Check if a certain table is required according to schema
 - [`ds.list_coding_methods()`](https://peekbank.github.io/peekbankr/reference/ds.list_coding_methods.md)
   : Get the coding method list from json schema file
 - [`ds.list_ds_tables()`](https://peekbank.github.io/peekbankr/reference/ds.list_ds_tables.md)
@@ -52,12 +47,6 @@ Used by the import scripts in peekbank-data-import, not by analyses.
   : Shift each trial's times to start at zero
 - [`ds.validate_for_db_import()`](https://peekbank.github.io/peekbankr/reference/ds.validate_for_db_import.md)
   : check all csv files against database schema for database import
-- [`ds.validate_table()`](https://peekbank.github.io/peekbankr/reference/ds.validate_table.md)
-  : Check if a dataframe/table is compliant to peekbank json before
-  database import
-- [`ds.validate_trial_uniqueness_constraint()`](https://peekbank.github.io/peekbankr/reference/ds.validate_trial_uniqueness_constraint.md)
-  : Check if within aoi_timepoints table, there is no duplication in all
-  the administration_ids associated with each individual trial_id
 
 ## Superseded
 

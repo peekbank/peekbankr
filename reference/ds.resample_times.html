@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.5</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,8 +47,8 @@
 
 
 <dl><dt id="arg-df-table">df_table<a class="anchor" aria-label="anchor" href="#arg-df-table"></a></dt>
-<dd><p>to-be-resampled dataframe with t, aoi/xy values, trial_id and
-administration_id</p></dd>
+<dd><p>to-be-resampled dataframe with t_norm, aoi/xy values,
+trial_id and administration_id</p></dd>
 
 
 <dt id="arg-table-type">table_type<a class="anchor" aria-label="anchor" href="#arg-table-type"></a></dt>
@@ -65,13 +65,11 @@ administration_id</p></dd>
 <ol><li><p>iterate through every trial for every administration</p></li>
 <li><p>create desired timepoint sequence with equal spacing according to
 pre-specified SAMPLE_RATE parameter</p></li>
-<li><p>use approxfun to interpolate given data points to align with desired
-timepoint sequence "constant" interpolation method is used for AOI
-timepoints; "linear" interpolation method is used for xy timepoints; for more
-details on approxfun, please see:
-https://stat.ethz.ch/R-manual/R-devel/library/stats/html/approxfun.html</p></li>
+<li><p>use <code><a href="https://rdrr.io/r/stats/approxfun.html" class="external-link">stats::approx()</a></code> with "constant" interpolation, for AOI and xy
+timepoints alike, to give each new timepoint the value of the last sample at
+or before it</p></li>
 <li><p>after resampling, bind resampled dataframes back together and re-assign
-aoi_timepoint_id</p></li>
+aoi_timepoint_id or xy_timepoint_id</p></li>
 </ol></div>
 
     <div class="section level2">
