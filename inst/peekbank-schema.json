@@ -1,6 +1,5 @@
 [
   {
-    "model_class": "AOI_Timepoint",
     "table": "aoi_timepoints",
     "fields": [
       {
@@ -24,7 +23,7 @@
         "field_name": "administration_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Administration",
+          "to": "administrations",
           "null": false
         }
       },
@@ -39,14 +38,13 @@
         "field_name": "trial_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Trial",
+          "to": "trials",
           "null": false
         }
       }
     ]
   },
   {
-    "model_class": "AOI_Region_Set",
     "table": "aoi_region_sets",
     "fields": [
       {
@@ -124,7 +122,6 @@
     ]
   },
   {
-    "model_class": "Dataset",
     "table": "datasets",
     "fields": [
       {
@@ -181,7 +178,6 @@
     ]
   },
   {
-    "model_class": "Administration",
     "table": "administrations",
     "fields": [
       {
@@ -196,7 +192,7 @@
         "field_name": "dataset_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Dataset",
+          "to": "datasets",
           "null": false
         }
       },
@@ -230,7 +226,7 @@
         "field_name": "subject_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Subject",
+          "to": "subjects",
           "null": false
         }
       },
@@ -288,7 +284,6 @@
     ]
   },
   {
-    "model_class": "Subject",
     "table": "subjects",
     "fields": [
       {
@@ -338,7 +333,6 @@
     ]
   },
   {
-    "model_class": "Trial_Type",
     "table": "trial_types",
     "fields": [
       {
@@ -353,7 +347,7 @@
         "field_name": "aoi_region_set_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "AOI_Region_Set",
+          "to": "aoi_region_sets",
           "null": true
         }
       },
@@ -361,7 +355,7 @@
         "field_name": "dataset_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Dataset",
+          "to": "datasets",
           "null": false
         }
       },
@@ -369,7 +363,7 @@
         "field_name": "distractor_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Stimulus",
+          "to": "stimuli",
           "null": false,
           "related_name": "distractor_stimulus"
         }
@@ -378,7 +372,7 @@
         "field_name": "target_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Stimulus",
+          "to": "stimuli",
           "null": false,
           "related_name": "target_stimulus"
         }
@@ -456,7 +450,6 @@
     ]
   },
   {
-    "model_class": "Trial",
     "table": "trials",
     "fields": [
       {
@@ -479,7 +472,7 @@
         "field_name": "trial_type_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Trial_Type",
+          "to": "trial_types",
           "null": false
         }
       },
@@ -510,7 +503,6 @@
     ]
   },
   {
-    "model_class": "Stimulus",
     "table": "stimuli",
     "fields": [
       {
@@ -525,7 +517,7 @@
         "field_name": "dataset_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Dataset",
+          "to": "datasets",
           "null": false
         }
       },
@@ -604,7 +596,6 @@
     ]
   },
   {
-    "model_class": "XY_Timepoint",
     "table": "xy_timepoints",
     "fields": [
       {
@@ -619,7 +610,7 @@
         "field_name": "administration_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Administration",
+          "to": "administrations",
           "null": false
         }
       },
@@ -627,7 +618,7 @@
         "field_name": "trial_id",
         "field_class": "ForeignKey",
         "options": {
-          "to": "Trial",
+          "to": "trials",
           "null": false
         }
       },

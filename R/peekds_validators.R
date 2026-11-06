@@ -670,12 +670,10 @@ ds.validate_for_db_import <- function(dir_csv, cdi_expected, file_ext = ".csv", 
 
   # every foreign key has to point at a row of the table it refers to (a table
   # the dataset does not have counts as empty)
-  peekjson <- ds.get_peekjson()
   for (table_type in names(dict_tables)) {
     fields <- ds.get_json_fields(table_type)
-    for (i in which(fields$field_class == "ForeignKey")) {
-      key <- fields$field_name[i]
-      target <- peekjson$table[match(fields$options$to[i], peekjson$model_class)]
+    for (key in fields$field_name[fields$field_class == "ForeignKey"]) {
+      target <- fields$options$to[fields$field_name == key]
       target_fields <- ds.get_json_fields(target)
       target_id <- target_fields$field_name[target_fields$options$primary_key %in% TRUE]
       dangling <- setdiff(stats::na.omit(dict_tables[[table_type]][[key]]),
