@@ -143,6 +143,18 @@ pb <- peekbank("2026.1")
 pb$release   # "2026.1"
 ```
 
+### Keeping downloads between sessions
+
+Whatever a client reads stays cached until the R session ends. With
+`cache_on_disk = TRUE` it is also saved in a `.pbcache` folder in the
+working directory, so later sessions read it from there instead of
+downloading it again:
+
+``` r
+
+pb <- peekbank("2026.1", cache_on_disk = TRUE)
+```
+
 ### Data files
 
 Each release holds the README and raw data of its datasets, so the

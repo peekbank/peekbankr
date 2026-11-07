@@ -119,7 +119,7 @@ Pin a database version.
 
 #### Usage
 
-    PeekbankClient$new(version)
+    PeekbankClient$new(version, cache_on_disk = FALSE)
 
 #### Arguments
 
@@ -128,6 +128,11 @@ Pin a database version.
   A Peekbank release name such as "2025.1", "current", or "next" for the
   unreleased draft for whichever was published most recently. Required:
   see
+  [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md).
+
+- `cache_on_disk`:
+
+  Also keep what is read on disk for later sessions: see
   [`peekbank()`](https://peekbank.github.io/peekbankr/reference/peekbank.md).
 
 ------------------------------------------------------------------------
@@ -209,7 +214,8 @@ and its text in `readme` (`NA` where a download failed)
 ### Method `clear_cache()`
 
 Drop this version's (instance's) cached tables and query results, so the
-next read fetches them again.
+next read fetches them again. A `cache_on_disk` client also deletes the
+files it would read them back from.
 
 #### Usage
 

@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,10 +123,17 @@
 <span><span class="va">pb</span><span class="op">$</span><span class="va">release</span>   <span class="co"># "2026.1"</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="keeping-downloads-between-sessions">Keeping downloads between sessions<a class="anchor" aria-label="anchor" href="#keeping-downloads-between-sessions"></a>
+</h3>
+<p>Whatever a client reads stays cached until the R session ends. With <code>cache_on_disk = TRUE</code> it is also saved in a <code>.pbcache</code> folder in the working directory, so later sessions read it from there instead of downloading it again:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/peekbank.html">peekbank</a></span><span class="op">(</span><span class="st">"2026.1"</span>, cache_on_disk <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
 <h3 id="data-files">Data files<a class="anchor" aria-label="anchor" href="#data-files"></a>
 </h3>
 <p>Each release holds the README and raw data of its datasets, so the stimulus images and READMEs you get match the release. Releases from before that take them from the oldest release that holds them:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">readmes</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">readmes</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"pomper_saffran_2016"</span><span class="op">)</span>  <span class="co"># dataset documentation</span></span>
 <span><span class="va">stimuli</span> <span class="op">&lt;-</span> <span class="va">pb</span><span class="op">$</span><span class="fu">images</span><span class="op">(</span>datasets <span class="op">=</span> <span class="st">"reflook_v4"</span><span class="op">)</span>             <span class="co"># stimulus images</span></span></code></pre></div>
 </div>

@@ -9,7 +9,7 @@ comes from that version, so an analysis cannot mix releases."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">peekbankr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ comes from that version, so an analysis cannot mix releases.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">peekbank</span><span class="op">(</span><span class="va">version</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">peekbank</span><span class="op">(</span><span class="va">version</span>, cache_on_disk <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -54,6 +54,14 @@ comes from that version, so an analysis cannot mix releases.</p>
 take whichever version was published most recently, or "next" for the
 unreleased draft of the next release (only editors of the dataset on
 Redivis can read it)</p></dd>
+
+
+<dt id="arg-cache-on-disk">cache_on_disk<a class="anchor" aria-label="anchor" href="#arg-cache-on-disk"></a></dt>
+<dd><p>Also keep what is read in a <code>.pbcache</code> folder in the
+working directory, so that later sessions read it from there instead of
+downloading it again. They still need to reach Redivis, to resolve the
+release and to build timepoint queries. Not available for "next", whose
+contents change.</p></dd>
 
 </dl></div>
     <div class="section level2">
