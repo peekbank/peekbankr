@@ -36,7 +36,7 @@ month). The norms cover English (American):
 }
 }
 \details{
-WG and WS use the 2022 Wordbank norms, the short forms the MB-CDI
+WG and WS use the 2022 American English norms, the short forms the MB-CDI
 short-form norms: Level I for WG short and Level IIA for WS short.
 }
 \examples{

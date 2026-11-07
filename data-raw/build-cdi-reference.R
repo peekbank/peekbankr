@@ -6,7 +6,7 @@
 #
 #   Rscript data-raw/build-cdi-reference.R
 #
-# Norms come from the 2022 Wordbank benchmarks for English WG and WS
+# Norms come from the 2022 American English benchmarks for WG and WS
 # (data-raw/cdi-benchmarks-2022) and the English short-form norms Virginia
 # Marchman shared in peekbank/peekbankr#19 (data-raw/cdi-norms-shortform).
 # Level I is the WG short form. Peekbank does not record which of the two

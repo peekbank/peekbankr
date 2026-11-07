@@ -14,7 +14,7 @@ require_columns <- function(df, columns) {
 #' * WG and WG short form, comprehension and production, 8 to 18 months
 #' * WS and WS short form, production, 16 to 30 months
 #'
-#' WG and WS use the 2022 Wordbank norms, the short forms the MB-CDI
+#' WG and WS use the 2022 American English norms, the short forms the MB-CDI
 #' short-form norms: Level I for WG short and Level IIA for WS short.
 #'
 #' @param cdi CDI scores, one per row, e.g. from
