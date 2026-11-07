@@ -13,6 +13,7 @@ list_dataset_files <- function(pin) {
 # with the local path of each image
 fetch_stimulus_images <- function(pin, datasets = c(), dir = "stimulus_data",
                                   skip_existing = TRUE) {
+  message("Looking up stimulus images...")
   stimuli_df <- fetch_table(pin, "stimuli") %>%
     dplyr::filter(!is.na(.data$stimulus_image_path))
 
@@ -43,7 +44,7 @@ fetch_stimulus_images <- function(pin, datasets = c(), dir = "stimulus_data",
 
   local <- pb_download_files(files, dir, skip_existing = skip_existing)
   path_map <- stats::setNames(local, files$file_name)
-  message("Downloaded ", sum(!is.na(local)), " stimulus files from Redivis")
+  message("Stimulus images saved to: ", dir)
 
   return(wanted %>%
     dplyr::mutate(local_image_path =

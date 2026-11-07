@@ -1,7 +1,7 @@
 Package: peekbankr
 Type: Package
 Title: Accessing and Working with Peekbank Data
-Version: 1.1.1
+Version: 1.2.0
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Kyle", "MacDonald", email = "kylem412@gmail.com", role = "aut"),
@@ -18,13 +18,14 @@ BugReports: https://github.com/peekbank/peekbankr/issues
 Encoding: UTF-8
 Imports:
     R6 (>= 2.5.0),
+    cli (>= 3.4.0),
     DBI (>= 1.1.0),
     dbplyr (>= 2.3.0),
     dplyr (>= 1.1.0),
     glue (>= 1.4.2),
     jsonlite (>= 1.7.2),
     magrittr (>= 2.0.1),
-    purrr (>= 0.3.4),
+    purrr (>= 1.0.0),
     rlang (>= 0.4.10),
     tidyr (>= 1.1.2),
     stringr (>= 1.5.1),

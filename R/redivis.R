@@ -241,24 +241,51 @@ pb_fetch_file <- function(file_id, file_name, size, dest) {
                      path = dest, overwrite = TRUE, progress = FALSE)
 }
 
+# Fetch rows of a pb_files_listing() result to their dest as one batch, which
+# avoids most of the per-file overhead we would have with pb_fetch_file(). The
+# worker is internal to redivis and can change without notice + errors abort the
+# whole batch; we thus fall back to the slower pb_fetch_file() if that happens
+pb_fetch_batch <- function(files) {
+  worker <- utils::getFromNamespace("perform_parallel_download_worker", "redivis")
+  bar <- cli::cli_progress_bar(
+    total = sum(files$size),
+    format = paste("Downloading {cli::pb_bar} {cli::pb_current_bytes}/{cli::pb_total_bytes}",
+                   "| ETA: {cli::pb_eta}"))
+  worker(uris = paste0("/rawFiles/", files$file_id), download_paths = files$dest,
+         sizes = files$size, overwrite = TRUE, avg_file_size = mean(files$size),
+         on_progress = function(bytes) cli::cli_progress_update(inc = bytes, id = bar))
+}
+
+# whether a file is on disk with the size the release lists for it
+file_intact <- function(path, size) dplyr::coalesce(file.size(path) == size, FALSE)
+
 # download rows of a pb_files_listing() result, recreating the relative paths
 # under local_base_dir; returns the local paths (NA for failures)
 pb_download_files <- function(files, local_base_dir, skip_existing = TRUE) {
-  paths <- rep(NA_character_, nrow(files))
-  for (i in seq_len(nrow(files))) {
-    dest <- file.path(local_base_dir, files$file_name[i])
-    paths[i] <- dest
-    if (skip_existing && file.exists(dest) &&
-        file.size(dest) == files$size[i]) {
-      next
-    }
-    dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
-    ok <- pb_try(
-      pb_fetch_file(files$file_id[i], files$file_name[i], files$size[i], dest))
-    if (is.null(ok)) {
-      paths[i] <- NA_character_
-      message("Failed to download ", files$file_name[i])
-    }
+  files <- dplyr::mutate(files, dest = file.path(local_base_dir, .data$file_name))
+  needs_fetch <- function(f) {
+    dplyr::filter(f, !skip_existing | !file_intact(.data$dest, .data$size))
   }
-  paths
+  todo <- needs_fetch(files)
+
+  if (nrow(todo) > 0) {
+    message("Downloading ", nrow(todo), " files (", round(sum(todo$size) / 1e6, 1), " MB)")
+    tryCatch(pb_fetch_batch(todo), error = function(e) {
+      message("The batch download failed (", conditionMessage(e),
+              "), so fetching the files one by one")
+      purrr::pwalk(needs_fetch(todo), function(file_id, file_name, size, dest) {
+        dir.create(dirname(dest), recursive = TRUE, showWarnings = FALSE)
+        # pb_try raises when Redivis rejects a request, which should only cost this file
+        tryCatch(pb_try(pb_fetch_file(file_id, file_name, size, dest)),
+                 error = function(e) NULL)
+      }, .progress = "Downloading")
+    })
+  }
+
+  local <- dplyr::if_else(file_intact(files$dest, files$size), files$dest, NA_character_)
+  failed <- sum(is.na(local))
+  message("Downloaded ", nrow(todo) - failed, " files (", nrow(files) - nrow(todo),
+          " already on disk, ", failed, " failed)")
+  if (failed > 0) message("Failed to download: ", toString(files$file_name[is.na(local)]))
+  local
 }
