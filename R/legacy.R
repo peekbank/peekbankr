@@ -51,7 +51,15 @@ connect_to_peekbank <- function(db_version = "current", db_args = NULL,
             "These arguments are deprecated and ignored: ",
             paste(supplied, collapse = ", "), ".", call. = FALSE)
   }
-  new_connection(db_version)
+  structure(resolve_release(db_version), class = "peekbank_connection")
+}
+
+#' @export
+print.peekbank_connection <- function(x, ...) {
+  cat("<peekbank_connection> release ", x$release,
+      " (Redivis ", peekbank_organization, "/", peekbank_dataset_reference,
+      " version ", x$redivis_tag, ")\n", sep = "")
+  invisible(x)
 }
 
 resolve_connection <- function(connection) {

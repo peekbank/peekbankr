@@ -37,18 +37,16 @@ test_that("sql_in_clause builds IN clauses and drops NAs", {
 
 test_that("pb_query serves repeat queries from the session cache", {
   env <- peekbankr:::.peekbankr_env
-  con <- structure(list(release = "2026.1", redivis_tag = "v1.4"),
-                   class = "peekbank_connection")
+  pin <- list(release = "2026.1", redivis_tag = "v1.4")
   sql <- "SELECT sentinel FROM nowhere"
-  key <- paste(con$redivis_tag, sql)
+  key <- paste(pin$redivis_tag, sql)
   on.exit(rm(list = key, envir = env), add = TRUE)
 
   env[[key]] <- data.frame(sentinel = 42)
-  expect_equal(peekbankr:::pb_query(con, sql)$sentinel, 42)
+  expect_equal(peekbankr:::pb_query(pin, sql)$sentinel, 42)
 
   # the key is scoped to both the version and the query text
-  other_version <- structure(list(release = "2025.1", redivis_tag = "v1.2"),
-                             class = "peekbank_connection")
+  other_version <- list(release = "2025.1", redivis_tag = "v1.2")
   expect_null(env[[paste(other_version$redivis_tag, sql)]])
-  expect_null(env[[paste(con$redivis_tag, "SELECT something else")]])
+  expect_null(env[[paste(pin$redivis_tag, "SELECT something else")]])
 })

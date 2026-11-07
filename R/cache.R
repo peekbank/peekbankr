@@ -13,9 +13,9 @@ new_cache_dir <- function() {
   dir
 }
 
-cache_file <- function(connection, key) {
-  if (is.null(connection$cache_dir)) return(NULL)
-  file.path(connection$cache_dir, connection$redivis_tag,
+cache_file <- function(pin, key) {
+  if (is.null(pin$cache_dir)) return(NULL)
+  file.path(pin$cache_dir, pin$redivis_tag,
             paste0(rlang::hash(key), ".rds"))
 }
 
@@ -46,9 +46,9 @@ read_cache_file <- function(path) {
 }
 
 # Reads are served from the session cache. An entry missing there is restored
-# from its file on a cache_on_disk connection, and fetched otherwise.
-cached_read <- function(connection, key, fetch) {
-  path <- cache_file(connection, key)
+# from its file for a cache_on_disk client, and fetched otherwise.
+cached_read <- function(pin, key, fetch) {
+  path <- cache_file(pin, key)
   if (is.null(.peekbankr_env[[key]]) && !is.null(path) && file.exists(path)) {
     .peekbankr_env[[key]] <- read_cache_file(path)
   }

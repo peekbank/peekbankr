@@ -1,7 +1,7 @@
-# the files of a connection's release as (file_id, file_name, size), named
+# the files of a pinned release as (file_id, file_name, size), named
 # <dataset>/README.md and <dataset>/raw_data/<path>
-list_dataset_files <- function(con) {
-  redivis_tag <- files_redivis_tag(con)
+list_dataset_files <- function(pin) {
+  redivis_tag <- files_redivis_tag(pin)
   files <- if (is.null(redivis_tag)) NULL else pb_files_listing(redivis_tag)
   # the empty tibble keeps the columns when there are no files
   dplyr::bind_rows(
@@ -11,9 +11,9 @@ list_dataset_files <- function(con) {
 
 # stimulus images for a release, saved under dir; returns the stimuli table
 # with the local path of each image
-fetch_stimulus_images <- function(con, datasets = c(), dir = "stimulus_data",
+fetch_stimulus_images <- function(pin, datasets = c(), dir = "stimulus_data",
                                   skip_existing = TRUE) {
-  stimuli_df <- fetch_table(con, "stimuli") %>%
+  stimuli_df <- fetch_table(pin, "stimuli") %>%
     dplyr::filter(!is.na(.data$stimulus_image_path))
 
   if (length(datasets) > 0) {
@@ -29,7 +29,7 @@ fetch_stimulus_images <- function(con, datasets = c(), dir = "stimulus_data",
   # Datasets of older releases that are not in the release holding the files
   # (e.g. renamed ones) count as missing. Their image paths were not
   # consistent anyway, so there isnt much lost.
-  files <- list_dataset_files(con) %>%
+  files <- list_dataset_files(pin) %>%
     dplyr::filter(grepl("^[^/]+/raw_data/", .data$file_name)) %>%
     # saved as <dataset>/<path>, without the raw_data/ they have in the release
     dplyr::mutate(file_name = sub("^([^/]+)/raw_data/", "\\1/", .data$file_name)) %>%
@@ -53,14 +53,14 @@ fetch_stimulus_images <- function(con, datasets = c(), dir = "stimulus_data",
 
 # the READMEs of a release's datasets, saved as <dataset>.md under dir;
 # returns the datasets table with the local path and text of each README
-fetch_readmes <- function(con, datasets = c(), dir = "dataset_readmes") {
-  datasets_df <- fetch_table(con, "datasets")
+fetch_readmes <- function(pin, datasets = c(), dir = "dataset_readmes") {
+  datasets_df <- fetch_table(pin, "datasets")
   if (length(datasets) > 0) {
     datasets_df <- datasets_df %>%
       dplyr::filter(.data$dataset_name %in% .env$datasets)
   }
 
-  paths <- download_readmes(con, datasets_df$dataset_name, dir)
+  paths <- download_readmes(pin, datasets_df$dataset_name, dir)
   local <- unname(paths[datasets_df$dataset_name])
 
   datasets_df %>%
@@ -77,8 +77,8 @@ fetch_readmes <- function(con, datasets = c(), dir = "dataset_readmes") {
 # the READMEs of the named datasets (every one in the release if NULL), saved
 # as <dataset>.md under dir; returns their local paths named by dataset, NA
 # where a download failed
-download_readmes <- function(con, datasets, dir) {
-  readmes <- list_dataset_files(con) %>%
+download_readmes <- function(pin, datasets, dir) {
+  readmes <- list_dataset_files(pin) %>%
     dplyr::filter(grepl("^[^/]+/README\\.md$", .data$file_name))
   if (!is.null(datasets)) {
     readmes <- readmes[sub("/README\\.md$", "", readmes$file_name) %in% datasets, ]

@@ -120,10 +120,9 @@ test_that("an entry already in memory is saved by a cache_on_disk client", {
 
 test_that("a failed read is not saved", {
   in_fresh_dir({
-    con <- structure(list(release = "2026.1", redivis_tag = "vtest",
-                          cache_dir = file.path(getwd(), ".pbcache")),
-                     class = "peekbank_connection")
-    expect_null(peekbankr:::cached_read(con, "vtest failed", function() NULL))
+    pin <- list(release = "2026.1", redivis_tag = "vtest",
+                cache_dir = file.path(getwd(), ".pbcache"))
+    expect_null(peekbankr:::cached_read(pin, "vtest failed", function() NULL))
     expect_length(list.files(".pbcache", recursive = TRUE), 0)
   })
 })
@@ -131,11 +130,10 @@ test_that("a failed read is not saved", {
 test_that("a failed save warns and still returns the data", {
   in_fresh_dir({
     file.create("not_a_folder")
-    con <- structure(list(release = "2026.1", redivis_tag = "vtest",
-                          cache_dir = file.path(getwd(), "not_a_folder")),
-                     class = "peekbank_connection")
+    pin <- list(release = "2026.1", redivis_tag = "vtest",
+                cache_dir = file.path(getwd(), "not_a_folder"))
     expect_warning(
-      value <- peekbankr:::cached_read(con, "vtest unsaved", function() 42),
+      value <- peekbankr:::cached_read(pin, "vtest unsaved", function() 42),
       "Could not save")
     expect_equal(value, 42)
   })

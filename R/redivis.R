@@ -98,7 +98,7 @@ release_name_at <- function(redivis_tag) {
 }
 
 # a release name, "current" or "next", to the release and the Redivis version
-# tag holding it
+# tag holding it: the `pin` that reads are made against
 resolve_release <- function(db_version = "current") {
   if (identical(db_version, "next")) {
     # the draft of the next release, which only editors of the dataset can read
@@ -143,19 +143,10 @@ resolve_release <- function(db_version = "current") {
   list(release = release, redivis_tag = redivis_tag)
 }
 
-# The release that reads are pinned to.
-new_connection <- function(version) {
-  ver <- resolve_release(version)
-  structure(
-    list(release = ver$release, redivis_tag = ver$redivis_tag),
-    class = "peekbank_connection"
-  )
-}
-
 # fetch a whole table as a tibble, cached per session + version
-pb_table <- function(connection, name) {
-  redivis_tag <- connection$redivis_tag
-  cached_read(connection, paste(redivis_tag, name), function() {
+pb_table <- function(pin, name) {
+  redivis_tag <- pin$redivis_tag
+  cached_read(pin, paste(redivis_tag, name), function() {
     if (!redivis_available()) return(NULL)
     pb_try(pb_dataset(redivis_tag)$table(name)$to_tibble())
   })
@@ -164,20 +155,12 @@ pb_table <- function(connection, name) {
 # run a SQL query against the dataset version (server-side filtering for the
 # big timepoint tables), cached per session + version; BigQuery Standard SQL
 # dialect
-pb_query <- function(connection, sql) {
-  redivis_tag <- connection$redivis_tag
-  cached_read(connection, paste(redivis_tag, sql), function() {
+pb_query <- function(pin, sql) {
+  redivis_tag <- pin$redivis_tag
+  cached_read(pin, paste(redivis_tag, sql), function() {
     if (!redivis_available()) return(NULL)
     pb_try(pb_dataset(redivis_tag)$query(sql)$to_tibble())
   })
-}
-
-#' @export
-print.peekbank_connection <- function(x, ...) {
-  cat("<peekbank_connection> release ", x$release,
-      " (Redivis ", peekbank_organization, "/", peekbank_dataset_reference,
-      " version ", x$redivis_tag, ")\n", sep = "")
-  invisible(x)
 }
 
 # ---- data files (raw data / READMEs) ----------------------------------------
@@ -213,18 +196,18 @@ pb_files_listing <- function(redivis_tag) {
   pb_try(pb_dataset(redivis_tag)$query(sql)$to_tibble())
 }
 
-# The Redivis version holding the files of a connection's release. Releases
+# The Redivis version holding the files of a pinned release. Releases
 # from before releases held their files (before 2026.2) use the oldest release that does as
 # it is the closest to them in time, and it does not change any more.
 # This enables at least some file fetching even if not fully supported
-files_redivis_tag <- function(connection) {
-  if (pb_has_files(connection$redivis_tag)) {
-    return(connection$redivis_tag)
+files_redivis_tag <- function(pin) {
+  if (pb_has_files(pin$redivis_tag)) {
+    return(pin$redivis_tag)
   }
   # loop through in release order to get the first one with files
   for (redivis_tag in rev(published_redivis_tags()$redivis_tags)) {
     if (pb_has_files(redivis_tag)) {
-      message("Release ", connection$release, " holds no files, so they are ",
+      message("Release ", pin$release, " holds no files, so they are ",
               "taken from release ", release_name_at(redivis_tag),
               ", the oldest one that does")
       return(redivis_tag)

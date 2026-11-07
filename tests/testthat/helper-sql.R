@@ -2,7 +2,7 @@
 captured_sql <- function(expr) {
   sql <- NULL
   testthat::local_mocked_bindings(
-    pb_query = function(connection, sql_text) {
+    pb_query = function(pin, sql_text) {
       sql <<- sql_text
       NULL
     },

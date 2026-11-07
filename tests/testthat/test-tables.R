@@ -34,7 +34,7 @@ test_that("the legacy getters keep the 0/1 flags", {
     trial_types = tibble(trial_type_id = 1:2, dataset_id = 1,
                          vanilla_trial = c(0L, 1L)),
     trials = tibble(trial_id = 1:2, trial_type_id = 1:2, excluded = c(1L, 0L)))
-  local_mocked_bindings(pb_table = function(connection, name) tables[[name]])
+  local_mocked_bindings(pb_table = function(pin, name) tables[[name]])
   expect_identical(get_trials(connection = con)$excluded, c(1L, 0L))
   expect_identical(get_trial_types(connection = con)$vanilla_trial, c(0L, 1L))
 })

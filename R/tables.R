@@ -1,6 +1,6 @@
 # The tables in the shape peekbankr hands out, derived from the ones redivis.R pulled.
 
-fetch_table_names <- function(con) pb_table_listing(con$redivis_tag)$tables
+fetch_table_names <- function(pin) pb_table_listing(pin$redivis_tag)$tables
 
 # the tables whose rows belong to a dataset, and so can be given its name
 dataset_joined_tables <- c("administrations", "subjects", "trials",
@@ -83,8 +83,8 @@ as_logical_flags <- function(name, tbl) {
 }
 
 # the view read into memory, by passing the reader that returns tibbles
-fetch_table <- function(con, name, logical_flags = TRUE) {
-  table_view(name, function(n) pb_table(con, n), logical_flags)
+fetch_table <- function(pin, name, logical_flags = TRUE) {
+  table_view(name, function(n) pb_table(pin, n), logical_flags)
 }
 
 # join `other` on, keeping only the columns `frame` does not already have

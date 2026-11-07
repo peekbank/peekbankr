@@ -40,14 +40,14 @@ PeekbankClient <- R6Class(
              "while its Redivis version stays the same,\n  so a saved copy ",
              "would go stale.", call. = FALSE)
       }
-      private$con <- new_connection(version)
-      if (cache_on_disk) private$con$cache_dir <- new_cache_dir()
+      private$pin <- resolve_release(version)
+      if (cache_on_disk) private$pin$cache_dir <- new_cache_dir()
       invisible(self)
     },
 
     #' @description Run a BigQuery Standard SQL query against this release
     #' @param sql A valid SQL query string
-    query = function(sql) pb_query(private$con, sql),
+    query = function(sql) pb_query(private$pin, sql),
 
     #' @description Download the stimulus images of this release's stimuli
     #' @param datasets Dataset names to download for; all datasets if empty
@@ -58,7 +58,7 @@ PeekbankClient <- R6Class(
     #'   (`NA` where a download failed)
     images = function(datasets = c(), dir = "stimulus_data",
                       skip_existing = TRUE) {
-      fetch_stimulus_images(private$con, datasets = datasets, dir = dir,
+      fetch_stimulus_images(private$pin, datasets = datasets, dir = dir,
                             skip_existing = skip_existing)
     },
 
@@ -69,7 +69,7 @@ PeekbankClient <- R6Class(
     #'   `local_readme_path` and its text in `readme` (`NA` where a download
     #'   failed)
     readmes = function(datasets = c(), dir = "dataset_readmes") {
-      fetch_readmes(private$con, datasets = datasets, dir = dir)
+      fetch_readmes(private$pin, datasets = datasets, dir = dir)
     },
 
     #' @description Drop this version's (instance's) cached tables and query results, so the
@@ -77,10 +77,10 @@ PeekbankClient <- R6Class(
     #'   the files it would read them back from.
     clear_cache = function() {
       keys <- ls(.peekbankr_env)
-      hits <- keys[startsWith(keys, paste0(private$con$redivis_tag, " "))]
+      hits <- keys[startsWith(keys, paste0(private$pin$redivis_tag, " "))]
       rm(list = hits, envir = .peekbankr_env)
-      if (!is.null(private$con$cache_dir)) {
-        unlink(file.path(private$con$cache_dir, private$con$redivis_tag),
+      if (!is.null(private$pin$cache_dir)) {
+        unlink(file.path(private$pin$cache_dir, private$pin$redivis_tag),
                recursive = TRUE)
       }
       invisible(self)
@@ -89,10 +89,10 @@ PeekbankClient <- R6Class(
     #' @description Print the pinned release and what is reachable on it
     #' @param ... Ignored
     print = function(...) {
-      cat("<peekbank> release ", private$con$release,
-          " (Redivis version ", private$con$redivis_tag, ")\n", sep = "")
+      cat("<peekbank> release ", private$pin$release,
+          " (Redivis version ", private$pin$redivis_tag, ")\n", sep = "")
       # older releases do not record the commit of the import code
-      commit <- pb_table(private$con, "release_info")[["import_commit"]]
+      commit <- pb_table(private$pin, "release_info")[["import_commit"]]
       if (length(commit) == 1 && !is.na(commit)) {
         cat("  code:    https://github.com/peekbank/peekbank-data-import/tree/",
             commit, "\n", sep = "")
@@ -115,19 +115,19 @@ PeekbankClient <- R6Class(
     #' @field release The Peekbank release this client is pinned to
     release = function(value) {
       private$assert_readonly(missing(value), "release")
-      private$con$release
+      private$pin$release
     },
 
     #' @field redivis_tag The Redivis version this client is pinned to
     redivis_tag = function(value) {
       private$assert_readonly(missing(value), "redivis_tag")
-      private$con$redivis_tag
+      private$pin$redivis_tag
     },
 
     #' @field tables Names of the tables in this release
     tables = function(value) {
       private$assert_readonly(missing(value), "tables")
-      fetch_table_names(private$con)
+      fetch_table_names(private$pin)
     },
 
     #' @field subset One function per table taking `dplyr` predicates, e.g.
@@ -176,7 +176,7 @@ PeekbankClient <- R6Class(
       private$assert_readonly(missing(value), "db")
       if (is.null(private$db_env)) {
         e <- new.env(parent = emptyenv())
-        for (nm in setdiff(fetch_table_names(private$con), "release_info")) {
+        for (nm in setdiff(fetch_table_names(private$pin), "release_info")) {
           local({
             name <- nm
             makeActiveBinding(
@@ -193,46 +193,46 @@ PeekbankClient <- R6Class(
     #' @field datasets The datasets table
     datasets = function(value) {
       private$assert_readonly(missing(value), "datasets")
-      fetch_table(private$con, "datasets")
+      fetch_table(private$pin, "datasets")
     },
 
     #' @field subjects The subjects table. Subjects link longitudinal
     #'   administrations; `administrations` is usually the one you want.
     subjects = function(value) {
       private$assert_readonly(missing(value), "subjects")
-      fetch_table(private$con, "subjects")
+      fetch_table(private$pin, "subjects")
     },
 
     #' @field administrations The administrations table, with `dataset_name`
     #'   joined on
     administrations = function(value) {
       private$assert_readonly(missing(value), "administrations")
-      fetch_table(private$con, "administrations")
+      fetch_table(private$pin, "administrations")
     },
 
     #' @field trials The trials table, with `dataset_id` and `dataset_name`
     #'   joined on
     trials = function(value) {
       private$assert_readonly(missing(value), "trials")
-      fetch_table(private$con, "trials")
+      fetch_table(private$pin, "trials")
     },
 
     #' @field trial_types The trial types table, with `dataset_name` joined on
     trial_types = function(value) {
       private$assert_readonly(missing(value), "trial_types")
-      fetch_table(private$con, "trial_types")
+      fetch_table(private$pin, "trial_types")
     },
 
     #' @field stimuli The stimuli table, with `dataset_name` joined on
     stimuli = function(value) {
       private$assert_readonly(missing(value), "stimuli")
-      fetch_table(private$con, "stimuli")
+      fetch_table(private$pin, "stimuli")
     },
 
     #' @field aoi_region_sets The AOI region sets table
     aoi_region_sets = function(value) {
       private$assert_readonly(missing(value), "aoi_region_sets")
-      fetch_table(private$con, "aoi_region_sets")
+      fetch_table(private$pin, "aoi_region_sets")
     },
 
     #' @field aoi_timepoints Every AOI timepoint in the release: 36 million
@@ -252,7 +252,7 @@ PeekbankClient <- R6Class(
   ),
 
   private = list(
-    con = NULL,
+    pin = NULL,
     dbi_con = NULL,
     db_env = NULL,
     subset_env = NULL,
@@ -273,7 +273,7 @@ PeekbankClient <- R6Class(
     # fully qualified path to a table in this client's version
     path = function(name) {
       paste0(peekbank_organization, ".", peekbank_dataset_reference, ":",
-             gsub(".", "_", private$con$redivis_tag, fixed = TRUE), ".", name)
+             gsub(".", "_", private$pin$redivis_tag, fixed = TRUE), ".", name)
     },
 
     redivis_remote_table = function(name) {
@@ -330,8 +330,8 @@ PeekbankClient <- R6Class(
         c("administration_id", "trial_id", "t_norm")
       sql <- as.character(
         sql_render(dplyr::arrange(query, !!!rlang::syms(order))))
-      rows <- if (length(run_dots) == 0) pb_query(private$con, sql) else
-        tryCatch(pb_query(private$con, sql), error = function(e) {
+      rows <- if (length(run_dots) == 0) pb_query(private$pin, sql) else
+        tryCatch(pb_query(private$pin, sql), error = function(e) {
           stop(conditionMessage(e), "\n  Predicates on ", public_name,
                " are translated to SQL. Use !! for values computed by a\n  ",
                "function in R. The functions that translate are listed at\n  ",
@@ -345,7 +345,7 @@ PeekbankClient <- R6Class(
       if (is.null(rows)) return(NULL)
       if (!encoded) return(rows)
       # keep the expanded rows too
-      key <- paste(private$con$redivis_tag, "decoded", sql)
+      key <- paste(private$pin$redivis_tag, "decoded", sql)
       if (is.null(.peekbankr_env[[key]])) {
         .peekbankr_env[[key]] <- decode_rle_timepoints(rows, carry)
       }
@@ -360,7 +360,7 @@ PeekbankClient <- R6Class(
     # cached copies to save time and roundtrips (and have access to more predicte expressions)
     narrow = function(name, dots) {
       cols <- names(self[[name]])
-      view <- predicate_view(name, function(n) pb_table(private$con, n))
+      view <- predicate_view(name, function(n) pb_table(private$pin, n))
       private$reject_unknown_columns(dots, colnames(view), name)
       view %>%
         dplyr::filter(!!!dots) %>%
