@@ -27,7 +27,7 @@ keeps it on one data release, install it by its tag:
 
 ``` r
 
-remotes::install_github("peekbank/peekbankr@v1.0.0")
+remotes::install_github("peekbank/peekbankr@v1.1.1")
 ```
 
 The first data request will open a browser window to authorize Redivis
