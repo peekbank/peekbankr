@@ -96,7 +96,7 @@ run-length encoded and is expanded locally.
 \subsection{Method \code{new()}}{
 Pin a database version.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$new(version)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$new(version, cache_on_disk = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -106,6 +106,9 @@ Pin a database version.
 "next" for the unreleased draft
 for whichever was published most recently. Required: see
 \code{\link[=peekbank]{peekbank()}}.}
+
+\item{\code{cache_on_disk}}{Also keep what is read on disk for later sessions:
+see \code{\link[=peekbank]{peekbank()}}.}
 }
 \if{html}{\out{</div>}}
 }
@@ -186,7 +189,8 @@ failed)
 \if{latex}{\out{\hypertarget{method-PeekbankClient-clear_cache}{}}}
 \subsection{Method \code{clear_cache()}}{
 Drop this version's (instance's) cached tables and query results, so the
-next read fetches them again.
+next read fetches them again. A \code{cache_on_disk} client also deletes
+the files it would read them back from.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{PeekbankClient$clear_cache()}\if{html}{\out{</div>}}
 }

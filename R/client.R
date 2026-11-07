@@ -31,9 +31,17 @@ PeekbankClient <- R6Class(
     #'   "next" for the unreleased draft
     #'   for whichever was published most recently. Required: see
     #'   [peekbank()].
-    initialize = function(version) {
+    #' @param cache_on_disk Also keep what is read on disk for later sessions:
+    #'   see [peekbank()].
+    initialize = function(version, cache_on_disk = FALSE) {
       if (missing(version)) stop(version_required(), call. = FALSE)
+      if (cache_on_disk && identical(version, "next")) {
+        stop("`cache_on_disk` cannot be used with \"next\": the draft changes ",
+             "while its Redivis version stays the same,\n  so a saved copy ",
+             "would go stale.", call. = FALSE)
+      }
       private$con <- new_connection(version)
+      if (cache_on_disk) private$con$cache_dir <- new_cache_dir()
       invisible(self)
     },
 
@@ -65,11 +73,16 @@ PeekbankClient <- R6Class(
     },
 
     #' @description Drop this version's (instance's) cached tables and query results, so the
-    #'   next read fetches them again.
+    #'   next read fetches them again. A `cache_on_disk` client also deletes
+    #'   the files it would read them back from.
     clear_cache = function() {
       keys <- ls(.peekbankr_env)
       hits <- keys[startsWith(keys, paste0(private$con$redivis_tag, " "))]
       rm(list = hits, envir = .peekbankr_env)
+      if (!is.null(private$con$cache_dir)) {
+        unlink(file.path(private$con$cache_dir, private$con$redivis_tag),
+               recursive = TRUE)
+      }
       invisible(self)
     },
 
@@ -451,6 +464,11 @@ print.peekbank_method <- function(x, ...) {
 #'   take whichever version was published most recently, or "next" for the
 #'   unreleased draft of the next release (only editors of the dataset on
 #'   Redivis can read it)
+#' @param cache_on_disk Also keep what is read in a `.pbcache` folder in the
+#'   working directory, so that later sessions read it from there instead of
+#'   downloading it again. They still need to reach Redivis, to resolve the
+#'   release and to build timepoint queries. Not available for "next", whose
+#'   contents change.
 #'
 #' @return A [PeekbankClient]
 #' @export
@@ -469,9 +487,9 @@ print.peekbank_method <- function(x, ...) {
 #' # computed on the server, nothing transferred until collect()
 #' pb$db$aoi_timepoints |> dplyr::count(aoi) |> dplyr::collect()
 #' }
-peekbank <- function(version) {
+peekbank <- function(version, cache_on_disk = FALSE) {
   if (missing(version)) stop(version_required(), call. = FALSE)
-  PeekbankClient$new(version = version)
+  PeekbankClient$new(version = version, cache_on_disk = cache_on_disk)
 }
 
 #' Peekbank releases

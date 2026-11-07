@@ -1,13 +1,5 @@
 # The tables in the shape peekbankr hands out, derived from the ones redivis.R pulled.
 
-new_connection <- function(version) {
-  ver <- resolve_release(version)
-  structure(
-    list(release = ver$release, redivis_tag = ver$redivis_tag),
-    class = "peekbank_connection"
-  )
-}
-
 fetch_table_names <- function(con) pb_table_listing(con$redivis_tag)$tables
 
 # the tables whose rows belong to a dataset, and so can be given its name

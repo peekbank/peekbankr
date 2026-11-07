@@ -8,5 +8,6 @@
 _pkgdown.yml
 ^\.github$
 ^\.lintr$
+^\.pbcache$
 ^dev$
 ^data-raw$

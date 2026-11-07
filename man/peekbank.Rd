@@ -4,13 +4,19 @@
 \alias{peekbank}
 \title{Connect to Peekbank}
 \usage{
-peekbank(version)
+peekbank(version, cache_on_disk = FALSE)
 }
 \arguments{
 \item{version}{A Peekbank release name such as "2025.1". Pass "current" to
 take whichever version was published most recently, or "next" for the
 unreleased draft of the next release (only editors of the dataset on
 Redivis can read it)}
+
+\item{cache_on_disk}{Also keep what is read in a \code{.pbcache} folder in the
+working directory, so that later sessions read it from there instead of
+downloading it again. They still need to reach Redivis, to resolve the
+release and to build timepoint queries. Not available for "next", whose
+contents change.}
 }
 \value{
 A \link{PeekbankClient}

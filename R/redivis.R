@@ -3,9 +3,6 @@
 # machinery for resolving Peekbank releases to Redivis dataset versions and
 # for fetching tables and running queries against them.
 
-# cached reads, shared by every client for the life of the session
-.peekbankr_env <- new.env(parent = emptyenv())
-
 peekbank_organization <- "datapages"
 peekbank_dataset_reference <- "peekbank:a3v0"
 
@@ -146,16 +143,22 @@ resolve_release <- function(db_version = "current") {
   list(release = release, redivis_tag = redivis_tag)
 }
 
+# The release that reads are pinned to.
+new_connection <- function(version) {
+  ver <- resolve_release(version)
+  structure(
+    list(release = ver$release, redivis_tag = ver$redivis_tag),
+    class = "peekbank_connection"
+  )
+}
+
 # fetch a whole table as a tibble, cached per session + version
 pb_table <- function(connection, name) {
   redivis_tag <- connection$redivis_tag
-  key <- paste(redivis_tag, name)
-  if (is.null(.peekbankr_env[[key]])) {
+  cached_read(connection, paste(redivis_tag, name), function() {
     if (!redivis_available()) return(NULL)
-    .peekbankr_env[[key]] <- pb_try(
-      pb_dataset(redivis_tag)$table(name)$to_tibble())
-  }
-  .peekbankr_env[[key]]
+    pb_try(pb_dataset(redivis_tag)$table(name)$to_tibble())
+  })
 }
 
 # run a SQL query against the dataset version (server-side filtering for the
@@ -163,13 +166,10 @@ pb_table <- function(connection, name) {
 # dialect
 pb_query <- function(connection, sql) {
   redivis_tag <- connection$redivis_tag
-  key <- paste(redivis_tag, sql)
-  if (is.null(.peekbankr_env[[key]])) {
+  cached_read(connection, paste(redivis_tag, sql), function() {
     if (!redivis_available()) return(NULL)
-    .peekbankr_env[[key]] <- pb_try(
-      pb_dataset(redivis_tag)$query(sql)$to_tibble())
-  }
-  .peekbankr_env[[key]]
+    pb_try(pb_dataset(redivis_tag)$query(sql)$to_tibble())
+  })
 }
 
 #' @export
