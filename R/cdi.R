@@ -1,3 +1,8 @@
+# Helpers for CDI scores once unnest_aux() has turned them into rows: norm
+# percentiles, the share of the form's words, and matching scores to
+# administrations by age. The norms and item counts come from inst/extdata,
+# built by data-raw/build-cdi-reference.R.
+
 require_columns <- function(df, columns) {
   missing <- setdiff(columns, names(df))
   if (length(missing) > 0) {

@@ -1,3 +1,7 @@
+# Lookups into inst/peekbank-schema.json, which defines the tables of an
+# imported dataset: their fields, which tables each coding method needs, and
+# the allowed language codes.
+
 #' parse the bundled peekbank schema json into a dataframe
 #'
 #' @return the organized dataframe from schema json file

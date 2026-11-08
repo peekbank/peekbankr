@@ -1,3 +1,7 @@
+# The peekbank() client. PeekbankClient pins one release and hands out its
+# tables three ways (pb$<table>, pb$subset, pb$db), with methods for the
+# release's files, SQL queries and cache.
+
 #' Peekbank client
 #'
 #' A client pins one Peekbank release, so every table read through it comes

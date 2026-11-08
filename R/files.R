@@ -1,3 +1,6 @@
+# Downloading a release's dataset files from Redivis: stimulus images and
+# READMEs, for pb$images() and pb$readmes() as well as their superseded counterparts.
+
 # the files of a pinned release as (file_id, file_name, size), named
 # <dataset>/README.md and <dataset>/raw_data/<path>
 list_dataset_files <- function(pin) {

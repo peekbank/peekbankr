@@ -21,8 +21,7 @@ remotes::install_github("peekbank/peekbankr")
 ```
 
 peekbankr follows [semantic versioning](https://semver.org), and each version
-is tagged. To keep an analysis on one version of the package, the way
-`peekbank()` keeps it on one data release, install it by its tag:
+is tagged. To keep an analysis on one version of the package, install it by its tag:
 
 ```r
 remotes::install_github("peekbank/peekbankr@v1.1.1")
@@ -143,11 +142,52 @@ stimuli <- pb$images(datasets = "reflook_v4")             # stimulus images
 
 ### Development
 
-After making changes, run `roxygen2::roxygenise()` to update exports and
-documentation, and `testthat::test_local()` for the offline test suite.
+#### Setup
 
-Running the full test suite requires Redivis credentials: Without them
-the network tests skip. Copy
-`.Renviron.template` to `.Renviron`, fill in a personal API token from your
+Clone the repo, then install the development tools and the package's
+dependencies:
+
+```r
+install.packages(c("devtools", "lintr"))
+devtools::install_dev_deps()
+```
+
+To run the network tests and build the vignette,
+copy `.Renviron.template` to `.Renviron`, fill in a personal API token with
+the `data.metadata` scope from your
 [Redivis workspace](https://redivis.com/workspace) settings, and set
 `PEEKBANK_NETWORK_TESTS=true`.
+
+#### The repo
+
+- `R/client.R`: the `peekbank()` client, consumed by users
+- `R/redivis.R`, `R/tables.R`, `R/files.R`, `R/cache.R`: contain the main functionality powering the client, i.e. reading a release
+  from Redivis, shaping its tables, downloading related files and caching
+  what was read
+- `R/aux_data.R`, `R/cdi.R`: helper functions for aux data and CDI scores
+- `R/ds_*.R`: the `ds.` functions are used by import script writers, contains e.g. validation
+- `R/legacy.R`: the superseded interface we keep in the codebase for backwards compatibility
+- `inst/peekbank-schema.json`: the peekbank schema components like the validator use
+- `inst/extdata/`: CDI norms and item counts, built by
+  `data-raw/build-cdi-reference.R`
+
+#### Repos directly dependent on this one
+
+- [peekbank-data-import](https://github.com/langcog/peekbank-data-import)
+  processes each dataset with the help of the `ds.` functions and checks it with
+  `ds.validate_for_db_import()`.
+- [peekbank-website](https://github.com/peekbank/peekbank-website) documents
+  the exported functions for users. If you change the behavior or structure of any exported function, be sure to update that one as well.
+
+#### Checklist before pushing
+
+- Run `devtools::document()` after changing roxygen comments, then
+  `devtools::test()`, `lintr::lint_package()` and `devtools::check()`. CI
+  runs check, lint, the network tests and the pkgdown build on every push
+  (see `.github/workflows/`).
+- `pkgdown::check_pkgdown()` checks that every export has a place in
+  `_pkgdown.yml`.
+- Right now people install directly from GitHub, so bump `Version` in `DESCRIPTION` on every push that changes behavior.
+Since version `1.0.0`, peekbankr follows semantic versioning: \<Break>.\<Add>.\<Fix>
+- After pushing a new version, tag it so people can install it by its tag
+  (see Installation): `git tag vX.Y.Z`, then `git push origin vX.Y.Z`.

@@ -1,3 +1,6 @@
+# Houses ds.validate_for_db_import(), which the import scripts run on a dataset's
+# processed CSVs.
+
 collapse_warnings <- function(warnings) {
   vapply(warnings, function(w) paste(w, collapse = " "), character(1))
 }

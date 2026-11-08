@@ -1,3 +1,5 @@
+# The time standardization the import scripts run on every dataset.
+
 # returns a logical vector indicating which resampled points fall inside
 # large gaps (>3x median interval) between consecutive original timepoints
 find_gap_points <- function(t_origin, t_resampled) {
