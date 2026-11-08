@@ -215,6 +215,17 @@ workspace](https://redivis.com/workspace) settings, and set
   or structure of any exported function, be sure to update that one as
   well.
 
+#### Github CI Requirements
+
+Pushing to `master` rebuilds the [pkgdown
+site](https://peekbank.github.io/peekbankr/) and pushes it to the
+`gh-pages` branch (`.github/workflows/pkgdown.yaml`), which GitHub Pages
+serves (Settings \> Pages: deploy from the `gh-pages` branch).
+
+The network tests in CI need a read-only Redivis token with the
+`data.metadata` scope as an Actions secret named `REDIVIS_API_TOKEN`
+(Settings \> Secrets and variables \> Actions).
+
 #### Checklist before pushing
 
 - Run `devtools::document()` after changing roxygen comments, then

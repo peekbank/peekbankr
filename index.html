@@ -181,6 +181,12 @@
 </ul>
 </div>
 <div class="section level4">
+<h4 id="github-ci-requirements">Github CI Requirements<a class="anchor" aria-label="anchor" href="#github-ci-requirements"></a>
+</h4>
+<p>Pushing to <code>master</code> rebuilds the <a href="https://peekbank.github.io/peekbankr/">pkgdown site</a> and pushes it to the <code>gh-pages</code> branch (<code>.github/workflows/pkgdown.yaml</code>), which GitHub Pages serves (Settings &gt; Pages: deploy from the <code>gh-pages</code> branch).</p>
+<p>The network tests in CI need a read-only Redivis token with the <code>data.metadata</code> scope as an Actions secret named <code>REDIVIS_API_TOKEN</code> (Settings &gt; Secrets and variables &gt; Actions).</p>
+</div>
+<div class="section level4">
 <h4 id="checklist-before-pushing">Checklist before pushing<a class="anchor" aria-label="anchor" href="#checklist-before-pushing"></a>
 </h4>
 <ul>
