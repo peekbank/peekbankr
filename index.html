@@ -56,7 +56,7 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("remotes")</span></span>
 <span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"peekbank/peekbankr"</span><span class="op">)</span></span></code></pre></div>
-<p>peekbankr follows <a href="https://semver.org" class="external-link">semantic versioning</a>, and each version is tagged. To keep an analysis on one version of the package, the way <code><a href="reference/peekbank.html">peekbank()</a></code> keeps it on one data release, install it by its tag:</p>
+<p>peekbankr follows <a href="https://semver.org" class="external-link">semantic versioning</a>, and each version is tagged. To keep an analysis on one version of the package, install it by its tag:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"peekbank/peekbankr@v1.1.1"</span><span class="op">)</span></span></code></pre></div>
 <p>The first data request will open a browser window to authorize Redivis access (free account). For non-interactive use, set a <code>REDIVIS_API_TOKEN</code> environment variable instead. That token needs the <code>data.metadata</code> scope.</p>
@@ -140,8 +140,57 @@
 <div class="section level3">
 <h3 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
 </h3>
-<p>After making changes, run <code>roxygen2::roxygenise()</code> to update exports and documentation, and <code><a href="https://testthat.r-lib.org/reference/test_package.html" class="external-link">testthat::test_local()</a></code> for the offline test suite.</p>
-<p>Running the full test suite requires Redivis credentials: Without them the network tests skip. Copy <code>.Renviron.template</code> to <code>.Renviron</code>, fill in a personal API token from your <a href="https://redivis.com/workspace" class="external-link">Redivis workspace</a> settings, and set <code>PEEKBANK_NETWORK_TESTS=true</code>.</p>
+<div class="section level4">
+<h4 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
+</h4>
+<p>Clone the repo, then install the development tools and the package’s dependencies:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"devtools"</span>, <span class="st">"lintr"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_dev_deps</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>To run the network tests and build the vignette, copy <code>.Renviron.template</code> to <code>.Renviron</code>, fill in a personal API token with the <code>data.metadata</code> scope from your <a href="https://redivis.com/workspace" class="external-link">Redivis workspace</a> settings, and set <code>PEEKBANK_NETWORK_TESTS=true</code>.</p>
+</div>
+<div class="section level4">
+<h4 id="the-repo">The repo<a class="anchor" aria-label="anchor" href="#the-repo"></a>
+</h4>
+<ul>
+<li>
+<code>R/client.R</code>: the <code><a href="reference/peekbank.html">peekbank()</a></code> client, consumed by users</li>
+<li>
+<code>R/redivis.R</code>, <code>R/tables.R</code>, <code>R/files.R</code>, <code>R/cache.R</code>: contain the main functionality powering the client, i.e. reading a release from Redivis, shaping its tables, downloading related files and caching what was read</li>
+<li>
+<code>R/aux_data.R</code>, <code>R/cdi.R</code>: helper functions for aux data and CDI scores</li>
+<li>
+<code>R/ds_*.R</code>: the <code>ds.</code> functions are used by import script writers, contains e.g. validation</li>
+<li>
+<code>R/legacy.R</code>: the superseded interface we keep in the codebase for backwards compatibility</li>
+<li>
+<code>inst/peekbank-schema.json</code>: the peekbank schema components like the validator use</li>
+<li>
+<code>inst/extdata/</code>: CDI norms and item counts, built by <code>data-raw/build-cdi-reference.R</code>
+</li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="repos-directly-dependent-on-this-one">Repos directly dependent on this one<a class="anchor" aria-label="anchor" href="#repos-directly-dependent-on-this-one"></a>
+</h4>
+<ul>
+<li>
+<a href="https://github.com/langcog/peekbank-data-import" class="external-link">peekbank-data-import</a> processes each dataset with the help of the <code>ds.</code> functions and checks it with <code><a href="reference/ds.validate_for_db_import.html">ds.validate_for_db_import()</a></code>.</li>
+<li>
+<a href="https://github.com/peekbank/peekbank-website" class="external-link">peekbank-website</a> documents the exported functions for users. If you change the behavior or structure of any exported function, be sure to update that one as well.</li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="checklist-before-pushing">Checklist before pushing<a class="anchor" aria-label="anchor" href="#checklist-before-pushing"></a>
+</h4>
+<ul>
+<li>Run <code>devtools::document()</code> after changing roxygen comments, then <code>devtools::test()</code>, <code><a href="https://lintr.r-lib.org/reference/lint.html" class="external-link">lintr::lint_package()</a></code> and <code>devtools::check()</code>. CI runs check, lint, the network tests and the pkgdown build on every push (see <code>.github/workflows/</code>).</li>
+<li>
+<code><a href="https://pkgdown.r-lib.org/reference/check_pkgdown.html" class="external-link">pkgdown::check_pkgdown()</a></code> checks that every export has a place in <code>_pkgdown.yml</code>.</li>
+<li>Right now people install directly from GitHub, so bump <code>Version</code> in <code>DESCRIPTION</code> on every push that changes behavior. Since version <code>1.0.0</code>, peekbankr follows semantic versioning: &lt;Break&gt;.&lt;Add&gt;.&lt;Fix&gt;</li>
+<li>After pushing a new version, tag it so people can install it by its tag (see Installation): <code>git tag vX.Y.Z</code>, then <code>git push origin vX.Y.Z</code>.</li>
+</ul>
+</div>
 </div>
 </div>
 
